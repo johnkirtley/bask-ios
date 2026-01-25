@@ -1,0 +1,5 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[633],{5633:function(e,t,r){r.r(t),r.d(t,{createSwipeBackGesture:function(){return a}});var n=r(6450);/*!
+ * (C) Ionic http://ionicframework.com - MIT License
+ */let i=e=>e&&""!==e.dir?"rtl"===e.dir.toLowerCase():(null==document?void 0:document.dir.toLowerCase())==="rtl";var o=r(25);/*!
+ * (C) Ionic http://ionicframework.com - MIT License
+ */let a=(e,t,r,a,l)=>{let u=e.ownerDocument.defaultView,d=i(e),c=e=>{let{startX:t}=e;return d?t>=u.innerWidth-50:t<=50},s=e=>d?-e.deltaX:e.deltaX,h=e=>d?-e.velocityX:e.velocityX;return(0,o.A)({el:e,gestureName:"goback-swipe",gesturePriority:101,threshold:10,canStart:r=>(d=i(e),c(r)&&t()),onStart:r,onMove:e=>{let t=s(e),r=t/u.innerWidth;a(r)},onEnd:e=>{let t=s(e),r=u.innerWidth,i=t/r,o=h(e),a=o>=0&&(o>.2||t>r/2),d=a?1-i:i,c=d*r,w=0;c>5&&(w=Math.min(c/Math.abs(o),540)),l(a,i<=0?.01:(0,n.k)(0,i,.9999),w)}})}}}]);

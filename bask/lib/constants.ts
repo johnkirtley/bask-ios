@@ -1,0 +1,71 @@
+// Database Configuration
+export const DB_CONFIG = {
+  name: 'bask',
+  version: 1,
+} as const;
+
+// RevenueCat Configuration
+export const REVENUECAT_API_KEY =
+  process.env.NEXT_PUBLIC_REVENUECAT_API_KEY || '';
+// RevenueCat Entitlement IDs
+export const ENTITLEMENTS = {
+  monthly: 'monthly',
+  yearly: 'yearly',
+  lifetime: 'lifetime',
+} as const;
+
+// Local Storage Keys
+export const STORAGE_KEYS = {
+  userProgress: 'bask_progress',
+  settings: 'bask_settings',
+  onboarding: 'bask_onboarding',
+  reviewMilestone1: 'review_milestone_1',
+  reviewMilestone2: 'review_milestone_2',
+  reviewMilestone3: 'review_milestone_3',
+  reviewCompleted: 'review_completed',
+} as const;
+
+// AdMob Configuration
+export const ADMOB_CONFIG = {
+  bannerId: {
+    ios: process.env.NEXT_PUBLIC_ADMOB_BANNER_IOS || '',
+    android: process.env.NEXT_PUBLIC_ADMOB_BANNER_ANDROID || '',
+  },
+  interstitialId: {
+    ios: process.env.NEXT_PUBLIC_ADMOB_INTERSTITIAL_IOS || '',
+    android: process.env.NEXT_PUBLIC_ADMOB_INTERSTITIAL_ANDROID || '',
+  },
+} as const;
+
+// App Routes
+export const ROUTES = {
+  home: '/',
+  settings: '/settings',
+} as const;
+
+// Review Milestones Configuration
+export const REVIEW_MILESTONES = {
+  milestone1: {
+    id: 'milestone1',
+    storageKey: 'review_milestone_1',
+    threshold: 7,
+    headline: "How's it going? 👋",
+    body: "You've been using the app for a bit now. Are you enjoying the experience?",
+  },
+  milestone2: {
+    id: 'milestone2',
+    storageKey: 'review_milestone_2',
+    headline: "Enjoying the app? 👋",
+    body: "We'd love to hear your feedback. Are you finding the app useful?",
+  },
+  milestone3: {
+    id: 'milestone3',
+    storageKey: 'review_milestone_3',
+    threshold: 30,
+    headline: "Thanks for sticking with us! 👋",
+    body: "We're glad you've been using the app. Would you mind leaving a review?",
+  },
+} as const;
+
+// Feedback Email
+export const FEEDBACK_EMAIL = 'feedback@example.com';

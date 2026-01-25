@@ -1,0 +1,124 @@
+PODS:
+  - Capacitor (8.0.0):
+    - CapacitorCordova
+  - CapacitorApp (8.0.0):
+    - Capacitor
+  - CapacitorBrowser (8.0.0):
+    - Capacitor
+  - CapacitorCommunityAdmob (8.0.0):
+    - Capacitor
+    - Google-Mobile-Ads-SDK (~> 12.14)
+    - GoogleUserMessagingPlatform (~> 3.1)
+  - CapacitorCommunityInAppReview (8.0.0):
+    - Capacitor
+  - CapacitorCommunitySqlite (7.0.3):
+    - Capacitor
+    - SQLCipher
+    - ZIPFoundation
+  - CapacitorCordova (8.0.0)
+  - CapacitorHaptics (8.0.0):
+    - Capacitor
+  - CapacitorKeyboard (8.0.0):
+    - Capacitor
+  - CapacitorStatusBar (8.0.0):
+    - Capacitor
+  - Google-Mobile-Ads-SDK (12.14.0):
+    - GoogleUserMessagingPlatform (>= 1.1)
+  - GoogleUserMessagingPlatform (3.1.0)
+  - PurchasesHybridCommon (17.26.0):
+    - RevenueCat (= 5.52.0)
+  - PurchasesHybridCommonUI (17.26.0):
+    - PurchasesHybridCommon (= 17.26.0)
+    - RevenueCatUI (= 5.52.0)
+  - RevenueCat (5.52.0)
+  - RevenuecatPurchasesCapacitor (12.0.1):
+    - Capacitor
+    - PurchasesHybridCommon (= 17.26.0)
+  - RevenuecatPurchasesCapacitorUi (12.0.1):
+    - Capacitor
+    - PurchasesHybridCommonUI (= 17.26.0)
+  - RevenueCatUI (5.52.0):
+    - RevenueCat (= 5.52.0)
+  - SQLCipher (4.10.0):
+    - SQLCipher/standard (= 4.10.0)
+  - SQLCipher/common (4.10.0)
+  - SQLCipher/standard (4.10.0):
+    - SQLCipher/common
+  - ZIPFoundation (0.9.20)
+
+DEPENDENCIES:
+  - "Capacitor (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorApp (from `../../node_modules/@capacitor/app`)"
+  - "CapacitorBrowser (from `../../node_modules/@capacitor/browser`)"
+  - "CapacitorCommunityAdmob (from `../../node_modules/@capacitor-community/admob`)"
+  - "CapacitorCommunityInAppReview (from `../../node_modules/@capacitor-community/in-app-review`)"
+  - "CapacitorCommunitySqlite (from `../../node_modules/@capacitor-community/sqlite`)"
+  - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorHaptics (from `../../node_modules/@capacitor/haptics`)"
+  - "CapacitorKeyboard (from `../../node_modules/@capacitor/keyboard`)"
+  - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
+  - "RevenuecatPurchasesCapacitor (from `../../node_modules/@revenuecat/purchases-capacitor`)"
+  - "RevenuecatPurchasesCapacitorUi (from `../../node_modules/@revenuecat/purchases-capacitor-ui`)"
+
+SPEC REPOS:
+  trunk:
+    - Google-Mobile-Ads-SDK
+    - GoogleUserMessagingPlatform
+    - PurchasesHybridCommon
+    - PurchasesHybridCommonUI
+    - RevenueCat
+    - RevenueCatUI
+    - SQLCipher
+    - ZIPFoundation
+
+EXTERNAL SOURCES:
+  Capacitor:
+    :path: "../../node_modules/@capacitor/ios"
+  CapacitorApp:
+    :path: "../../node_modules/@capacitor/app"
+  CapacitorBrowser:
+    :path: "../../node_modules/@capacitor/browser"
+  CapacitorCommunityAdmob:
+    :path: "../../node_modules/@capacitor-community/admob"
+  CapacitorCommunityInAppReview:
+    :path: "../../node_modules/@capacitor-community/in-app-review"
+  CapacitorCommunitySqlite:
+    :path: "../../node_modules/@capacitor-community/sqlite"
+  CapacitorCordova:
+    :path: "../../node_modules/@capacitor/ios"
+  CapacitorHaptics:
+    :path: "../../node_modules/@capacitor/haptics"
+  CapacitorKeyboard:
+    :path: "../../node_modules/@capacitor/keyboard"
+  CapacitorStatusBar:
+    :path: "../../node_modules/@capacitor/status-bar"
+  RevenuecatPurchasesCapacitor:
+    :path: "../../node_modules/@revenuecat/purchases-capacitor"
+  RevenuecatPurchasesCapacitorUi:
+    :path: "../../node_modules/@revenuecat/purchases-capacitor-ui"
+
+SPEC CHECKSUMS:
+  Capacitor: 341ff7cf652ec695d1a8ebf604db448ac7b6d635
+  CapacitorApp: 3963a84197280757b84f126afd1520a85ae3b092
+  CapacitorBrowser: b7d7f05f840fe042e46f6528bb8db853e3058fb2
+  CapacitorCommunityAdmob: 9c36b466f46da413e5c105f7484e7603178c6223
+  CapacitorCommunityInAppReview: 4492bdd34aad4d27ed87949376022cc93b294ea1
+  CapacitorCommunitySqlite: 4813d82ad33001e612a39d313cb5d28066cbafda
+  CapacitorCordova: 5dc3912d25ef770a3fe0f431bb65c9fbfa2e92f9
+  CapacitorHaptics: 2079d9fa04c5a71e18663b4722323c304c58245c
+  CapacitorKeyboard: d7868c079a4d5277a3deca27a10a488fcbbb8b69
+  CapacitorStatusBar: 312e2e67928dfe9514c4a8916a1fd610552f5f35
+  Google-Mobile-Ads-SDK: 4534fd2dfcd3f705c5485a6633c5188d03d4eed2
+  GoogleUserMessagingPlatform: befe603da6501006420c206222acd449bba45a9c
+  PurchasesHybridCommon: 93399cb2ba29164dbab79d6398e79f7723b41653
+  PurchasesHybridCommonUI: ebbb750fc4592418a15a16c88061dd8734a509db
+  RevenueCat: 946aceaf97c1eee083dd7fad65a0e0d0c64c837e
+  RevenuecatPurchasesCapacitor: 2d2511b140ea68cdcb1436652ea70ac9f8017d17
+  RevenuecatPurchasesCapacitorUi: 9b2443c399287ad0994956a1ac7305901b316144
+  RevenueCatUI: 9e4a7e2ccff6b4fc9becd72b7efc9476c458e936
+  SQLCipher: eb79c64049cb002b4e9fcb30edb7979bf4706dfc
+  ZIPFoundation: dfd3d681c4053ff7e2f7350bc4e53b5dba3f5351
+
+PODFILE CHECKSUM: ba9b0e69f543f6c47fad31394a80e48577ddf2c0
+
+COCOAPODS: 1.16.2

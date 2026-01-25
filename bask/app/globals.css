@@ -1,0 +1,343 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Ionic Core CSS required for IonModal and other Ionic components */
+@import '@ionic/react/css/core.css';
+@import '@ionic/react/css/normalize.css';
+@import '@ionic/react/css/structure.css';
+
+/* Disable Ionic's automatic safe area handling - we handle it ourselves with pt-safe/pb-safe */
+ion-app {
+  --ion-safe-area-top: 0px !important;
+  --ion-safe-area-bottom: 0px !important;
+}
+
+/* Scroll container for pages (works with Ionic's fixed body) */
+.scroll-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Safe area insets for iOS */
+@layer utilities {
+  .pt-safe {
+    padding-top: 70px;
+  }
+  .pb-safe {
+    padding-bottom: 34px;
+  }
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Text truncation utility */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+/* Timer ring animation */
+.timer-ring {
+  transition: stroke-dashoffset 1s linear;
+}
+
+/* Phase badge colors - HIGH CONTRAST */
+.phase-mobility {
+  background-color: rgba(74, 107, 58, 0.15);
+  color: #4A6B3A;
+  border: 1px solid rgba(74, 107, 58, 0.3);
+}
+.phase-activation {
+  background-color: rgba(184, 90, 58, 0.15);
+  color: #B85A3A;
+  border: 1px solid rgba(184, 90, 58, 0.3);
+}
+.phase-integration {
+  background-color: rgba(74, 107, 58, 0.15);
+  color: #4A6B3A;
+  border: 1px solid rgba(74, 107, 58, 0.3);
+}
+
+/* Program card - flat, no shadows */
+.program-card {
+  transition: transform 0.2s;
+  border: 1px solid #D5D0C8;
+}
+.program-card:active {
+  transform: scale(0.98);
+}
+
+/* Modal backdrop - warm semi-transparent */
+.modal-backdrop {
+  background: rgba(53, 47, 43, 0.6);
+}
+
+/* Custom scrollbar - warm theme */
+.scrollable-div::-webkit-scrollbar {
+  width: 4px;
+}
+.scrollable-div::-webkit-scrollbar-track {
+  background: #F2F0EB;
+  border-radius: 2px;
+}
+.scrollable-div::-webkit-scrollbar-thumb {
+  background: #D5D0C8;
+  border-radius: 2px;
+}
+
+/* Button press animation */
+.btn {
+  transition: transform 0.1s ease-out;
+}
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Tab bar styling - border instead of shadow */
+.tab-bar-custom {
+  border-top: 1px solid #D5D0C8;
+}
+
+/* Loading pulse animation enhancement */
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+.animate-pulse-soft {
+  animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Prevent text selection on interactive elements */
+.no-select {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Slide Sheet - warm flat style */
+.slide-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  background: #FFFFFF;
+  border-top-left-radius: 1rem;
+  border-top-right-radius: 1rem;
+  border-top: 1px solid #D5D0C8;
+  transform: translateY(100%);
+  transition: transform 0.3s ease-out;
+  max-height: 95vh;
+  overflow: hidden;
+}
+
+.slide-sheet.open {
+  transform: translateY(0);
+}
+
+.slide-sheet.dragging {
+  transition: none;
+}
+
+/* Drag handle - warm theme */
+.drag-handle {
+  width: 36px;
+  height: 5px;
+  background: #D5D0C8;
+  border-radius: 2.5px;
+  margin: 0 auto;
+}
+
+/* Sheet content area */
+.sheet-content {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  max-height: calc(95vh - 40px);
+}
+
+/* Sheet backdrop - warm semi-transparent */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(53, 47, 43, 0.5);
+  z-index: 55;
+  opacity: 0;
+  transition: opacity 0.3s ease-out;
+  pointer-events: none;
+}
+
+.sheet-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* New York serif font for iOS Large Title style */
+.font-title {
+  font-family: 'New York', 'New York Large', ui-serif, Georgia, 'Times New Roman', serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Floating pill tab bar */
+.tab-bar-pill {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 100px;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08), 0 0 0 0.5px rgba(0, 0, 0, 0.05);
+}
+
+/* Action card styling */
+.action-card {
+  transition: transform 0.15s ease-out, opacity 0.15s ease-out;
+}
+.action-card:active:not(:disabled) {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+.action-card:disabled {
+  opacity: 0.6;
+}
+.action-card:focus-visible {
+  outline: 2px solid rgba(139, 168, 137, 0.8);
+  outline-offset: 2px;
+}
+
+/* Filter chip styling */
+.filter-chip {
+  transition: all 0.2s ease-out;
+}
+.filter-chip:active {
+  transform: scale(0.96);
+}
+.filter-chip:focus-visible {
+  outline: 2px solid rgba(139, 168, 137, 0.8);
+  outline-offset: 2px;
+}
+
+/* Hero card */
+.hero-card {
+  background: linear-gradient(135deg, #F5F2ED 0%, #FBF9F6 100%);
+}
+
+/* Exercise card container - cream background */
+.exercise-card-container {
+  background: linear-gradient(145deg, #F5EDE5 0%, #FAF7F3 100%);
+}
+
+/* Large play button - shadow and press effect */
+.play-button-large {
+  box-shadow: 0 4px 12px rgba(90, 122, 82, 0.3);
+  transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
+}
+
+.play-button-large:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 8px rgba(90, 122, 82, 0.2);
+}
+
+/* Instructions tab styles - no longer used (replaced with inline Tailwind) */
+/* Keeping for potential future use */
+.instructions-tab-legacy {
+  width: 100%;
+  max-width: 100%;
+  background: #FFFFFE;
+  border-radius: 16px 16px 0 0;
+  padding: 8px 24px 12px;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.instructions-tab-legacy:active {
+  background-color: rgba(242, 240, 235, 0.8);
+  transform: translateY(-2px);
+}
+
+/* Scroll fade overlay - makes content appear to scroll off screen */
+.scroll-fade-bottom {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: linear-gradient(to bottom, transparent 0%, #F9F9F7 100%);
+  pointer-events: none;
+  z-index: 45; /* Between sticky content (40) and TabBar (50) */
+}
+
+/* Exercises Page Searchbar Styling */
+.exercises-searchbar {
+  --background: #F9F9F7; /* limestone */
+  --border-radius: 12px;
+  --box-shadow: none;
+  --placeholder-color: #7A726C; /* umber-muted */
+  --icon-color: #7A726C;
+  --color: #3D3835; /* umber */
+  padding: 0 !important;
+}
+
+.exercises-searchbar.searchbar-has-focus {
+  --background: #FFFFFF; /* oat */
+}
+
+.exercises-searchbar .searchbar-input-container {
+  border: 1px solid #E5E2DC; /* border-warm */
+}
+
+.exercises-searchbar.searchbar-has-focus .searchbar-input-container {
+  border-color: #5A7A52; /* olive */
+}
+
+/* Filter Modal Customization */
+.filter-modal {
+  --background: #F9F9F7; /* limestone */
+}
+
+.filter-modal ion-toolbar {
+  --background: #F9F9F7;
+  --border-color: #E5E2DC;
+}
+
+.filter-modal ion-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #3D3835; /* umber */
+}
+
+.filter-modal ion-button {
+  --color: #5A7A52; /* olive */
+  font-weight: 600;
+}
+
+/* Instructions Sheet Customization */
+.instructions-sheet {
+  --border-radius: 16px 16px 0 0;
+  --background: #FFFFFE; /* oat */
+  --width: 100%;
+  --max-width: 100%;
+}
+
+.instructions-sheet::part(content) {
+  border-radius: 16px 16px 0 0;
+}
