@@ -82,6 +82,49 @@ const migrations: Migration[] = [
       `CREATE INDEX IF NOT EXISTS idx_exercises_name ON completed_exercises(exercise_name)`,
     ],
   },
+  {
+    version: 4,
+    up: [
+      // Bask user profile (single row)
+      `CREATE TABLE IF NOT EXISTS bask_user_profile (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        fitzpatrick_type INTEGER NOT NULL DEFAULT 2,
+        base_d_level INTEGER NOT NULL DEFAULT 0,
+        daily_goal INTEGER NOT NULL DEFAULT 5000,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )`,
+      // Insert default user profile row
+      `INSERT OR IGNORE INTO bask_user_profile (id) VALUES (1)`,
+      // Bask sun exposure sessions
+      `CREATE TABLE IF NOT EXISTS bask_sessions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        started_at TEXT NOT NULL,
+        ended_at TEXT,
+        uv_index REAL NOT NULL,
+        duration_seconds INTEGER NOT NULL DEFAULT 0,
+        iu_gained INTEGER NOT NULL DEFAULT 0,
+        clothing_preset_id TEXT NOT NULL,
+        exposure_percent REAL NOT NULL,
+        notes TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )`,
+      // Indexes for bask_sessions
+      `CREATE INDEX IF NOT EXISTS idx_bask_sessions_started_at ON bask_sessions(started_at)`,
+      `CREATE INDEX IF NOT EXISTS idx_bask_sessions_date ON bask_sessions(date(started_at))`,
+      // Bask supplements log
+      `CREATE TABLE IF NOT EXISTS bask_supplements (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        dosage_iu INTEGER NOT NULL,
+        logged_at TEXT NOT NULL,
+        notes TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )`,
+      // Indexes for bask_supplements
+      `CREATE INDEX IF NOT EXISTS idx_bask_supplements_logged_at ON bask_supplements(logged_at)`,
+      `CREATE INDEX IF NOT EXISTS idx_bask_supplements_date ON bask_supplements(date(logged_at))`,
+    ],
+  },
 ];
 
 export async function runMigrations(): Promise<void> {

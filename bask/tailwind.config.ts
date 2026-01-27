@@ -11,65 +11,56 @@ const config: Config = {
   ],
   // Safelist ensures dynamically-constructed classes are included in the build
   safelist: [
-    'bg-olive',
-    'bg-sage',
-    'bg-clay',
-    'bg-teal',
-    'bg-amber',
-    'bg-dusty-rose',
-    'bg-slate',
-    'border-border-warm',
-    'border-olive/50',
-    'border-sage/50',
-    'border-clay/50',
-    'border-teal/50',
-    'border-amber/50',
-    'border-dusty-rose/50',
-    'border-slate/50',
-    // Cue pill styling
-    'bg-amber/20',
-    'bg-olive/20',
-    'text-amber',
-    // Daily Essential badge
-    'bg-gold/15',
-    'text-gold',
-    'border-gold/30',
-    // Heatmap colors
-    'bg-heatmap-empty',
-    'bg-heatmap-low',
-    'bg-heatmap-medium',
-    'bg-heatmap-high',
-    // Premium card gradient
-    'from-premium-cream',
-    'to-amber/20',
+    'bg-solar-amber',
+    'bg-deep-charcoal',
+    'bg-ember-glow',
+    'bg-cloud-white',
+    'border-solar-amber',
+    'border-ember-glow',
+    'text-solar-amber',
+    'text-ember-glow',
+    'text-deep-charcoal',
+    'text-cloud-white',
+    // Gradient colors
+    'from-morning-peach',
+    'to-morning-gold',
+    'from-midday-amber',
+    'to-midday-white',
+    'from-evening-indigo',
+    'to-evening-copper',
+    'from-night-grey',
+    'to-night-dark',
     'bg-gradient-to-br',
   ],
   theme: {
     extend: {
       colors: {
-        // Modern iOS muted earth tone palette
-        limestone: '#F9F9F7',      // Softer off-white background
-        oat: '#FFFFFF',            // Pure white cards
-        sage: '#8BA889',           // Muted sage green
-        clay: '#B57B65',           // Softer dusty rose/clay
-        olive: '#5A7A52',          // Adjusted olive
-        teal: '#6A9A9A',           // Softer teal
-        amber: '#C4956A',          // Softer amber
-        gold: '#B8962E',           // Muted gold/yellow for Daily Essential badge
-        'dusty-rose': '#A8857D',   // Muted rose
-        slate: '#7A8A9A',          // Softer slate
-        umber: '#3D3835',          // Dark brown text
-        'umber-muted': '#7A726C',  // Muted text
-        'border-warm': '#E5E2DC',  // Softer border
-        'premium-cream': '#F5EDE5', // Softer cream
-        'hero-cream': '#F5F2ED',   // Hero card background
-        // Heatmap colors (GitHub-style with earth tones)
-        'heatmap-empty': '#F2F0EB',    // Warm Limestone
-        'heatmap-low': '#C5D4B8',      // Pale Sage
-        'heatmap-medium': '#5E7B4C',   // Mossy Olive
-        'heatmap-high': '#3A5534',     // Deep Forest Green
-        // XP progress bar
-        'canyon-clay': '#C36A4A',      // Canyon Clay for XP bar
+        // Bask Dark Mode Palette (Primary)
+        'dark-bg': '#0A0E1A',          // Deep navy/charcoal background
+        'dark-surface': '#1A1F2E',     // Card/surface background
+        'golden-glow': '#D4A574',      // Golden ring color
+        'amber-glow': '#E8A959',       // Bright amber for active ring
+        'ember-glow': '#E86F1B',       // Orange/red for warnings
+
+        // Glass/Frosted Effects
+        'glass-white': 'rgba(255, 255, 255, 0.1)',
+        'glass-border': 'rgba(255, 255, 255, 0.2)',
+
+        // Text Colors (Dark Mode)
+        'text-primary': '#FFFFFF',     // White text
+        'text-secondary': '#A0A0A0',   // Muted text
+        'text-muted': '#666666',       // Very muted text
+
+        // Gradients
+        'gradient-dark-start': '#0A0E1A',
+        'gradient-dark-mid': '#1A1F2E',
+        'gradient-warm': '#2D2416',    // Warm dark gradient
+
+        // Legacy support
+        'solar-amber': '#FFBF5E',
+        'deep-charcoal': '#1A1A1A',
+        'cloud-white': '#F9F9F9',
+        'border-light': '#E5E5E5',
       },
     },
   },
@@ -80,16 +71,16 @@ const config: Config = {
     themes: [
       {
         mytheme: {
-          primary: '#5A7A52',
-          secondary: '#B57B65',
-          accent: '#8BA889',
-          neutral: '#3D3835',
-          'base-100': '#F9F9F7',
-          'base-200': '#FFFFFF',
-          'base-300': '#E5E2DC',
-          info: '#6A9A9A',
-          success: '#8BA889',
-          warning: '#B57B65',
+          primary: '#FFBF5E',        // solar-amber
+          secondary: '#E86F1B',      // ember-glow
+          accent: '#FFD078',         // midday-amber
+          neutral: '#1A1A1A',        // deep-charcoal
+          'base-100': '#F9F9F9',     // cloud-white
+          'base-200': '#FAFAFA',     // midday-white
+          'base-300': '#E5E5E5',     // border-light
+          info: '#FFD078',
+          success: '#8BA889',        // Keep for compatibility
+          warning: '#E86F1B',        // ember-glow
           error: '#C96B6B',
         },
       },

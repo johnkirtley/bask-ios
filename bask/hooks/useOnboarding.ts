@@ -11,7 +11,12 @@ const DEFAULT_ONBOARDING: OnboardingState = {
   completedAt: null,
   agreedToTermsAt: null,
   answers: {
-    interest: [],
+    primaryGoal: null,
+    skinTone: null,
+    eyeColor: null,
+    sunReaction: null,
+    outdoorTime: null,
+    vitaminDSupplementation: null,
   },
   paywallShown: false,
 };

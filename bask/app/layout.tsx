@@ -19,8 +19,8 @@ import IonicProvider from '../components/IonicProvider';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'App Template',
-  description: 'iOS app built with Next.js and Capacitor',
+  title: 'Bask',
+  description: 'Track your vitamin D and sun exposure with intelligent UV monitoring',
 };
 
 export default function RootLayout({
@@ -36,7 +36,7 @@ export default function RootLayout({
           content="width=device-width, initial-scale=1.0, viewport-fit=cover"
         />
       </head>
-      <body className={`${inter.className} bg-limestone text-umber`}>
+      <body className={`${inter.className} bg-cloud-white text-text-primary`}>
         <IonicProvider>
           <main className="scroll-container">{children}</main>
           <TabBar />

@@ -3,47 +3,31 @@
 import { useState, useCallback } from 'react';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { OnboardingAnswers } from '../../types';
-import { onboardingQuestions } from '../../lib/onboardingData';
+import {
+  TOTAL_ONBOARDING_SCREENS,
+  goalOptions,
+  sunReactionOptions,
+  outdoorTimeOptions,
+  supplementationOptions,
+} from '../../lib/onboardingData';
 import { useOnboardingContext } from '../../contexts/OnboardingContext';
-import PageIndicator from './PageIndicator';
-import WelcomeScreen from './WelcomeScreen';
-import QuestionScreen from './QuestionScreen';
-import LegalScreen from './LegalScreen';
-
-const TOTAL_SCREENS = 3; // 1 welcome + 1 question + 1 legal
+import ProgressBar from './ProgressBar';
+import EmotionalHookScreen from './EmotionalHookScreen';
+import SingleSelectScreen from './SingleSelectScreen';
+import SkinEyeColorScreen from './SkinEyeColorScreen';
+import ProcessingScreen from './ProcessingScreen';
 
 export default function OnboardingFlow() {
   const { completeOnboarding } = useOnboardingContext();
   const [currentScreen, setCurrentScreen] = useState(0);
   const [answers, setAnswers] = useState<OnboardingAnswers>({
-    interest: [],
+    primaryGoal: null,
+    skinTone: null,
+    eyeColor: null,
+    sunReaction: null,
+    outdoorTime: null,
+    vitaminDSupplementation: null,
   });
-
-  const handleToggleAnswer = useCallback(
-    (questionId: keyof OnboardingAnswers, value: string) => {
-      setAnswers((prev) => {
-        const currentValues = prev[questionId];
-        const isSelected = currentValues.includes(value);
-        return {
-          ...prev,
-          [questionId]: isSelected
-            ? currentValues.filter((v) => v !== value)
-            : [...currentValues, value],
-        };
-      });
-    },
-    []
-  );
-
-  const handleSingleSelect = useCallback(
-    (questionId: keyof OnboardingAnswers, value: string) => {
-      setAnswers((prev) => ({
-        ...prev,
-        [questionId]: [value],
-      }));
-    },
-    []
-  );
 
   const handleContinue = useCallback(async () => {
     try {
@@ -51,7 +35,7 @@ export default function OnboardingFlow() {
     } catch {
       // Web fallback
     }
-    setCurrentScreen((prev) => Math.min(prev + 1, TOTAL_SCREENS - 1));
+    setCurrentScreen((prev) => Math.min(prev + 1, TOTAL_ONBOARDING_SCREENS - 1));
   }, []);
 
   const handleBack = useCallback(async () => {
@@ -63,78 +47,122 @@ export default function OnboardingFlow() {
     setCurrentScreen((prev) => Math.max(prev - 1, 0));
   }, []);
 
-  const handleLegalAgree = useCallback(async () => {
-    try {
-      await Haptics.impact({ style: ImpactStyle.Medium });
-    } catch {
-      // Web fallback
-    }
+  const handleSingleSelect = useCallback(
+    (field: keyof OnboardingAnswers, value: string) => {
+      setAnswers((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
+    },
+    []
+  );
+
+  const handleProcessingComplete = useCallback(async () => {
     await completeOnboarding(answers);
   }, [answers, completeOnboarding]);
 
   const renderScreen = () => {
-    // Screen 0: Welcome
-    if (currentScreen === 0) {
-      return <WelcomeScreen onGetStarted={handleContinue} />;
-    }
+    switch (currentScreen) {
+      // Screen 0: Emotional Hook
+      case 0:
+        return <EmotionalHookScreen onContinue={handleContinue} />;
 
-    // Screen 1: Question
-    if (currentScreen === 1) {
-      const question = onboardingQuestions[0];
-      const isMultiSelect = question.multiSelect !== false;
-      const answerValues = answers[question.id];
-      return (
-        <QuestionScreen
-          question={question}
-          selectedValues={answerValues}
-          onToggle={(value) =>
-            isMultiSelect
-              ? handleToggleAnswer(question.id, value)
-              : handleSingleSelect(question.id, value)
-          }
-          onContinue={handleContinue}
-        />
-      );
-    }
+      // Screen 1: Goal Selection
+      case 1:
+        return (
+          <SingleSelectScreen
+            title="What is your primary focus with Bask?"
+            options={goalOptions}
+            selectedValue={answers.primaryGoal}
+            onSelect={(value) => handleSingleSelect('primaryGoal', value)}
+            onContinue={handleContinue}
+          />
+        );
 
-    // Screen 2: Legal
-    return <LegalScreen onAgree={handleLegalAgree} />;
+      // Screen 2: Skin & Eye Color
+      case 2:
+        return (
+          <SkinEyeColorScreen
+            skinTone={answers.skinTone}
+            eyeColor={answers.eyeColor}
+            onSkinToneSelect={(value) => handleSingleSelect('skinTone', value)}
+            onEyeColorSelect={(value) => handleSingleSelect('eyeColor', value)}
+            onContinue={handleContinue}
+          />
+        );
+
+      // Screen 3: Sun Reaction
+      case 3:
+        return (
+          <SingleSelectScreen
+            title="How does your skin typically react to 30 minutes of midday sun?"
+            options={sunReactionOptions}
+            selectedValue={answers.sunReaction}
+            onSelect={(value) => handleSingleSelect('sunReaction', value)}
+            onContinue={handleContinue}
+          />
+        );
+
+      // Screen 4: Outdoor Time
+      case 4:
+        return (
+          <SingleSelectScreen
+            title="On a typical weekday, how much time do you spend outdoors?"
+            options={outdoorTimeOptions}
+            selectedValue={answers.outdoorTime}
+            onSelect={(value) => handleSingleSelect('outdoorTime', value)}
+            onContinue={handleContinue}
+          />
+        );
+
+      // Screen 5: Supplementation
+      case 5:
+        return (
+          <SingleSelectScreen
+            title="Are you currently taking Vitamin D3 supplements?"
+            options={supplementationOptions}
+            selectedValue={answers.vitaminDSupplementation}
+            onSelect={(value) => handleSingleSelect('vitaminDSupplementation', value)}
+            onContinue={handleContinue}
+          />
+        );
+
+      // Screen 6: Processing
+      case 6:
+        return <ProcessingScreen onComplete={handleProcessingComplete} />;
+
+      default:
+        return null;
+    }
   };
 
   return (
-    <div className="fixed inset-0 bg-limestone flex flex-col">
-      {/* Header with back button and page indicator */}
-      <div className="flex items-center justify-between px-4 pt-safe pb-2">
-        <div className="w-16">
-          {currentScreen > 0 && currentScreen < TOTAL_SCREENS - 1 && (
-            <button
-              onClick={handleBack}
-              className="p-2 -ml-2 text-umber-muted active:scale-95"
-              aria-label="Go back"
+    <div className="fixed inset-0 bg-gradient-to-b from-dark-bg via-dark-surface to-gradient-warm flex flex-col">
+      {/* Progress bar (only show on screens 1-5, not on emotional hook or processing) */}
+      {currentScreen > 0 && currentScreen < TOTAL_ONBOARDING_SCREENS - 1 && (
+        <ProgressBar currentStep={currentScreen - 1} totalSteps={5} />
+      )}
+
+      {/* Back button (only show on screens 1-5) */}
+      {currentScreen > 0 && currentScreen < TOTAL_ONBOARDING_SCREENS - 1 && (
+        <div className="absolute top-safe left-4 z-10">
+          <button
+            onClick={handleBack}
+            className="p-2 text-text-secondary active:scale-95 transition-transform duration-200"
+            aria-label="Go back"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
             >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
-          )}
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
         </div>
-
-        {currentScreen < TOTAL_SCREENS - 1 && (
-          <PageIndicator totalPages={TOTAL_SCREENS - 1} currentPage={currentScreen} />
-        )}
-
-        <div className="w-16" />
-      </div>
+      )}
 
       {/* Screen content */}
       <div className="flex-1 overflow-hidden">{renderScreen()}</div>

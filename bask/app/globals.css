@@ -195,13 +195,14 @@ ion-app {
   letter-spacing: -0.02em;
 }
 
-/* Floating pill tab bar */
+/* Floating pill tab bar - dark mode */
 .tab-bar-pill {
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(26, 31, 46, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 100px;
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08), 0 0 0 0.5px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3), 0 0 0 0.5px rgba(255, 255, 255, 0.05);
 }
 
 /* Action card styling */
@@ -340,4 +341,320 @@ ion-app {
 
 .instructions-sheet::part(content) {
   border-radius: 16px 16px 0 0;
+}
+
+/* ========================================
+   BASK-SPECIFIC STYLES
+   ======================================== */
+
+/* Bask Ring - Smooth progress ring animations with glow */
+.bask-ring-progress {
+  transition: stroke-dashoffset 1s ease-in-out;
+  filter: drop-shadow(0 0 8px currentColor) drop-shadow(0 0 16px currentColor);
+}
+
+/* Glowing ring effect */
+.ring-glow {
+  filter: drop-shadow(0 0 12px #D4A574) drop-shadow(0 0 24px rgba(212, 165, 116, 0.5));
+}
+
+/* Pulsing dot for current time indicator on chart */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: drop-shadow(0 0 4px #FFBF5E);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.2);
+    filter: drop-shadow(0 0 8px #FFBF5E);
+  }
+}
+
+.pulsing-dot {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Bask button press feedback */
+.bask-button {
+  transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
+}
+
+.bask-button:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+/* Atmospheric background gradient transition */
+.atmospheric-transition {
+  transition: background 2s ease-in-out;
+}
+
+/* Checkmark animation for supplement logging */
+@keyframes check-pop {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.check-animation {
+  animation: check-pop 0.3s ease-out;
+}
+
+/* UV level indicator colors */
+.uv-low {
+  color: #8BA889;
+}
+
+.uv-moderate {
+  color: #FFBF5E;
+}
+
+.uv-high {
+  color: #E86F1B;
+}
+
+.uv-very-high {
+  color: #C96B6B;
+}
+
+.uv-extreme {
+  color: #9B2C2C;
+}
+
+/* ========================================
+   ONBOARDING ANIMATIONS
+   ======================================== */
+
+/* Emotional Hook Screen - Sun Animation */
+.sun-orb {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(232, 169, 89, 0.8) 0%,
+    rgba(212, 165, 116, 0.4) 40%,
+    rgba(232, 111, 27, 0.1) 70%,
+    transparent 100%
+  );
+  filter: blur(20px);
+  animation: sun-pulse 4s ease-in-out infinite;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes sun-pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 1;
+  }
+}
+
+/* Sun rays extending outward */
+.sun-rays {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  animation: rays-rotate 20s linear infinite;
+}
+
+@keyframes rays-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.sun-ray {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200px;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(232, 169, 89, 0.6) 0%,
+    transparent 100%
+  );
+  transform-origin: left center;
+}
+
+/* Light particles/sparkles floating upward */
+@keyframes particle-float {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100px) translateX(20px);
+    opacity: 0;
+  }
+}
+
+.light-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  animation: particle-float 3s ease-in-out infinite;
+}
+
+/* Atmospheric glow overlay */
+.atmospheric-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(232, 169, 89, 0.15) 0%,
+    transparent 60%
+  );
+  pointer-events: none;
+}
+
+/* Processing Screen - Orb Animation */
+.processing-orb {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(232, 169, 89, 0.9) 0%,
+    rgba(212, 165, 116, 0.5) 40%,
+    rgba(232, 111, 27, 0.2) 70%,
+    transparent 100%
+  );
+  filter: blur(10px);
+  animation: processing-pulse 2s ease-in-out infinite;
+}
+
+@keyframes processing-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+    filter: blur(10px);
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+    filter: blur(15px);
+  }
+}
+
+/* Orbiting particles around processing orb */
+.orbit-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: rgba(232, 169, 89, 0.8);
+  border-radius: 50%;
+  animation: orbit 3s linear infinite;
+}
+
+@keyframes orbit {
+  from {
+    transform: rotate(0deg) translateX(120px) rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg) translateX(120px) rotate(-360deg);
+  }
+}
+
+/* Text fade in/out for processing steps */
+.processing-text-enter {
+  animation: text-fade-in 0.5s ease-out forwards;
+}
+
+.processing-text-exit {
+  animation: text-fade-out 0.5s ease-in forwards;
+}
+
+@keyframes text-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes text-fade-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+/* Onboarding progress bar fill animation */
+.onboarding-progress-fill {
+  background: linear-gradient(
+    90deg,
+    #D4A574 0%,
+    #E8A959 50%,
+    #E86F1B 100%
+  );
+}
+
+/* Subtle shimmer effect on progress bar */
+.progress-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* Glass card selection glow */
+.glass-card-selected {
+  box-shadow:
+    0 0 20px rgba(212, 165, 116, 0.3),
+    inset 0 0 20px rgba(212, 165, 116, 0.1);
+}
+
+/* Color swatch selection ring */
+.swatch-selected {
+  box-shadow:
+    0 0 0 3px #0A0E1A,
+    0 0 0 5px #D4A574;
 }

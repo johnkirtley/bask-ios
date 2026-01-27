@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { ROUTES } from '../../lib/constants';
 import { useModal } from '../../contexts/ModalContext';
@@ -25,6 +25,36 @@ const icons = {
         strokeLinecap='round'
         strokeLinejoin='round'
         d='M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25'
+      />
+    </svg>
+  ),
+  history: (active: boolean) => (
+    <svg
+      xmlns='http://www.w3.org/2000/svg'
+      fill='none'
+      viewBox='0 0 24 24'
+      strokeWidth={active ? 2 : 1.5}
+      stroke='currentColor'
+      className='w-6 h-6'>
+      <path
+        strokeLinecap='round'
+        strokeLinejoin='round'
+        d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5'
+      />
+    </svg>
+  ),
+  insights: (active: boolean) => (
+    <svg
+      xmlns='http://www.w3.org/2000/svg'
+      fill='none'
+      viewBox='0 0 24 24'
+      strokeWidth={active ? 2 : 1.5}
+      stroke='currentColor'
+      className='w-6 h-6'>
+      <path
+        strokeLinecap='round'
+        strokeLinejoin='round'
+        d='M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6'
       />
     </svg>
   ),
@@ -57,6 +87,16 @@ const tabs: TabConfig[] = [
     icon: icons.home,
   },
   {
+    path: ROUTES.history,
+    label: 'History',
+    icon: icons.history,
+  },
+  {
+    path: ROUTES.insights,
+    label: 'Insights',
+    icon: icons.insights,
+  },
+  {
     path: ROUTES.settings,
     label: 'Settings',
     icon: icons.settings,
@@ -65,6 +105,7 @@ const tabs: TabConfig[] = [
 
 export default function TabBar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { isModalOpen } = useModal();
 
   // Hide TabBar when modal/sheet is open
@@ -86,7 +127,14 @@ export default function TabBar() {
     } catch {
       // Haptics not available (web preview)
     }
-    window.location.href = path === '/' ? '/index.html' : `${path}.html`;
+
+    // Use Next.js router for development, direct navigation for static build
+    if (process.env.NODE_ENV === 'development') {
+      router.push(path);
+    } else {
+      // Production static export uses .html extensions
+      window.location.href = path === '/' ? '/index.html' : `${path}.html`;
+    }
   };
 
   return (
@@ -100,7 +148,7 @@ export default function TabBar() {
                 key={tab.path}
                 onClick={() => handleTabPress(tab.path)}
                 className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
-                  active ? 'text-sage' : 'text-umber-muted'
+                  active ? 'text-golden-glow' : 'text-text-secondary'
                 }`}>
                 {tab.icon(active)}
                 <span

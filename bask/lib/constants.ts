@@ -40,6 +40,8 @@ export const ADMOB_CONFIG = {
 // App Routes
 export const ROUTES = {
   home: '/',
+  history: '/history',
+  insights: '/insights',
   settings: '/settings',
 } as const;
 
