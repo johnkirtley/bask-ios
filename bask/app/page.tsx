@@ -1,12 +1,15 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { useSunData } from '../hooks/useSunData';
 import { useOnboardingContext } from '../contexts/OnboardingContext';
 import { useBaskSession } from '../hooks/useBaskSession';
 import { sessionsRepository, supplementsRepository } from '../lib/database';
 import { deriveFitzpatrickType, calculateTimeToGoal, getBurnRiskLevel, calculateDailyDecayAmount } from '../lib/dEngine';
 import { getMockClothingPresets } from '../lib/mockData';
+import { calculateOptimalWindows, DWindowForecast } from '../lib/dWindowForecast';
+import { BaskWeather } from '../lib/plugins';
 import AtmosphericBackground from '../components/home/AtmosphericBackground';
 import BaskRing from '../components/home/BaskRing';
 import GlassCard from '../components/home/GlassCard';
@@ -16,6 +19,7 @@ import ClothingPresetSelector from '../components/home/ClothingPresetSelector';
 import SolarWindowChart from '../components/home/SolarWindowChart';
 import SupplementCard from '../components/home/SupplementCard';
 import CofactorCard from '../components/home/CofactorCard';
+import DWindowForecastCard from '../components/home/DWindowForecastCard';
 
 export default function Home() {
   const sunData = useSunData();
@@ -40,13 +44,18 @@ export default function Home() {
 
   // Daily total (sessions + supplements)
   const [todayTotal, setTodayTotal] = useState(0);
+  const [todaySunIU, setTodaySunIU] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // D-Window Forecast state
+  const [dWindowForecast, setDWindowForecast] = useState<DWindowForecast | null>(null);
 
   useEffect(() => {
     async function loadTodayTotal() {
       try {
         const sessionsIU = await sessionsRepository.getTodayTotalIU();
         const supplementsIU = await supplementsRepository.getTodayTotalIU();
+        setTodaySunIU(sessionsIU);
         setTodayTotal(sessionsIU + supplementsIU);
       } catch (error) {
         console.error('Failed to load today total:', error);
@@ -54,6 +63,34 @@ export default function Home() {
     }
     loadTodayTotal();
   }, [session.status, refreshKey]); // Reload when session completes or supplement is logged
+
+  // Load D-Window Forecast
+  useEffect(() => {
+    async function loadForecast() {
+      if (!Capacitor.isNativePlatform()) {
+        // Web fallback - use mock data
+        return;
+      }
+
+      try {
+        const hourlyData = await BaskWeather.getHourlyForecast();
+        const forecast = calculateOptimalWindows(
+          hourlyData.forecast,
+          fitzpatrickType,
+          exposurePercent,
+          2500 // Target 2500 IU per window
+        );
+        setDWindowForecast(forecast);
+      } catch (error) {
+        console.warn('Failed to load D-Window forecast:', error);
+      }
+    }
+
+    loadForecast();
+    // Refresh forecast every 30 minutes
+    const interval = setInterval(loadForecast, 30 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [fitzpatrickType]);
 
   const handleSupplementLogged = () => {
     setRefreshKey(prev => prev + 1);
@@ -143,6 +180,9 @@ export default function Home() {
             />
           </div>
 
+          {/* D-Window Forecast (MOAT Feature) */}
+          {dWindowForecast && <DWindowForecastCard forecast={dWindowForecast} />}
+
           {/* Solar Window Chart */}
           <div className="mt-6">
             <SolarWindowChart
@@ -153,9 +193,14 @@ export default function Home() {
             />
           </div>
 
-          {/* Supplement Quick-Add Card */}
+          {/* Supplement Quick-Add Card with Weather-Adjusted Recommendations */}
           <div className="mt-4">
-            <SupplementCard onSupplementLogged={handleSupplementLogged} />
+            <SupplementCard
+              onSupplementLogged={handleSupplementLogged}
+              todaySunIU={todaySunIU}
+              uvIndex={sunData.uvIndex}
+              vitaminDGoal={sunData.vitaminDGoal}
+            />
           </div>
 
           {/* Cofactor Tracking Card */}
