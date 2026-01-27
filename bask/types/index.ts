@@ -37,6 +37,12 @@ export interface OnboardingAnswers {
 
   // Screen 10: Location Permission
   locationPermissionGranted: boolean;
+
+  // Blood Test Baseline (optional)
+  hasBloodTest: boolean;
+  bloodTestValue: number | null; // ng/mL or nmol/L
+  bloodTestUnit: 'ng/mL' | 'nmol/L';
+  bloodTestDate: string | null; // ISO date
 }
 
 export interface OnboardingState {

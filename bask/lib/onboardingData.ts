@@ -78,7 +78,7 @@ export const processingSteps: string[] = [
 ];
 
 // Total number of onboarding screens
-export const TOTAL_ONBOARDING_SCREENS = 11;
+export const TOTAL_ONBOARDING_SCREENS = 12; // Updated to include Blood Test screen
 
 // Legal links (used by settings page)
 export const legalContent = {

@@ -21,6 +21,7 @@ import TypicalAttireScreen from './TypicalAttireScreen';
 import BiologicalProfileScreen from './BiologicalProfileScreen';
 import MedicalDisclaimerScreen from './MedicalDisclaimerScreen';
 import LocationPermissionScreen from './LocationPermissionScreen';
+import BloodTestScreen from './BloodTestScreen';
 
 export default function OnboardingFlow() {
   const { completeOnboarding } = useOnboardingContext();
@@ -38,6 +39,10 @@ export default function OnboardingFlow() {
     weightUnit: 'lbs',
     medicalDisclaimerAccepted: false,
     locationPermissionGranted: false,
+    hasBloodTest: false,
+    bloodTestValue: null,
+    bloodTestUnit: 'ng/mL',
+    bloodTestDate: null,
   });
 
   const handleContinue = useCallback(async () => {
@@ -169,8 +174,21 @@ export default function OnboardingFlow() {
           />
         );
 
-      // Screen 8: Medical Disclaimer
+      // Screen 8: Blood Test Baseline
       case 8:
+        return (
+          <BloodTestScreen
+            hasBloodTest={answers.hasBloodTest}
+            bloodTestValue={answers.bloodTestValue}
+            bloodTestUnit={answers.bloodTestUnit}
+            bloodTestDate={answers.bloodTestDate}
+            onUpdate={(data) => handleMultipleUpdates(data)}
+            onContinue={handleContinue}
+          />
+        );
+
+      // Screen 9: Medical Disclaimer
+      case 9:
         return (
           <MedicalDisclaimerScreen
             onAccept={() => {
@@ -180,8 +198,8 @@ export default function OnboardingFlow() {
           />
         );
 
-      // Screen 9: Location Permission
-      case 9:
+      // Screen 10: Location Permission
+      case 10:
         return (
           <LocationPermissionScreen
             onPermissionGranted={() => {
@@ -195,8 +213,8 @@ export default function OnboardingFlow() {
           />
         );
 
-      // Screen 10: Processing
-      case 10:
+      // Screen 11: Processing
+      case 11:
         return <ProcessingScreen onComplete={handleProcessingComplete} />;
 
       default:
@@ -206,12 +224,12 @@ export default function OnboardingFlow() {
 
   return (
     <div className="fixed inset-0 bg-gradient-to-b from-dark-bg via-dark-surface to-gradient-warm flex flex-col">
-      {/* Progress bar (only show on screens 1-9, not on emotional hook or processing) */}
+      {/* Progress bar (only show on screens 1-10, not on emotional hook or processing) */}
       {currentScreen > 0 && currentScreen < TOTAL_ONBOARDING_SCREENS - 1 && (
-        <ProgressBar currentStep={currentScreen - 1} totalSteps={9} />
+        <ProgressBar currentStep={currentScreen - 1} totalSteps={10} />
       )}
 
-      {/* Back button (only show on screens 1-9) */}
+      {/* Back button (only show on screens 1-10) */}
       {currentScreen > 0 && currentScreen < TOTAL_ONBOARDING_SCREENS - 1 && (
         <div className="absolute top-safe left-4 z-10">
           <button

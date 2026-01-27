@@ -23,6 +23,10 @@ const DEFAULT_ONBOARDING: OnboardingState = {
     weightUnit: 'lbs',
     medicalDisclaimerAccepted: false,
     locationPermissionGranted: false,
+    hasBloodTest: false,
+    bloodTestValue: null,
+    bloodTestUnit: 'ng/mL',
+    bloodTestDate: null,
   },
   paywallShown: false,
 };
