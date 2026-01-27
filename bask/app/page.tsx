@@ -5,7 +5,7 @@ import { useSunData } from '../hooks/useSunData';
 import { useOnboarding } from '../hooks/useOnboarding';
 import { useBaskSession } from '../hooks/useBaskSession';
 import { sessionsRepository, supplementsRepository } from '../lib/database';
-import { deriveFitzpatrickType, calculateTimeToGoal, getBurnRiskLevel } from '../lib/dEngine';
+import { deriveFitzpatrickType, calculateTimeToGoal, getBurnRiskLevel, calculateDailyDecayAmount } from '../lib/dEngine';
 import { getMockClothingPresets } from '../lib/mockData';
 import AtmosphericBackground from '../components/home/AtmosphericBackground';
 import BaskRing from '../components/home/BaskRing';
@@ -13,6 +13,9 @@ import GlassCard from '../components/home/GlassCard';
 import BaskNowButton from '../components/home/BaskNowButton';
 import ActiveSessionView from '../components/home/ActiveSessionView';
 import ClothingPresetSelector from '../components/home/ClothingPresetSelector';
+import SolarWindowChart from '../components/home/SolarWindowChart';
+import SupplementCard from '../components/home/SupplementCard';
+import CofactorCard from '../components/home/CofactorCard';
 
 export default function Home() {
   const sunData = useSunData();
@@ -37,6 +40,7 @@ export default function Home() {
 
   // Daily total (sessions + supplements)
   const [todayTotal, setTodayTotal] = useState(0);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     async function loadTodayTotal() {
@@ -49,7 +53,11 @@ export default function Home() {
       }
     }
     loadTodayTotal();
-  }, [session.status]); // Reload when session completes
+  }, [session.status, refreshKey]); // Reload when session completes or supplement is logged
+
+  const handleSupplementLogged = () => {
+    setRefreshKey(prev => prev + 1);
+  };
 
   // Calculate time to goal using D-Engine
   const remainingIU = Math.max(0, sunData.vitaminDGoal - todayTotal - session.currentIU);
@@ -64,6 +72,9 @@ export default function Home() {
 
   // Burn risk
   const burnRisk = getBurnRiskLevel(sunData.uvIndex);
+
+  // Daily decay (educational - shows ~4.5% decay per day)
+  const dailyDecay = calculateDailyDecayAmount(todayTotal > 0 ? todayTotal : 5000);
 
   // Handle session start
   const handleStartSession = async () => {
@@ -122,9 +133,34 @@ export default function Home() {
           />
 
           {/* Stat Cards */}
-          <div className="px-6 mt-8 grid grid-cols-2 gap-4">
+          <div className="px-6 mt-8 grid grid-cols-3 gap-3">
             <GlassCard label="Time to Goal" value={`${timeToGoalMinutes}m`} />
             <GlassCard label="Burn Risk" value={burnRisk} />
+            <GlassCard
+              label="Daily Decay"
+              value={`-${dailyDecay} IU`}
+              subtext="Natural 15-day half-life"
+            />
+          </div>
+
+          {/* Solar Window Chart */}
+          <div className="mt-6">
+            <SolarWindowChart
+              uvCurve={sunData.uvCurve}
+              currentHour={new Date().getHours()}
+              sweetSpotStart={sunData.sweetSpotStart}
+              sweetSpotEnd={sunData.sweetSpotEnd}
+            />
+          </div>
+
+          {/* Supplement Quick-Add Card */}
+          <div className="mt-4">
+            <SupplementCard onSupplementLogged={handleSupplementLogged} />
+          </div>
+
+          {/* Cofactor Tracking Card */}
+          <div className="mt-4">
+            <CofactorCard onCofactorLogged={handleSupplementLogged} />
           </div>
 
           {/* Bask Now Button */}

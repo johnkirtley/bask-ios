@@ -7,7 +7,9 @@ export { settingsRepository } from './repositories/settingsRepository';
 export { userProfileRepository } from './repositories/userProfileRepository';
 export { sessionsRepository } from './repositories/sessionsRepository';
 export { supplementsRepository } from './repositories/supplementsRepository';
+export { cofactorsRepository } from './repositories/cofactorsRepository';
 
 export type { UserProfile } from './repositories/userProfileRepository';
 export type { BaskSession, NewBaskSession } from './repositories/sessionsRepository';
 export type { Supplement } from './repositories/supplementsRepository';
+export type { Cofactor, CofactorType } from './repositories/cofactorsRepository';

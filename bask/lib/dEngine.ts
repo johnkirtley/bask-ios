@@ -145,6 +145,36 @@ export function getBurnRiskLevel(uvIndex: number): BurnRiskLevel {
 }
 
 /**
+ * Calculate vitamin D decay over time
+ * Vitamin D has a half-life of approximately 15 days
+ *
+ * Formula: Remaining_IU = Initial_IU * (0.5 ^ (days_elapsed / 15))
+ *
+ * @param initialIU - Starting vitamin D level in IU
+ * @param daysElapsed - Number of days since initial measurement
+ * @returns Remaining IU after decay
+ */
+export function calculateDecay(initialIU: number, daysElapsed: number): number {
+  const HALF_LIFE_DAYS = 15;
+  const decayFactor = Math.pow(0.5, daysElapsed / HALF_LIFE_DAYS);
+  return Math.round(initialIU * decayFactor);
+}
+
+/**
+ * Calculate daily decay amount (IU lost per day)
+ * Uses the half-life formula to determine average daily loss
+ *
+ * @param currentIU - Current vitamin D level in IU
+ * @returns IU lost per day
+ */
+export function calculateDailyDecayAmount(currentIU: number): number {
+  const HALF_LIFE_DAYS = 15;
+  // Daily decay rate = 1 - (0.5 ^ (1/15)) ≈ 0.0448 or 4.48% per day
+  const dailyDecayRate = 1 - Math.pow(0.5, 1 / HALF_LIFE_DAYS);
+  return Math.round(currentIU * dailyDecayRate);
+}
+
+/**
  * Get clothing exposure percentage from coverage percentage
  * Note: Coverage percent is how much is COVERED, exposure is how much is EXPOSED
  * @param coveragePercent - Percentage of skin covered by clothing (0-100)

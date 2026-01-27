@@ -125,6 +125,23 @@ const migrations: Migration[] = [
       `CREATE INDEX IF NOT EXISTS idx_bask_supplements_date ON bask_supplements(date(logged_at))`,
     ],
   },
+  {
+    version: 5,
+    up: [
+      // Cofactor tracking (Magnesium and Vitamin K2)
+      `CREATE TABLE IF NOT EXISTS bask_cofactors (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        cofactor_type TEXT NOT NULL CHECK (cofactor_type IN ('magnesium', 'vitamin_k2')),
+        logged_at TEXT NOT NULL,
+        notes TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )`,
+      // Indexes for bask_cofactors
+      `CREATE INDEX IF NOT EXISTS idx_bask_cofactors_logged_at ON bask_cofactors(logged_at)`,
+      `CREATE INDEX IF NOT EXISTS idx_bask_cofactors_date ON bask_cofactors(date(logged_at))`,
+      `CREATE INDEX IF NOT EXISTS idx_bask_cofactors_type ON bask_cofactors(cofactor_type)`,
+    ],
+  },
 ];
 
 export async function runMigrations(): Promise<void> {
