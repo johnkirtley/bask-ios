@@ -1,0 +1,9 @@
+#import <Foundation/Foundation.h>
+#import <Capacitor/Capacitor.h>
+
+CAP_PLUGIN(BaskWeatherPlugin, "BaskWeather",
+    CAP_PLUGIN_METHOD(getCurrentWeather, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(getHourlyForecast, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(getSolarEvents, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(requestLocationPermission, CAPPluginReturnPromise);
+)

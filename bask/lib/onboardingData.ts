@@ -63,7 +63,14 @@ export const supplementationOptions: OnboardingOption[] = [
   { value: 'occasionally', label: 'Occasionally' },
 ];
 
-// Screen 7: Processing Screen Text Sequence
+// Screen 7: Typical Attire (Body Surface Area)
+export const attireOptions: OnboardingOption[] = [
+  { value: 'face-hands', label: 'Face & Hands Only', description: '~10% exposed' },
+  { value: 't-shirt-shorts', label: 'T-Shirt & Shorts', description: '~50% exposed' },
+  { value: 'swimwear', label: 'Swimwear/Tank Top', description: '~80% exposed' },
+];
+
+// Screen 11: Processing Screen Text Sequence
 export const processingSteps: string[] = [
   'Calculating your optimal solar windows...',
   'Syncing with local UV data...',
@@ -71,12 +78,12 @@ export const processingSteps: string[] = [
 ];
 
 // Total number of onboarding screens
-export const TOTAL_ONBOARDING_SCREENS = 7;
+export const TOTAL_ONBOARDING_SCREENS = 11;
 
 // Legal links (used by settings page)
 export const legalContent = {
   links: {
-    privacyPolicy: 'https://www.example.com/privacy',
-    termsOfService: 'https://www.example.com/terms',
+    privacyPolicy: 'https://www.bask.io/privacy',
+    termsOfService: 'https://www.bask.io/terms',
   },
 };

@@ -202,11 +202,11 @@ Main screen shows daily vitamin D progress, current UV conditions, and session c
       _Location: `components/home/ActiveSessionView.tsx`, `hooks/useBaskSession.ts`_
       Full-screen session UI with timer ring (MM:SS), live "+X IU" count, pause/resume/end/cancel buttons. Updates every 1 second using D-Engine calculations
 
-- [ ] **Integrate SolarWindowChart**
+- [x] **Integrate SolarWindowChart**
       _Location: `components/home/SolarWindowChart.tsx` (built but not rendered)_
       UV curve chart showing optimal basking window (10am-2pm "sweet spot"). Add to dashboard below stat cards
 
-- [ ] **Integrate SupplementCard quick-log**
+- [x] **Integrate SupplementCard quick-log**
       _Location: `components/home/SupplementCard.tsx` (built but not rendered)_
       Quick-add card for supplement intake with checkmark animation. Add to dashboard or as floating action
 
@@ -254,11 +254,11 @@ Users manually log sun exposure and supplement intake (no automatic tracking).
       _Location: `lib/database/repositories/supplementsRepository.ts`, schema in `lib/database/schema.ts`_
       Table: `bask_supplements` (dosage_iu, logged_at, notes)
 
-- [ ] **Supplement quick-add UI**
+- [x] **Supplement quick-add UI**
       _Location: `components/home/SupplementCard.tsx` (built but not integrated)_
       Add to dashboard or as drawer. Integrate with `supplementsRepository.create()`
 
-- [ ] **Preset supplement buttons**
+- [x] **Preset supplement buttons**
       Quick-add buttons for common dosages: 1000 IU, 2000 IU, 5000 IU. One-tap logging
 
 - [ ] **Cofactor tip on supplement log**
@@ -284,10 +284,10 @@ Track complementary nutrients required for vitamin D metabolism. This is **Bask'
 
 ### Implementation Status
 
-- [ ] **Magnesium daily toggle**
+- [x] **Magnesium daily toggle**
       Simple toggle in daily log or settings. Tracks whether user took Mg supplement today
 
-- [ ] **Vitamin K2 daily toggle**
+- [x] **Vitamin K2 daily toggle**
       Same as above for K2
 
 - [ ] **Cofactor reminder notifications**
@@ -313,16 +313,16 @@ View past sun sessions, supplements, and trends.
 
 **Current state:** Stub placeholder (`app/history/page.tsx`) with "Coming Soon" message
 
-- [ ] **Daily sun exposure log list**
+- [x] **Daily sun exposure log list**
       Scrollable list of past `bask_sessions` records. Show date, duration, IU gained, UV level, clothing preset
 
-- [ ] **Supplement log history**
+- [x] **Supplement log history**
       List of `bask_supplements` records with date, dosage, notes
 
-- [ ] **Calendar view of basking streaks**
+- [x] **Calendar view of basking streaks**
       Visual calendar with days highlighted when user logged sun exposure. Show current/longest streak
 
-- [ ] **Vitamin D trend chart**
+- [x] **Vitamin D trend chart**
       Line chart showing daily D accumulation over past 7/30/90 days. Visualizes sun + supplement deposits
 
 ---

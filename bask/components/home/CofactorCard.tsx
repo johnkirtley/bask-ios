@@ -176,7 +176,7 @@ export default function CofactorCard({ onCofactorLogged }: CofactorCardProps) {
               <p className="text-xs font-medium text-white">🧂 Why Magnesium Matters</p>
               <p className="text-xs text-white/70 leading-relaxed">
                 Your body needs magnesium to convert vitamin D into its active form. Without adequate magnesium,
-                your D levels won't rise as expected, even with supplementation.
+                your D levels won&apos;t rise as expected, even with supplementation.
               </p>
             </div>
             <div className="space-y-2">

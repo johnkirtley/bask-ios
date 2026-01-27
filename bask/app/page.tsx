@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useSunData } from '../hooks/useSunData';
-import { useOnboarding } from '../hooks/useOnboarding';
+import { useOnboardingContext } from '../contexts/OnboardingContext';
 import { useBaskSession } from '../hooks/useBaskSession';
 import { sessionsRepository, supplementsRepository } from '../lib/database';
 import { deriveFitzpatrickType, calculateTimeToGoal, getBurnRiskLevel, calculateDailyDecayAmount } from '../lib/dEngine';
@@ -19,7 +19,7 @@ import CofactorCard from '../components/home/CofactorCard';
 
 export default function Home() {
   const sunData = useSunData();
-  const { answers } = useOnboarding();
+  const { answers } = useOnboardingContext();
 
   // Calculate Fitzpatrick type from onboarding
   const fitzpatrickType = useMemo(() => {

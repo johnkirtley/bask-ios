@@ -104,12 +104,12 @@ export default function SettingsPage() {
 
   const handleSuggestFeature = () => {
     // Customize this link to your feature request platform
-    handleOpenLink('https://example.com/feature-requests');
+    handleOpenLink('https://www.bask.io/feature-requests');
   };
 
   const handleRateApp = () => {
     // Customize this link to your App Store page
-    handleOpenLink('https://apps.apple.com/us/app/your-app-id');
+    handleOpenLink('https://apps.apple.com/us/app/bask-app-id');
   };
 
   return (

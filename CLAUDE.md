@@ -10,12 +10,12 @@ This is an iOS app template built with Next.js 13 and wrapped as a native iOS/An
 
 1. **Customize the app identity:**
    - Update `app-name/capacitor.config.ts` - change `appId` and `appName`
-   - Update `app-name/ios/App/App/Info.plist` - change `CFBundleDisplayName` and `GADApplicationIdentifier`
+   - Update `app-name/ios/App/App/Info.plist` - change `CFBundleDisplayName`
    - Update `app-name/package.json` - change `name`
 
 2. **Add your API keys:**
    - Copy `.env.example` to `.env`
-   - Add your RevenueCat and AdMob API keys
+   - Add your RevenueCat API key
 
 3. **Customize the UI:**
    - Update `app-name/app/page.tsx` - main home page
@@ -74,7 +74,6 @@ app-name/
 │   └── ui/             # Generic UI components
 ├── hooks/              # React hooks
 │   ├── useSubscription.ts    # RevenueCat integration
-│   ├── useInterstitialAd.ts  # AdMob integration
 │   ├── useHappinessFilter.ts # App review prompts
 │   └── useOnboarding.ts      # Onboarding state
 ├── contexts/           # React contexts
@@ -91,10 +90,6 @@ app-name/
 - **RevenueCat** - In-app purchases and subscriptions
   - Configure in `hooks/useSubscription.ts`
   - Add your API key to `.env`
-
-- **AdMob** - Banner and interstitial ads
-  - Configure in `hooks/useInterstitialAd.ts`
-  - Add your app IDs to `.env` and `ios/App/App/Info.plist`
 
 ### Onboarding Flow
 
@@ -218,11 +213,6 @@ Replace the placeholder home page in `app/page.tsx` with your app's main functio
 2. Add your API key to `.env`
 3. Configure products in RevenueCat dashboard
 
-**AdMob:**
-1. Create app at [admob.google.com](https://admob.google.com)
-2. Get your App ID and Ad Unit IDs
-3. Update `.env` and `ios/App/App/Info.plist`
-
 ## Building for Production
 
 1. Update app version in `package.json`
@@ -248,15 +238,6 @@ if (!canAccess('premium')) {
   presentPaywall();
   return;
 }
-```
-
-### Showing Interstitial Ads
-
-```typescript
-const { showInterstitial } = useInterstitialAd();
-
-// Show ad after completing an action
-await showInterstitial();
 ```
 
 ### Triggering Haptic Feedback

@@ -16,75 +16,12 @@ const migrations: Migration[] = [
         version INTEGER PRIMARY KEY,
         applied_at TEXT NOT NULL DEFAULT (datetime('now'))
       )`,
-      // User progress aggregate data (single row)
-      `CREATE TABLE IF NOT EXISTS user_progress (
-        id INTEGER PRIMARY KEY CHECK (id = 1),
-        current_streak INTEGER NOT NULL DEFAULT 0,
-        last_session_date TEXT,
-        created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-      )`,
-      // Completed sessions (normalized)
-      `CREATE TABLE IF NOT EXISTS completed_sessions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        program_id TEXT NOT NULL,
-        completed_at TEXT NOT NULL,
-        duration_seconds INTEGER NOT NULL,
-        created_at TEXT NOT NULL DEFAULT (datetime('now'))
-      )`,
-      // Indexes for common queries
-      `CREATE INDEX IF NOT EXISTS idx_sessions_program_id ON completed_sessions(program_id)`,
-      `CREATE INDEX IF NOT EXISTS idx_sessions_completed_at ON completed_sessions(completed_at)`,
       // Settings key-value store
       `CREATE TABLE IF NOT EXISTS settings (
         key TEXT PRIMARY KEY,
         value TEXT NOT NULL,
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
       )`,
-      // Favorites (future feature)
-      `CREATE TABLE IF NOT EXISTS favorites (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        item_type TEXT NOT NULL CHECK (item_type IN ('program', 'exercise')),
-        item_id TEXT NOT NULL,
-        created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        UNIQUE(item_type, item_id)
-      )`,
-      `CREATE INDEX IF NOT EXISTS idx_favorites_type ON favorites(item_type)`,
-      // Insert default user_progress row
-      `INSERT OR IGNORE INTO user_progress (id, current_streak) VALUES (1, 0)`,
-    ],
-  },
-  {
-    version: 2,
-    up: [
-      // Add longest_streak column for tracking all-time best streak
-      `ALTER TABLE user_progress ADD COLUMN longest_streak INTEGER NOT NULL DEFAULT 0`,
-      // Backfill: set longest_streak to current_streak for existing users
-      `UPDATE user_progress SET longest_streak = current_streak WHERE longest_streak = 0 AND current_streak > 0`,
-    ],
-  },
-  {
-    version: 3,
-    up: [
-      // Individual exercise completions (separate from program sessions)
-      `CREATE TABLE IF NOT EXISTS completed_exercises (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        exercise_name TEXT NOT NULL,
-        exercise_type TEXT NOT NULL CHECK (exercise_type IN ('exercise', 'stretch')),
-        muscle_group TEXT NOT NULL,
-        completed_at TEXT NOT NULL,
-        duration_seconds INTEGER DEFAULT 0,
-        created_at TEXT NOT NULL DEFAULT (datetime('now'))
-      )`,
-      // Index for date-based queries (heatmap, daily counts)
-      `CREATE INDEX IF NOT EXISTS idx_exercises_completed_at ON completed_exercises(completed_at)`,
-      // Index for counting by exercise name
-      `CREATE INDEX IF NOT EXISTS idx_exercises_name ON completed_exercises(exercise_name)`,
-    ],
-  },
-  {
-    version: 4,
-    up: [
       // Bask user profile (single row)
       `CREATE TABLE IF NOT EXISTS bask_user_profile (
         id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -123,11 +60,6 @@ const migrations: Migration[] = [
       // Indexes for bask_supplements
       `CREATE INDEX IF NOT EXISTS idx_bask_supplements_logged_at ON bask_supplements(logged_at)`,
       `CREATE INDEX IF NOT EXISTS idx_bask_supplements_date ON bask_supplements(date(logged_at))`,
-    ],
-  },
-  {
-    version: 5,
-    up: [
       // Cofactor tracking (Magnesium and Vitamin K2)
       `CREATE TABLE IF NOT EXISTS bask_cofactors (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -140,6 +72,17 @@ const migrations: Migration[] = [
       `CREATE INDEX IF NOT EXISTS idx_bask_cofactors_logged_at ON bask_cofactors(logged_at)`,
       `CREATE INDEX IF NOT EXISTS idx_bask_cofactors_date ON bask_cofactors(date(logged_at))`,
       `CREATE INDEX IF NOT EXISTS idx_bask_cofactors_type ON bask_cofactors(cofactor_type)`,
+    ],
+  },
+  {
+    version: 2,
+    up: [
+      // Add new biological profile fields to bask_user_profile
+      `ALTER TABLE bask_user_profile ADD COLUMN age INTEGER`,
+      `ALTER TABLE bask_user_profile ADD COLUMN weight REAL`,
+      `ALTER TABLE bask_user_profile ADD COLUMN weight_unit TEXT DEFAULT 'lbs'`,
+      `ALTER TABLE bask_user_profile ADD COLUMN default_attire TEXT DEFAULT 't-shirt-shorts'`,
+      `ALTER TABLE bask_user_profile ADD COLUMN disclaimer_accepted_at TEXT`,
     ],
   },
 ];

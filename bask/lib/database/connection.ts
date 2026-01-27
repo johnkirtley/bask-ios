@@ -3,7 +3,7 @@
 import { CapacitorSQLite, SQLiteConnection, SQLiteDBConnection } from '@capacitor-community/sqlite';
 import { Capacitor } from '@capacitor/core';
 
-const DB_NAME = 'posture_booster';
+const DB_NAME = 'bask';
 
 class DatabaseService {
   private static instance: DatabaseService;

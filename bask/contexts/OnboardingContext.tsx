@@ -17,6 +17,12 @@ const DEFAULT_ONBOARDING: OnboardingState = {
     sunReaction: null,
     outdoorTime: null,
     vitaminDSupplementation: null,
+    typicalAttire: null,
+    age: null,
+    weight: null,
+    weightUnit: 'lbs',
+    medicalDisclaimerAccepted: false,
+    locationPermissionGranted: false,
   },
   paywallShown: false,
 };

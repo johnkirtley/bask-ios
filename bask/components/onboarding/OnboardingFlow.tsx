@@ -9,6 +9,7 @@ import {
   sunReactionOptions,
   outdoorTimeOptions,
   supplementationOptions,
+  attireOptions,
 } from '../../lib/onboardingData';
 import { useOnboardingContext } from '../../contexts/OnboardingContext';
 import ProgressBar from './ProgressBar';
@@ -16,6 +17,10 @@ import EmotionalHookScreen from './EmotionalHookScreen';
 import SingleSelectScreen from './SingleSelectScreen';
 import SkinEyeColorScreen from './SkinEyeColorScreen';
 import ProcessingScreen from './ProcessingScreen';
+import TypicalAttireScreen from './TypicalAttireScreen';
+import BiologicalProfileScreen from './BiologicalProfileScreen';
+import MedicalDisclaimerScreen from './MedicalDisclaimerScreen';
+import LocationPermissionScreen from './LocationPermissionScreen';
 
 export default function OnboardingFlow() {
   const { completeOnboarding } = useOnboardingContext();
@@ -27,6 +32,12 @@ export default function OnboardingFlow() {
     sunReaction: null,
     outdoorTime: null,
     vitaminDSupplementation: null,
+    typicalAttire: null,
+    age: null,
+    weight: null,
+    weightUnit: 'lbs',
+    medicalDisclaimerAccepted: false,
+    locationPermissionGranted: false,
   });
 
   const handleContinue = useCallback(async () => {
@@ -56,6 +67,13 @@ export default function OnboardingFlow() {
     },
     []
   );
+
+  const handleMultipleUpdates = useCallback((updates: Partial<OnboardingAnswers>) => {
+    setAnswers((prev) => ({
+      ...prev,
+      ...updates,
+    }));
+  }, []);
 
   const handleProcessingComplete = useCallback(async () => {
     await completeOnboarding(answers);
@@ -127,8 +145,58 @@ export default function OnboardingFlow() {
           />
         );
 
-      // Screen 6: Processing
+      // Screen 6: Typical Attire
       case 6:
+        return (
+          <TypicalAttireScreen
+            selectedValue={answers.typicalAttire}
+            onSelect={(value) => handleSingleSelect('typicalAttire', value)}
+            onContinue={handleContinue}
+          />
+        );
+
+      // Screen 7: Biological Profile
+      case 7:
+        return (
+          <BiologicalProfileScreen
+            age={answers.age}
+            weight={answers.weight}
+            weightUnit={answers.weightUnit}
+            onAgeChange={(age) => handleMultipleUpdates({ age })}
+            onWeightChange={(weight) => handleMultipleUpdates({ weight })}
+            onWeightUnitChange={(weightUnit) => handleMultipleUpdates({ weightUnit })}
+            onContinue={handleContinue}
+          />
+        );
+
+      // Screen 8: Medical Disclaimer
+      case 8:
+        return (
+          <MedicalDisclaimerScreen
+            onAccept={() => {
+              handleMultipleUpdates({ medicalDisclaimerAccepted: true });
+              handleContinue();
+            }}
+          />
+        );
+
+      // Screen 9: Location Permission
+      case 9:
+        return (
+          <LocationPermissionScreen
+            onPermissionGranted={() => {
+              handleMultipleUpdates({ locationPermissionGranted: true });
+              handleContinue();
+            }}
+            onSkip={() => {
+              handleMultipleUpdates({ locationPermissionGranted: false });
+              handleContinue();
+            }}
+          />
+        );
+
+      // Screen 10: Processing
+      case 10:
         return <ProcessingScreen onComplete={handleProcessingComplete} />;
 
       default:
@@ -138,12 +206,12 @@ export default function OnboardingFlow() {
 
   return (
     <div className="fixed inset-0 bg-gradient-to-b from-dark-bg via-dark-surface to-gradient-warm flex flex-col">
-      {/* Progress bar (only show on screens 1-5, not on emotional hook or processing) */}
+      {/* Progress bar (only show on screens 1-9, not on emotional hook or processing) */}
       {currentScreen > 0 && currentScreen < TOTAL_ONBOARDING_SCREENS - 1 && (
-        <ProgressBar currentStep={currentScreen - 1} totalSteps={5} />
+        <ProgressBar currentStep={currentScreen - 1} totalSteps={9} />
       )}
 
-      {/* Back button (only show on screens 1-5) */}
+      {/* Back button (only show on screens 1-9) */}
       {currentScreen > 0 && currentScreen < TOTAL_ONBOARDING_SCREENS - 1 && (
         <div className="absolute top-safe left-4 z-10">
           <button

@@ -25,18 +25,6 @@ export const STORAGE_KEYS = {
   reviewCompleted: 'review_completed',
 } as const;
 
-// AdMob Configuration
-export const ADMOB_CONFIG = {
-  bannerId: {
-    ios: process.env.NEXT_PUBLIC_ADMOB_BANNER_IOS || '',
-    android: process.env.NEXT_PUBLIC_ADMOB_BANNER_ANDROID || '',
-  },
-  interstitialId: {
-    ios: process.env.NEXT_PUBLIC_ADMOB_INTERSTITIAL_IOS || '',
-    android: process.env.NEXT_PUBLIC_ADMOB_INTERSTITIAL_ANDROID || '',
-  },
-} as const;
-
 // App Routes
 export const ROUTES = {
   home: '/',
@@ -70,4 +58,4 @@ export const REVIEW_MILESTONES = {
 } as const;
 
 // Feedback Email
-export const FEEDBACK_EMAIL = 'feedback@example.com';
+export const FEEDBACK_EMAIL = 'feedback@bask.io';

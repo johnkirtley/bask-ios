@@ -23,6 +23,20 @@ export interface OnboardingAnswers {
 
   // Screen 6: Supplementation
   vitaminDSupplementation: string | null;
+
+  // Screen 7: Typical Attire
+  typicalAttire: string | null;
+
+  // Screen 8: Biological Profile
+  age: number | null;
+  weight: number | null;
+  weightUnit: 'lbs' | 'kg';
+
+  // Screen 9: Medical Disclaimer
+  medicalDisclaimerAccepted: boolean;
+
+  // Screen 10: Location Permission
+  locationPermissionGranted: boolean;
 }
 
 export interface OnboardingState {
