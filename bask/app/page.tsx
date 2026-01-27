@@ -20,6 +20,7 @@ import SolarWindowChart from '../components/home/SolarWindowChart';
 import SupplementCard from '../components/home/SupplementCard';
 import CofactorCard from '../components/home/CofactorCard';
 import DWindowForecastCard from '../components/home/DWindowForecastCard';
+import WeatherKitAttribution from '../components/home/WeatherKitAttribution';
 
 export default function Home() {
   const sunData = useSunData();
@@ -216,6 +217,9 @@ export default function Home() {
               onPresetChange={() => setIsPresetSelectorOpen(true)}
             />
           </div>
+
+          {/* WeatherKit Attribution (REQUIRED by Apple) */}
+          <WeatherKitAttribution />
         </div>
       </AtmosphericBackground>
 
