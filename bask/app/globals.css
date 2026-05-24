@@ -13,6 +13,18 @@ ion-app {
   --ion-safe-area-bottom: 0px !important;
 }
 
+/* Accessibility: Focus-visible styles for keyboard navigation */
+:focus-visible {
+  outline: 2px solid #FF9F1C;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* Remove default focus outline when focus-visible is supported */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
 /* Scroll container for pages (works with Ionic's fixed body) */
 .scroll-container {
   position: fixed;
@@ -27,10 +39,10 @@ ion-app {
 /* Safe area insets for iOS */
 @layer utilities {
   .pt-safe {
-    padding-top: 70px;
+    padding-top: max(48px, env(safe-area-inset-top));
   }
   .pb-safe {
-    padding-bottom: 34px;
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
   }
   .safe-area-top {
     padding-top: env(safe-area-inset-top);
@@ -54,9 +66,9 @@ ion-app {
   transition: stroke-dashoffset 1s linear;
 }
 
-/* Modal backdrop - warm semi-transparent */
+/* Modal backdrop - light warm overlay */
 .modal-backdrop {
-  background: rgba(53, 47, 43, 0.6);
+  background: rgba(240, 237, 233, 0.75);
 }
 
 /* Custom scrollbar - warm theme */
@@ -146,11 +158,11 @@ ion-app {
   max-height: calc(95vh - 40px);
 }
 
-/* Sheet backdrop - warm semi-transparent */
+/* Sheet backdrop - light warm overlay */
 .sheet-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(53, 47, 43, 0.5);
+  background: rgba(240, 237, 233, 0.7);
   z-index: 55;
   opacity: 0;
   transition: opacity 0.3s ease-out;
@@ -169,42 +181,14 @@ ion-app {
   letter-spacing: -0.02em;
 }
 
-/* Floating pill tab bar - dark mode */
+/* Floating pill tab bar - light frosted glass */
 .tab-bar-pill {
-  background: rgba(26, 31, 46, 0.95);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 100px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3), 0 0 0 0.5px rgba(255, 255, 255, 0.05);
-}
-
-/* Action card styling */
-.action-card {
-  transition: transform 0.15s ease-out, opacity 0.15s ease-out;
-}
-.action-card:active:not(:disabled) {
-  transform: scale(0.98);
-  opacity: 0.9;
-}
-.action-card:disabled {
-  opacity: 0.6;
-}
-.action-card:focus-visible {
-  outline: 2px solid rgba(139, 168, 137, 0.8);
-  outline-offset: 2px;
-}
-
-/* Filter chip styling */
-.filter-chip {
-  transition: all 0.2s ease-out;
-}
-.filter-chip:active {
-  transform: scale(0.96);
-}
-.filter-chip:focus-visible {
-  outline: 2px solid rgba(139, 168, 137, 0.8);
-  outline-offset: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
 }
 
 /* ========================================
@@ -219,7 +203,7 @@ ion-app {
 
 /* Glowing ring effect */
 .ring-glow {
-  filter: drop-shadow(0 0 12px #D4A574) drop-shadow(0 0 24px rgba(212, 165, 116, 0.5));
+  filter: drop-shadow(0 0 12px #FFB347) drop-shadow(0 0 24px rgba(255, 179, 71, 0.5));
 }
 
 /* Pulsing dot for current time indicator on chart */
@@ -227,17 +211,73 @@ ion-app {
   0%, 100% {
     opacity: 1;
     transform: scale(1);
-    filter: drop-shadow(0 0 4px #FFBF5E);
+    filter: drop-shadow(0 0 4px #FFB347);
   }
   50% {
     opacity: 0.8;
     transform: scale(1.2);
-    filter: drop-shadow(0 0 8px #FFBF5E);
+    filter: drop-shadow(0 0 8px #FFB347);
   }
 }
 
 .pulsing-dot {
   animation: pulse-glow 2s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Live weather indicator - prominent pulsing green dot */
+@keyframes pulse-live {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.3);
+    box-shadow: 0 0 6px 2px rgba(74, 222, 128, 0.4);
+  }
+}
+
+.animate-pulse-live {
+  animation: pulse-live 2s ease-in-out infinite;
+}
+
+/* D-Window active indicator - pulsing green dot */
+@keyframes pulse-dwindow-active {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.3);
+    box-shadow: 0 0 6px 2px rgba(74, 222, 128, 0.4);
+  }
+}
+
+.animate-pulse-dwindow {
+  animation: pulse-dwindow-active 2s ease-in-out infinite;
+}
+
+/* Location denied indicator - pulsing red dot */
+@keyframes pulse-denied {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.7);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.3);
+    box-shadow: 0 0 6px 2px rgba(248, 113, 113, 0.4);
+  }
+}
+
+.animate-pulse-denied {
+  animation: pulse-denied 2s ease-in-out infinite;
 }
 
 /* Bask button press feedback */
@@ -277,7 +317,7 @@ ion-app {
 }
 
 .uv-moderate {
-  color: #FFBF5E;
+  color: #FFB347;
 }
 
 .uv-high {
@@ -296,7 +336,7 @@ ion-app {
    ONBOARDING ANIMATIONS
    ======================================== */
 
-/* Emotional Hook Screen - Sun Animation */
+/* Emotional Hook Screen - Sun Animation (light mode) */
 .sun-orb {
   position: absolute;
   width: 300px;
@@ -304,8 +344,8 @@ ion-app {
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(232, 169, 89, 0.8) 0%,
-    rgba(212, 165, 116, 0.4) 40%,
+    rgba(255, 179, 71, 0.5) 0%,
+    rgba(255, 159, 28, 0.3) 40%,
     rgba(232, 111, 27, 0.1) 70%,
     transparent 100%
   );
@@ -348,7 +388,7 @@ ion-app {
   height: 2px;
   background: linear-gradient(
     90deg,
-    rgba(232, 169, 89, 0.6) 0%,
+    rgba(255, 179, 71, 0.4) 0%,
     transparent 100%
   );
   transform-origin: left center;
@@ -376,33 +416,33 @@ ion-app {
   position: absolute;
   width: 4px;
   height: 4px;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 179, 71, 0.6);
   border-radius: 50%;
   animation: particle-float 3s ease-in-out infinite;
 }
 
-/* Atmospheric glow overlay */
+/* Atmospheric glow overlay (light mode) */
 .atmospheric-glow {
   position: absolute;
   inset: 0;
   background: radial-gradient(
     ellipse at center,
-    rgba(232, 169, 89, 0.15) 0%,
+    rgba(255, 179, 71, 0.12) 0%,
     transparent 60%
   );
   pointer-events: none;
 }
 
-/* Processing Screen - Orb Animation */
+/* Processing Screen - Orb Animation (light mode) */
 .processing-orb {
   width: 200px;
   height: 200px;
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(232, 169, 89, 0.9) 0%,
-    rgba(212, 165, 116, 0.5) 40%,
-    rgba(232, 111, 27, 0.2) 70%,
+    rgba(255, 179, 71, 0.6) 0%,
+    rgba(255, 159, 28, 0.4) 40%,
+    rgba(232, 111, 27, 0.15) 70%,
     transparent 100%
   );
   filter: blur(10px);
@@ -422,12 +462,12 @@ ion-app {
   }
 }
 
-/* Orbiting particles around processing orb */
+/* Orbiting particles around processing orb (light mode) */
 .orbit-particle {
   position: absolute;
   width: 6px;
   height: 6px;
-  background: rgba(232, 169, 89, 0.8);
+  background: rgba(255, 179, 71, 0.7);
   border-radius: 50%;
   animation: orbit 3s linear infinite;
 }
@@ -472,12 +512,12 @@ ion-app {
   }
 }
 
-/* Onboarding progress bar fill animation */
+/* Onboarding progress bar fill animation (light mode) */
 .onboarding-progress-fill {
   background: linear-gradient(
     90deg,
-    #D4A574 0%,
-    #E8A959 50%,
+    #FFB347 0%,
+    #FF9F1C 50%,
     #E86F1B 100%
   );
 }
@@ -509,16 +549,370 @@ ion-app {
   100% { left: 100%; }
 }
 
-/* Glass card selection glow */
+/* Glass card selection glow (light mode) */
 .glass-card-selected {
   box-shadow:
-    0 0 20px rgba(212, 165, 116, 0.3),
-    inset 0 0 20px rgba(212, 165, 116, 0.1);
+    0 0 20px rgba(255, 179, 71, 0.3),
+    inset 0 0 20px rgba(255, 179, 71, 0.1);
 }
 
-/* Color swatch selection ring */
+/* Color swatch selection ring (light mode) */
 .swatch-selected {
   box-shadow:
-    0 0 0 3px #0A0E1A,
-    0 0 0 5px #D4A574;
+    0 0 0 3px #F0EDE9,
+    0 0 0 5px #FFB347;
+}
+
+/* ========================================
+   SWIPEABLE CARD FOR HISTORY
+   ======================================== */
+
+/* Solar loading indicator - warm pulsing dot */
+@keyframes pulse-solar-loading {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-pulse-solar {
+  animation: pulse-solar-loading 1.5s ease-in-out infinite;
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-solar {
+    animation: none;
+  }
+}
+
+/* Swipeable card container */
+.swipeable-card-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.75rem; /* rounded-xl */
+  margin-bottom: 0.75rem; /* mb-3 */
+}
+
+/* Card content that slides */
+.swipeable-card-content {
+  position: relative;
+  z-index: 1;
+  transition: transform 0.3s ease-out;
+}
+
+.swipeable-card-content.dragging {
+  transition: none;
+}
+
+/* Delete action button behind the card */
+.swipeable-card-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  z-index: 0;
+  transition: opacity 0.15s ease-out;
+}
+
+/* History Timeline Styles */
+
+/* Timeline entry fade-in animation */
+@keyframes history-entry-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.history-entry-card {
+  animation: history-entry-fade-in 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+/* Timeline dot pulse animation */
+@keyframes timeline-dot-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 179, 71, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 179, 71, 0);
+  }
+}
+
+.timeline-dot {
+  animation: timeline-dot-pulse 2s ease-in-out infinite;
+}
+
+/* Summary stats banner fade-in */
+@keyframes summary-stats-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.summary-stats-banner {
+  animation: summary-stats-fade-in 0.6s ease-out forwards;
+}
+
+/* Timeline entry hover effect */
+.timeline-entry {
+  transition: transform 0.2s ease-out;
+}
+
+.timeline-entry:hover .history-entry-card {
+  transform: translateY(-2px);
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .history-entry-card,
+  .summary-stats-banner {
+    animation: none;
+    opacity: 1;
+  }
+
+  .timeline-dot {
+    animation: none;
+  }
+
+  .timeline-entry:hover .history-entry-card {
+    transform: none;
+  }
+}
+
+/* ========================================
+   CALENDAR HEATMAP ANIMATIONS
+   ======================================== */
+
+/* Stagger fade-in for calendar days */
+@keyframes calendar-day-in {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.calendar-day {
+  animation: calendar-day-in 0.3s ease-out forwards;
+  opacity: 0;
+}
+
+/* Today ring pulse animation */
+@keyframes today-ring-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 179, 71, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(255, 179, 71, 0);
+  }
+}
+
+.today-ring-pulse {
+  animation: today-ring-pulse 2.5s ease-in-out infinite;
+}
+
+/* Active day heat breathe animation */
+@keyframes heat-breathe {
+  0%, 100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.1);
+  }
+}
+
+.heat-breathe {
+  animation: heat-breathe 3s ease-in-out infinite;
+}
+
+/* Streak stat glow pulse */
+@keyframes streak-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(255, 179, 71, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(255, 179, 71, 0.25);
+  }
+}
+
+.streak-glow {
+  animation: streak-glow 2s ease-in-out infinite;
+}
+
+/* Flame icon scale pulse */
+@keyframes flame-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.flame-pulse {
+  animation: flame-pulse 2s ease-in-out infinite;
+}
+
+/* Respect reduced motion for calendar animations */
+@media (prefers-reduced-motion: reduce) {
+  .calendar-day,
+  .today-ring-pulse,
+  .heat-breathe,
+  .streak-glow,
+  .flame-pulse {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* ========================================
+   INSIGHTS PAGE ANIMATIONS
+   ======================================== */
+
+/* Staggered card entrance - fade in with upward slide */
+@keyframes insight-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.insight-card-enter {
+  animation: insight-card-in 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+/* Detail view hero header expand animation */
+@keyframes detail-hero-expand {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.detail-hero-enter {
+  animation: detail-hero-expand 0.4s ease-out forwards;
+}
+
+/* Numbered section fade-in */
+@keyframes section-fade-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.section-number-enter {
+  animation: section-fade-in 0.3s ease-out forwards;
+  opacity: 0;
+}
+
+/* Pull quote slide-in from left */
+@keyframes pull-quote-slide {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.pull-quote-enter {
+  animation: pull-quote-slide 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+/* Tab content crossfade */
+@keyframes tab-content-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.tab-content-fade {
+  animation: tab-content-fade 0.3s ease-out forwards;
+}
+
+/* Respect reduced motion for all animations */
+@media (prefers-reduced-motion: reduce) {
+  .insight-card-enter,
+  .detail-hero-enter,
+  .section-number-enter,
+  .pull-quote-enter,
+  .tab-content-fade {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Homepage animations */
+  .d-pulse,
+  .d-pulse-secondary,
+  .ring-pulse,
+  .animate-pulse-live,
+  .animate-pulse-denied,
+  .animate-pulse-dwindow,
+  .bask-ring-progress {
+    animation: none !important;
+  }
+
+  /* WhyZeroIUTooltip inline animations */
+  [style*="slideInUp"],
+  [style*="fadeIn"] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Atmospheric background transitions */
+  .atmospheric-transition {
+    transition: none !important;
+  }
+
+  /* All scale transforms */
+  .active\:scale-95:active,
+  .active\:scale-98:active,
+  .active\:scale-\[0\.98\]:active,
+  .scale-\[1\.02\] {
+    transform: none !important;
+  }
 }

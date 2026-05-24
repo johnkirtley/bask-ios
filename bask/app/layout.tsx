@@ -12,11 +12,12 @@ import '@ionic/react/css/text-transformation.css';
 import '@ionic/react/css/flex-utils.css';
 import '@ionic/react/css/display.css';
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { DM_Sans } from 'next/font/google';
 import TabBar from '../components/navigation/TabBar';
 import IonicProvider from '../components/IonicProvider';
+import ErrorBoundary from '../components/ErrorBoundary';
 
-const inter = Inter({ subsets: ['latin'] });
+const dmSans = DM_Sans({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Bask',
@@ -36,11 +37,13 @@ export default function RootLayout({
           content="width=device-width, initial-scale=1.0, viewport-fit=cover"
         />
       </head>
-      <body className={`${inter.className} bg-cloud-white text-text-primary`}>
-        <IonicProvider>
-          <main className="scroll-container">{children}</main>
-          <TabBar />
-        </IonicProvider>
+      <body className={`${dmSans.className} bg-light-bg text-text-primary`}>
+        <ErrorBoundary>
+          <IonicProvider>
+            <main className="scroll-container">{children}</main>
+            <TabBar />
+          </IonicProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

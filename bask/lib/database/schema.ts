@@ -85,6 +85,25 @@ const migrations: Migration[] = [
       `ALTER TABLE bask_user_profile ADD COLUMN disclaimer_accepted_at TEXT`,
     ],
   },
+  {
+    version: 3,
+    up: [
+      // Add blood test baseline fields
+      `ALTER TABLE bask_user_profile ADD COLUMN blood_test_value REAL`,
+      `ALTER TABLE bask_user_profile ADD COLUMN blood_test_unit TEXT DEFAULT 'ng/mL'`,
+      `ALTER TABLE bask_user_profile ADD COLUMN blood_test_date TEXT`,
+      `ALTER TABLE bask_user_profile ADD COLUMN blood_test_source TEXT DEFAULT 'manual'`,
+    ],
+  },
+  {
+    version: 4,
+    up: [
+      // Add source column to distinguish manual vs HealthKit-derived sessions
+      `ALTER TABLE bask_sessions ADD COLUMN source TEXT DEFAULT 'manual' CHECK (source IN ('manual', 'healthkit'))`,
+      // Add synced_at timestamp for HealthKit sync tracking
+      `ALTER TABLE bask_sessions ADD COLUMN synced_at TEXT`,
+    ],
+  },
 ];
 
 export async function runMigrations(): Promise<void> {

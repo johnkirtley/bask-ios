@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { setupIonicReact, IonApp } from '@ionic/react';
 import { ModalProvider } from '../contexts/ModalContext';
+import { SubscriptionProvider } from '../contexts/SubscriptionContext';
 import { OnboardingProvider, useOnboardingContext } from '../contexts/OnboardingContext';
 import { useSubscription } from '../hooks/useSubscription';
 import OnboardingFlow from './onboarding/OnboardingFlow';
@@ -18,8 +19,8 @@ interface IonicProviderProps {
 
 function LoadingSpinner() {
   return (
-    <div className="fixed inset-0 bg-limestone flex items-center justify-center">
-      <div className="w-8 h-8 border-3 border-olive/20 border-t-olive rounded-full animate-spin" />
+    <div className="fixed inset-0 bg-light-bg flex items-center justify-center">
+      <div className="w-8 h-8 border-3 border-black/10 border-t-solar-flare rounded-full animate-spin" />
     </div>
   );
 }
@@ -82,11 +83,13 @@ function OnboardingGate({ children }: { children: React.ReactNode }) {
 export default function IonicProvider({ children }: IonicProviderProps) {
   return (
     <IonApp>
-      <OnboardingProvider>
-        <ModalProvider>
-          <OnboardingGate>{children}</OnboardingGate>
-        </ModalProvider>
-      </OnboardingProvider>
+      <SubscriptionProvider>
+        <OnboardingProvider>
+          <ModalProvider>
+            <OnboardingGate>{children}</OnboardingGate>
+          </ModalProvider>
+        </OnboardingProvider>
+      </SubscriptionProvider>
     </IonApp>
   );
 }

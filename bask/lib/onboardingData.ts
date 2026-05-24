@@ -15,22 +15,26 @@ export interface DualSelectSection {
   options: OnboardingOption[];
 }
 
-// Screen 2: Goal Selection
-export const goalOptions: OnboardingOption[] = [
-  { value: 'vitamin-d', label: 'Optimizing Vitamin D Levels' },
-  { value: 'tanning', label: 'Safe Tanning & Burn Prevention' },
-  { value: 'circadian', label: 'Circadian Rhythm & Better Sleep' },
-  { value: 'longevity', label: 'Longevity & Natural Immunity' },
+// Screen 1: Symptoms (multi-select)
+export const symptomOptions: OnboardingOption[] = [
+  { value: 'low-energy', label: 'Low energy / fatigue' },
+  { value: 'poor-sleep', label: 'Poor sleep' },
+  { value: 'mood-dips', label: 'Mood dips' },
+  { value: 'frequent-illness', label: 'Frequent colds or illness' },
+  { value: 'brain-fog', label: 'Brain fog' },
+  { value: 'joint-bone', label: 'Joint or bone discomfort' },
+  { value: 'hormonal', label: 'Hormonal concerns' },
+  { value: 'low-blood-test', label: 'Recent blood test flagged low' },
 ];
 
-// Screen 3: Skin & Eye Color (Fitzpatrick Assessment Part 1)
+// Skin & Eye Color (Fitzpatrick Assessment Part 1)
 export const skinToneOptions: OnboardingOption[] = [
-  { value: 'very-fair', label: 'Very Fair', colorHex: '#FFE4D1' },
-  { value: 'fair', label: 'Fair', colorHex: '#F5D0B5' },
-  { value: 'medium', label: 'Medium', colorHex: '#D4A574' },
-  { value: 'olive', label: 'Olive', colorHex: '#B8936A' },
-  { value: 'brown', label: 'Brown', colorHex: '#8B6914' },
-  { value: 'dark-brown', label: 'Dark Brown', colorHex: '#5C4033' },
+  { value: 'very-fair', label: 'Very Fair', colorHex: '#F9EBDD' },
+  { value: 'fair', label: 'Fair', colorHex: '#EFD3B1' },
+  { value: 'medium', label: 'Medium', colorHex: '#D5A77F' },
+  { value: 'olive', label: 'Olive', colorHex: '#9B6338' },
+  { value: 'brown', label: 'Brown', colorHex: '#6B3E26' },
+  { value: 'dark-brown', label: 'Dark Brown', colorHex: '#3C2016' },
 ];
 
 export const eyeColorOptions: OnboardingOption[] = [
@@ -41,14 +45,14 @@ export const eyeColorOptions: OnboardingOption[] = [
   { value: 'dark-brown', label: 'Dark Brown', colorHex: '#3D2314' },
 ];
 
-// Screen 4: Sun Reaction (Fitzpatrick Assessment Part 2)
+// Sun Reaction (Fitzpatrick Assessment Part 2)
 export const sunReactionOptions: OnboardingOption[] = [
   { value: 'always-burns', label: 'Always burns, never tans' },
   { value: 'burns-then-tans', label: 'Burns first, then tans lightly' },
   { value: 'rarely-burns', label: 'Rarely burns, tans easily' },
 ];
 
-// Screen 5: Outdoor Time (Lifestyle)
+// Outdoor Time (Lifestyle)
 export const outdoorTimeOptions: OnboardingOption[] = [
   { value: 'under-15', label: 'Less than 15 minutes' },
   { value: '15-60', label: '15-60 minutes' },
@@ -56,34 +60,35 @@ export const outdoorTimeOptions: OnboardingOption[] = [
   { value: '3-plus', label: '3+ hours' },
 ];
 
-// Screen 6: Vitamin D Supplementation
+// Sunscreen Frequency
+export const sunscreenFrequencyOptions: OnboardingOption[] = [
+  { value: 'never', label: 'Never', description: 'Maximum UVB exposure' },
+  { value: 'beach-only', label: 'Only at the beach', description: 'Most days unprotected' },
+  { value: 'when-i-remember', label: 'When I remember', description: 'Inconsistent SPF' },
+  { value: 'daily-spf', label: 'Daily SPF', description: 'Skin protected most of the day' },
+];
+
+// Vitamin D Supplementation
 export const supplementationOptions: OnboardingOption[] = [
   { value: 'no', label: 'No' },
   { value: 'daily', label: 'Daily' },
   { value: 'occasionally', label: 'Occasionally' },
 ];
 
-// Screen 7: Typical Attire (Body Surface Area)
-export const attireOptions: OnboardingOption[] = [
-  { value: 'face-hands', label: 'Face & Hands Only', description: '~10% exposed' },
-  { value: 't-shirt-shorts', label: 'T-Shirt & Shorts', description: '~50% exposed' },
-  { value: 'swimwear', label: 'Swimwear/Tank Top', description: '~80% exposed' },
-];
-
-// Screen 11: Processing Screen Text Sequence
+// Processing Screen Text Sequence
 export const processingSteps: string[] = [
   'Calculating your optimal solar windows...',
   'Syncing with local UV data...',
-  'Building your 2026 Vitamin D plan.',
+  `Building your ${new Date().getFullYear()} Vitamin D plan.`,
 ];
 
 // Total number of onboarding screens
-export const TOTAL_ONBOARDING_SCREENS = 12; // Updated to include Blood Test screen
+export const TOTAL_ONBOARDING_SCREENS = 16;
 
 // Legal links (used by settings page)
 export const legalContent = {
   links: {
-    privacyPolicy: 'https://www.bask.io/privacy',
-    termsOfService: 'https://www.bask.io/terms',
+    privacyPolicy: 'https://www.getbask.app/privacy',
+    termsOfService: 'https://www.getbask.app/terms',
   },
 };

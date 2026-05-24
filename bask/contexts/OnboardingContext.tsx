@@ -11,18 +11,20 @@ const DEFAULT_ONBOARDING: OnboardingState = {
   completedAt: null,
   agreedToTermsAt: null,
   answers: {
-    primaryGoal: null,
+    symptoms: [],
     skinTone: null,
     eyeColor: null,
     sunReaction: null,
     outdoorTime: null,
+    sunscreenFrequency: null,
     vitaminDSupplementation: null,
-    typicalAttire: null,
     age: null,
     weight: null,
     weightUnit: 'lbs',
     medicalDisclaimerAccepted: false,
     locationPermissionGranted: false,
+    notificationPermissionGranted: false,
+    healthKitPermissionGranted: false,
     hasBloodTest: false,
     bloodTestValue: null,
     bloodTestUnit: 'ng/mL',
@@ -56,6 +58,21 @@ function isValidOnboardingState(obj: unknown): obj is OnboardingState {
   );
 }
 
+function normalizeOnboardingState(state: OnboardingState): OnboardingState {
+  const raw = state.answers as OnboardingAnswers & { primaryGoal?: string[] };
+  const symptoms = raw.symptoms ?? raw.primaryGoal ?? [];
+
+  return {
+    ...state,
+    answers: {
+      ...DEFAULT_ONBOARDING.answers,
+      ...raw,
+      symptoms,
+      sunscreenFrequency: raw.sunscreenFrequency ?? null,
+    },
+  };
+}
+
 // Load onboarding state from localStorage
 function loadFromLocalStorage(): OnboardingState {
   try {
@@ -63,7 +80,7 @@ function loadFromLocalStorage(): OnboardingState {
     if (stored) {
       const parsed = JSON.parse(stored);
       if (isValidOnboardingState(parsed)) {
-        return parsed;
+        return normalizeOnboardingState(parsed);
       }
     }
   } catch (e) {
@@ -109,7 +126,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
               if (row && typeof row.value === 'string') {
                 const parsed = JSON.parse(row.value);
                 if (isValidOnboardingState(parsed)) {
-                  setState(parsed);
+                  setState(normalizeOnboardingState(parsed));
                   setDbReady(true);
                   setIsLoaded(true);
                   return;

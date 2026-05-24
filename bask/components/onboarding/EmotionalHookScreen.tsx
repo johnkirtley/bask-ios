@@ -13,68 +13,46 @@ export default function EmotionalHookScreen({ onContinue }: EmotionalHookScreenP
   };
 
   return (
-    <div className="flex flex-col items-center justify-center flex-1 px-6 pb-safe">
-      {/* Animated sun container */}
-      <div className="relative w-[300px] h-[300px] mb-12">
-        {/* Main sun orb with pulsing glow */}
-        <div className="sun-orb" />
+    <div className="flex flex-col flex-1 h-full items-center justify-center px-6 relative overflow-hidden">
+      {/* Atmospheric gradient background - soft warm */}
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          background: 'linear-gradient(180deg, #FFFCF8 0%, #FFF3E8 35%, #FFE8D6 70%, #FFDCC8 100%)',
+        }}
+      />
 
-        {/* Atmospheric glow overlay */}
-        <div className="atmospheric-glow" />
-
-        {/* Sun rays (8 rays at 45-degree intervals) */}
-        <div className="sun-rays absolute inset-0 flex items-center justify-center">
-          {[0, 45, 90, 135, 180, 225, 270, 315].map((rotation) => (
-            <div
-              key={rotation}
-              className="sun-ray absolute"
-              style={{
-                transform: `rotate(${rotation}deg)`,
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Light particles floating upward */}
-        {[...Array(12)].map((_, i) => (
-          <div
-            key={i}
-            className="light-particle"
-            style={{
-              left: `${20 + Math.random() * 60}%`,
-              top: `${20 + Math.random() * 60}%`,
-              animationDelay: `${i * 0.25}s`,
-            }}
-          />
-        ))}
+      {/* Logo */}
+      <div className="mb-8 z-10">
+        <img
+          src="/assets/bask-logo.png"
+          alt="Bask"
+          className="w-[140px] h-[140px] object-contain"
+        />
       </div>
 
-      {/* Title text with glow */}
-      <h1
-        className="font-title text-4xl text-center text-white mb-16"
-        style={{
-          textShadow: '0 0 20px rgba(232, 169, 89, 0.5), 0 0 40px rgba(212, 165, 116, 0.3)',
-        }}
-      >
-        Unlock the Power of the Sun.
-      </h1>
+      {/* Content */}
+      <div className="w-full max-w-md z-10 text-center space-y-6">
+        <div className="space-y-3">
+          <h1 className="text-3xl font-bold text-gray-900 leading-tight">
+            Get your daily vitamin D—naturally
+          </h1>
+          <p className="text-base text-gray-700">
+            Personalized sun exposure guidance for optimal health, safely
+          </p>
+        </div>
 
-      {/* CTA Button */}
-      <button
-        onClick={handleContinue}
-        className="
-          w-full max-w-sm px-8 py-4 rounded-full
-          backdrop-blur-xl bg-golden-glow/20 border-2 border-golden-glow
-          text-[17px] font-semibold text-white
-          active:scale-[0.98] transition-all duration-200
-          shadow-lg
-        "
-        style={{
-          boxShadow: '0 0 20px rgba(212, 165, 116, 0.3), inset 0 0 20px rgba(212, 165, 116, 0.1)',
-        }}
-      >
-        Start My Personalization
-      </button>
+        {/* CTA Button */}
+        <button
+          onClick={handleContinue}
+          className="w-full py-4 px-8 rounded-full bg-black text-white text-[17px] font-semibold active:scale-[0.98] transition-all duration-200 shadow-lg"
+          style={{
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
+          }}
+        >
+          Start My Personalization
+        </button>
+      </div>
     </div>
   );
 }

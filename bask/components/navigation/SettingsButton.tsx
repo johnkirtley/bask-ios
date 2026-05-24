@@ -1,5 +1,7 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+
 const SettingsIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -23,12 +25,12 @@ const SettingsIcon = () => (
 );
 
 export default function SettingsButton() {
+  const router = useRouter();
+
   return (
     <button
-      onClick={() => {
-        window.location.href = '/settings.html';
-      }}
-      className="p-2 -mr-2 text-umber-muted hover:text-umber transition-colors"
+      onClick={() => router.push('/settings')}
+      className="p-2 -mr-2 text-text-secondary hover:text-text-primary transition-colors active:scale-95"
       aria-label="Settings"
     >
       <SettingsIcon />

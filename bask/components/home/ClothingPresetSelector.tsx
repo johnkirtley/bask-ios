@@ -1,7 +1,7 @@
 'use client';
 
 import { IonActionSheet } from '@ionic/react';
-import type { ClothingPreset } from '../../lib/mockData';
+import type { ClothingPreset } from '../../lib/sunDataUtils';
 
 interface ClothingPresetSelectorProps {
   isOpen: boolean;

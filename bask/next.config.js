@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     images: {
-        domains: ['posturepal.s3.us-east-2.amazonaws.com']
+        unoptimized: true
     },
     output: 'export'
 }

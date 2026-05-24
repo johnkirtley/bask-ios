@@ -6,6 +6,8 @@ interface BaskNowButtonProps {
   preset: string;
   onPress?: () => void;
   onPresetChange?: () => void;
+  disabled?: boolean;
+  disabledReason?: string;
 }
 
 /**
@@ -16,8 +18,11 @@ export default function BaskNowButton({
   preset,
   onPress,
   onPresetChange,
+  disabled = false,
+  disabledReason,
 }: BaskNowButtonProps) {
   const handlePress = async () => {
+    if (disabled) return;
     try {
       await Haptics.impact({ style: ImpactStyle.Medium });
     } catch {
@@ -28,7 +33,9 @@ export default function BaskNowButton({
       onPress();
     } else {
       // Default action: show alert (for now)
-      alert('Bask session starting! (This will trigger timer and Live Activity)');
+      alert(
+        'Bask session starting! (This will trigger timer and Live Activity)',
+      );
     }
   };
 
@@ -48,41 +55,57 @@ export default function BaskNowButton({
   };
 
   return (
-    <div className="w-full px-4 py-4">
-      {/* Preset selector */}
-      <button
-        onClick={handlePresetChange}
-        className="w-full text-center mb-2 py-2 active:opacity-70 transition-opacity">
-        <span className="text-xs text-text-secondary">Current Preset:</span>
-        <div className="flex items-center justify-center gap-1 mt-0.5">
-          <span className="text-sm font-semibold text-white">
+    <div className='w-full py-4'>
+      {/* Preset selector - pill style */}
+      <div className='flex flex-col items-center mb-4'>
+        <button
+          onClick={handlePresetChange}
+          aria-label={`Change clothing preset. Currently wearing: ${preset}`}
+          className='flex items-center justify-center gap-1.5 px-3 py-2 bg-black/5 rounded-full active:bg-black/10 transition-colors min-h-[44px]'>
+          <span className='text-xs font-medium text-text-secondary'>
+            Wearing:
+          </span>
+          <span className='text-xs font-semibold text-text-primary'>
             {preset}
           </span>
           <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
+            xmlns='http://www.w3.org/2000/svg'
+            fill='none'
+            viewBox='0 0 24 24'
             strokeWidth={2}
-            stroke="currentColor"
-            className="w-4 h-4 text-solar-amber">
+            stroke='currentColor'
+            className='w-3.5 h-3.5 text-text-secondary'
+            aria-hidden='true'>
             <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M8.25 4.5l7.5 7.5-7.5 7.5"
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              d='M19.5 8.25l-7.5 7.5-7.5-7.5'
             />
           </svg>
-        </div>
-      </button>
+        </button>
+        <p className='text-[11px] text-text-secondary text-center mt-1.5 max-w-[220px]'>
+          Changing skin exposure updates your IU rate, time-to-goal, and
+          recommendations
+        </p>
+      </div>
 
       {/* Main CTA button */}
       <button
         onClick={handlePress}
-        className="bask-button w-full py-5 bg-solar-amber text-deep-charcoal rounded-full text-lg font-bold shadow-lg active:shadow-md">
+        disabled={disabled}
+        aria-disabled={disabled}
+        className={`bask-button w-full py-5 rounded-full text-lg font-bold shadow-lg active:shadow-md ${
+          disabled
+            ? 'bg-black/10 text-text-muted cursor-not-allowed'
+            : 'bg-solar-flare text-[#4A2800]'
+        }`}>
         Bask Now
       </button>
 
-      <p className="text-xs text-text-secondary text-center mt-3">
-        Tap to start tracking your sun exposure
+      <p className='text-xs text-text-secondary text-center mt-3'>
+        {disabled && disabledReason
+          ? disabledReason
+          : 'Tap to start tracking your sun exposure'}
       </p>
     </div>
   );

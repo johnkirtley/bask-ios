@@ -26,7 +26,7 @@ export const supplementsRepository = {
     const db = await databaseService.getConnection();
     const result = await db.query(
       `SELECT * FROM bask_supplements
-       WHERE date(logged_at) = date('now', 'localtime')
+       WHERE date(logged_at, 'localtime') = date('now', 'localtime')
        ORDER BY logged_at DESC`
     );
     return result.values ?? [];
@@ -37,7 +37,7 @@ export const supplementsRepository = {
     const result = await db.query(
       `SELECT COALESCE(SUM(dosage_iu), 0) as total
        FROM bask_supplements
-       WHERE date(logged_at) = date('now', 'localtime')`
+       WHERE date(logged_at, 'localtime') = date('now', 'localtime')`
     );
     return result.values?.[0]?.total ?? 0;
   },
@@ -51,6 +51,29 @@ export const supplementsRepository = {
       [start, end]
     );
     return result.values ?? [];
+  },
+
+  async update(id: number, data: Partial<Pick<Supplement, 'dosage_iu' | 'notes'>>): Promise<void> {
+    const db = await databaseService.getConnection();
+    const updates: string[] = [];
+    const values: any[] = [];
+
+    if (data.dosage_iu !== undefined) {
+      updates.push('dosage_iu = ?');
+      values.push(data.dosage_iu);
+    }
+    if (data.notes !== undefined) {
+      updates.push('notes = ?');
+      values.push(data.notes);
+    }
+
+    if (updates.length > 0) {
+      values.push(id);
+      await db.run(
+        `UPDATE bask_supplements SET ${updates.join(', ')} WHERE id = ?`,
+        values
+      );
+    }
   },
 
   async delete(id: number): Promise<void> {

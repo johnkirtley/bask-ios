@@ -224,9 +224,9 @@ public class BaskWeatherPlugin: CAPPlugin, CLLocationManagerDelegate {
             do {
                 let weatherService = WeatherService.shared
 
-                // Get hourly forecast for next 24 hours
+                // Get hourly forecast for next 48 hours
                 let startDate = Date()
-                let endDate = Calendar.current.date(byAdding: .hour, value: 24, to: startDate) ?? startDate
+                let endDate = Calendar.current.date(byAdding: .hour, value: 48, to: startDate) ?? startDate
 
                 let forecast = try await weatherService.weather(
                     for: location,
@@ -332,6 +332,61 @@ public class BaskWeatherPlugin: CAPPlugin, CLLocationManagerDelegate {
                 call.resolve(result)
             } catch {
                 call.reject("Failed to fetch solar events: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    // MARK: - Location Info
+    @objc func getLocationInfo(_ call: CAPPluginCall) {
+        getCurrentLocation { [weak self] result in
+            switch result {
+            case .success(let location):
+                self?.reverseGeocodeLocation(location: location, call: call)
+            case .failure(let error):
+                call.reject("Failed to get location: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    private func reverseGeocodeLocation(location: CLLocation, call: CAPPluginCall) {
+        let geocoder = CLGeocoder()
+
+        geocoder.reverseGeocodeLocation(location) { placemarks, error in
+            if let error = error {
+                call.reject("Failed to reverse geocode location: \(error.localizedDescription)")
+                return
+            }
+
+            guard let placemark = placemarks?.first else {
+                call.reject("No placemark found for location")
+                return
+            }
+
+            let result: [String: Any] = [
+                "city": placemark.locality ?? "",
+                "state": placemark.administrativeArea ?? "",
+                "country": placemark.country ?? "",
+                "latitude": location.coordinate.latitude,
+                "longitude": location.coordinate.longitude
+            ]
+
+            call.resolve(result)
+        }
+    }
+
+    // MARK: - App Settings
+    @objc func openSettings(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            guard let settingsUrl = URL(string: UIApplication.openSettingsURLString) else {
+                call.reject("Cannot create settings URL")
+                return
+            }
+            UIApplication.shared.open(settingsUrl) { success in
+                if success {
+                    call.resolve()
+                } else {
+                    call.reject("Failed to open settings")
+                }
             }
         }
     }

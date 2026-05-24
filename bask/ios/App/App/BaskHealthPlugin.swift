@@ -5,6 +5,11 @@ import HealthKit
 @objc(BaskHealthPlugin)
 public class BaskHealthPlugin: CAPPlugin {
     private var healthStore: HKHealthStore?
+    private lazy var dateFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
 
     public override func load() {
         // Initialize HealthKit store
@@ -32,8 +37,7 @@ public class BaskHealthPlugin: CAPPlugin {
 
         // Define the health data types we want to access
         let typesToRead: Set<HKObjectType> = [
-            HKQuantityType.quantityType(forIdentifier: .dietaryVitaminD)!,
-            HKQuantityType.quantityType(forIdentifier: .appleStandTime)!, // For outdoor time proxy
+            HKQuantityType.quantityType(forIdentifier: .dietaryVitaminD)!
         ]
 
         let typesToWrite: Set<HKSampleType> = [
@@ -86,13 +90,13 @@ public class BaskHealthPlugin: CAPPlugin {
         let startDate: Date
         let endDate: Date
 
-        if let startString = startDateString, let start = ISO8601DateFormatter().date(from: startString) {
+        if let startString = startDateString, let start = self.dateFormatter.date(from: startString) {
             startDate = start
         } else {
             startDate = calendar.startOfDay(for: Date())
         }
 
-        if let endString = endDateString, let end = ISO8601DateFormatter().date(from: endString) {
+        if let endString = endDateString, let end = self.dateFormatter.date(from: endString) {
             endDate = end
         } else {
             endDate = Date()
@@ -107,6 +111,15 @@ public class BaskHealthPlugin: CAPPlugin {
             options: .cumulativeSum
         ) { _, result, error in
             if let error = error {
+                // Treat "no data" as 0 instead of an error (e.g., user deleted all entries)
+                if error.localizedDescription.contains("No data available") {
+                    call.resolve([
+                        "minutes": 0,
+                        "startDate": self.dateFormatter.string(from: startDate),
+                        "endDate": self.dateFormatter.string(from: endDate)
+                    ])
+                    return
+                }
                 call.reject("Failed to fetch time in daylight: \(error.localizedDescription)")
                 return
             }
@@ -122,8 +135,8 @@ public class BaskHealthPlugin: CAPPlugin {
 
             call.resolve([
                 "minutes": minutes,
-                "startDate": ISO8601DateFormatter().string(from: startDate),
-                "endDate": ISO8601DateFormatter().string(from: endDate)
+                "startDate": self.dateFormatter.string(from: startDate),
+                "endDate": self.dateFormatter.string(from: endDate)
             ])
         }
 
@@ -151,13 +164,13 @@ public class BaskHealthPlugin: CAPPlugin {
         let startDate: Date
         let endDate: Date
 
-        if let startString = startDateString, let start = ISO8601DateFormatter().date(from: startString) {
+        if let startString = startDateString, let start = self.dateFormatter.date(from: startString) {
             startDate = start
         } else {
             startDate = calendar.startOfDay(for: Date())
         }
 
-        if let endString = endDateString, let end = ISO8601DateFormatter().date(from: endString) {
+        if let endString = endDateString, let end = self.dateFormatter.date(from: endString) {
             endDate = end
         } else {
             endDate = Date()
@@ -190,8 +203,8 @@ public class BaskHealthPlugin: CAPPlugin {
 
             call.resolve([
                 "iu": iu,
-                "startDate": ISO8601DateFormatter().string(from: startDate),
-                "endDate": ISO8601DateFormatter().string(from: endDate)
+                "startDate": self.dateFormatter.string(from: startDate),
+                "endDate": self.dateFormatter.string(from: endDate)
             ])
         }
 
@@ -219,7 +232,7 @@ public class BaskHealthPlugin: CAPPlugin {
         // Get date from parameter or use current time
         let dateString = call.getString("date")
         let date: Date
-        if let dateStr = dateString, let parsedDate = ISO8601DateFormatter().date(from: dateStr) {
+        if let dateStr = dateString, let parsedDate = self.dateFormatter.date(from: dateStr) {
             date = parsedDate
         } else {
             date = Date()
@@ -247,7 +260,7 @@ public class BaskHealthPlugin: CAPPlugin {
             call.resolve([
                 "success": success,
                 "iu": dosageIU,
-                "date": ISO8601DateFormatter().string(from: date)
+                "date": self.dateFormatter.string(from: date)
             ])
         }
     }

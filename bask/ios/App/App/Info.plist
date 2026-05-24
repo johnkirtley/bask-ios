@@ -22,14 +22,14 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Bask needs your location to provide accurate UV index and sun exposure data for your area.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Bask needs your location to provide accurate UV index and sun exposure data for your area.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Bask uses your outdoor time and Vitamin D data from Apple Health to automatically track sun exposure and calibrate your daily needs.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>Bask syncs your Vitamin D supplement intake to Apple Health so other health apps can see your complete nutritional data.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Bask needs your location to provide accurate UV index and sun exposure data for your area.</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

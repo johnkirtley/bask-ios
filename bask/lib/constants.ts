@@ -1,3 +1,6 @@
+/** Default daily vitamin D goal (IU) when user has not set a custom goal */
+export const DEFAULT_DAILY_GOAL_IU = 5000;
+
 // Database Configuration
 export const DB_CONFIG = {
   name: 'bask',
@@ -9,9 +12,7 @@ export const REVENUECAT_API_KEY =
   process.env.NEXT_PUBLIC_REVENUECAT_API_KEY || '';
 // RevenueCat Entitlement IDs
 export const ENTITLEMENTS = {
-  monthly: 'monthly',
-  yearly: 'yearly',
-  lifetime: 'lifetime',
+  pro: 'Bask Pro',
 } as const;
 
 // Local Storage Keys
@@ -23,6 +24,7 @@ export const STORAGE_KEYS = {
   reviewMilestone2: 'review_milestone_2',
   reviewMilestone3: 'review_milestone_3',
   reviewCompleted: 'review_completed',
+  onboardingReviewRequested: 'onboarding_review_requested',
 } as const;
 
 // App Routes
@@ -45,17 +47,17 @@ export const REVIEW_MILESTONES = {
   milestone2: {
     id: 'milestone2',
     storageKey: 'review_milestone_2',
-    headline: "Enjoying the app? 👋",
+    headline: 'Enjoying the app? 👋',
     body: "We'd love to hear your feedback. Are you finding the app useful?",
   },
   milestone3: {
     id: 'milestone3',
     storageKey: 'review_milestone_3',
     threshold: 30,
-    headline: "Thanks for sticking with us! 👋",
+    headline: 'Thanks for sticking with us! 👋',
     body: "We're glad you've been using the app. Would you mind leaving a review?",
   },
 } as const;
 
 // Feedback Email
-export const FEEDBACK_EMAIL = 'feedback@bask.io';
+export const FEEDBACK_EMAIL = 'support@getbask.app';

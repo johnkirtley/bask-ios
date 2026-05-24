@@ -33,23 +33,33 @@ export default function MedicalDisclaimerScreen({ onAccept }: MedicalDisclaimerS
   ];
 
   return (
-    <div className="flex flex-col h-full px-6 pt-6 pb-safe">
-      {/* Header */}
-      <div className="mb-8">
-        <h2 className="font-title text-[28px] leading-tight text-white mb-2">
-          Important Health Information
-        </h2>
-        <p className="text-[15px] text-text-secondary">Please read carefully before continuing</p>
-      </div>
+    <div className="flex flex-col flex-1 h-full px-6 pt-6 relative overflow-hidden">
+      {/* Atmospheric gradient background */}
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          background: 'linear-gradient(180deg, #FFFCF8 0%, #FFF3E8 35%, #FFE8D6 70%, #FFDCC8 100%)',
+        }}
+      />
+
+      {/* Content */}
+      <div className="relative z-10 flex flex-col h-full">
+        {/* Header */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 leading-tight mb-2">
+            Important Health Information
+          </h2>
+          <p className="text-base text-gray-700">Please read carefully before continuing</p>
+        </div>
 
       {/* Disclaimer Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="backdrop-blur-xl bg-white/10 border-2 border-white/20 rounded-2xl p-6">
+        <div className="backdrop-blur-xl bg-white/70 border-2 border-black/5 shadow-sm rounded-2xl p-6">
           <div className="flex items-center gap-3 mb-6">
             {/* Info Icon */}
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-golden-glow/20 border border-golden-glow/40 flex items-center justify-center">
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-solar-flare/15 border border-solar-flare/30 flex items-center justify-center">
               <svg
-                className="w-5 h-5 text-golden-glow"
+                className="w-5 h-5 text-solar-flare"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -62,15 +72,15 @@ export default function MedicalDisclaimerScreen({ onAccept }: MedicalDisclaimerS
                 />
               </svg>
             </div>
-            <h3 className="text-[17px] font-semibold text-white">Medical Disclaimer</h3>
+            <h3 className="text-[17px] font-semibold text-text-primary">Medical Disclaimer</h3>
           </div>
 
           {/* Disclaimer Points */}
           <div className="space-y-5">
             {disclaimerPoints.map((point, index) => (
               <div key={index} className="flex gap-3">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-golden-glow/20 border border-golden-glow/40 flex items-center justify-center mt-0.5">
-                  <span className="text-[12px] font-semibold text-golden-glow">{index + 1}</span>
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-solar-flare/15 border border-solar-flare/30 flex items-center justify-center mt-0.5">
+                  <span className="text-[12px] font-semibold text-solar-flare">{index + 1}</span>
                 </div>
                 <p className="text-[15px] text-text-secondary leading-relaxed">{point}</p>
               </div>
@@ -79,28 +89,29 @@ export default function MedicalDisclaimerScreen({ onAccept }: MedicalDisclaimerS
         </div>
       </div>
 
-      {/* Accept button */}
-      <div className="mt-6">
-        <button
-          onClick={handleAccept}
-          disabled={!canProceed}
-          className={`
-            w-full py-4 rounded-full text-[17px] font-semibold
-            transition-all duration-200
-            ${
-              canProceed
-                ? 'bg-golden-glow text-dark-bg active:scale-[0.98]'
-                : 'bg-golden-glow/30 text-white/50 cursor-not-allowed'
-            }
-          `}
-        >
-          {canProceed ? 'I Understand' : 'Please read...'}
-        </button>
-        {!canProceed && (
-          <p className="text-center text-[13px] text-text-secondary mt-2">
-            Button will be enabled in a moment
-          </p>
-        )}
+        {/* Accept button */}
+        <div className="mt-6">
+          <button
+            onClick={handleAccept}
+            disabled={!canProceed}
+            className={`
+              w-full py-4 rounded-full text-[17px] font-semibold
+              transition-all duration-200 shadow-lg
+              ${
+                canProceed
+                  ? 'bg-black text-white active:scale-[0.98]'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }
+            `}
+          >
+            {canProceed ? 'I Understand' : 'Please Read...'}
+          </button>
+          {!canProceed && (
+            <p className="text-center text-sm text-gray-600 mt-2">
+              Button will be enabled in a moment
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

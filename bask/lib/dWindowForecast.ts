@@ -1,4 +1,31 @@
 import { HourlyForecastItem } from './plugins/baskWeather';
+import { DEFAULT_DAILY_GOAL_IU } from './constants';
+import {
+  SKIN_MULTIPLIERS,
+  FitzpatrickType,
+  calculateTimeToBurn,
+  getAgeMultiplier,
+} from './dEngine';
+
+/**
+ * Minimum estimated IU for a window to be considered viable.
+ * Below this threshold, the UV conditions (after cloud attenuation)
+ * cannot produce meaningful vitamin D -- don't recommend the window.
+ */
+const MIN_VIABLE_IU = 100;
+
+/**
+ * Full-day band when effective UV supports vitamin D synthesis (Shadow Rule).
+ * Wider than the scored optimal session block.
+ */
+export interface SynthesisWindow {
+  date: string; // ISO8601 date
+  dayLabel: string; // "Today" or "Tomorrow"
+  startTime: string; // "10:00 AM"
+  endTime: string; // "4:00 PM"
+  startsAt: Date;
+  endsAt: Date;
+}
 
 /**
  * Optimal basking window for a specific time period
@@ -6,13 +33,38 @@ import { HourlyForecastItem } from './plugins/baskWeather';
 export interface OptimalWindow {
   date: string; // ISO8601 date
   dayLabel: string; // "Today" or "Tomorrow"
-  startTime: string; // "12:15 PM"
-  endTime: string; // "12:40 PM"
-  durationMinutes: number;
+  windowStartTime: string; // "11:00 AM" - start of best scored session block
+  windowEndTime: string; // "2:00 PM" - end of best scored session block
+  startTime: string; // "12:15 PM" - recommended session start
+  endTime: string; // "12:40 PM" - recommended session end
+  durationMinutes: number; // recommended session duration
   avgUvIndex: number;
   estimatedIU: number; // Estimated vitamin D for this window
   reason: string; // Why this is the optimal window
   cloudCover: number; // Average cloud cover %
+}
+
+/**
+ * Recommendation types
+ */
+export type RecommendationType = 'action' | 'alert' | 'tip' | 'window';
+
+/**
+ * Structured recommendation content
+ */
+export interface RecommendationItem {
+  headline: string; // Bold, scannable text
+  details?: string; // Optional secondary text (muted)
+  items?: string[]; // Optional bullet sub-items
+}
+
+/**
+ * Single recommendation with type and priority
+ */
+export interface Recommendation {
+  type: RecommendationType;
+  priority: number; // Sort order (0 = highest)
+  content: RecommendationItem;
 }
 
 /**
@@ -21,8 +73,46 @@ export interface OptimalWindow {
 export interface DWindowForecast {
   today: OptimalWindow | null;
   tomorrow: OptimalWindow | null;
+  todaySynthesis: SynthesisWindow | null;
+  tomorrowSynthesis: SynthesisWindow | null;
   efficiency: 'excellent' | 'good' | 'moderate' | 'poor';
-  recommendations: string[];
+  recommendations: Recommendation[];
+  noWindowReason?: 'uv-too-low' | 'clouds-blocking' | 'low-exposure';
+  todayNoWindowReason?: 'uv-too-low' | 'clouds-blocking' | 'low-exposure';
+  tomorrowNoWindowReason?: 'uv-too-low' | 'clouds-blocking' | 'low-exposure';
+}
+
+/**
+ * Determine why no D-window exists for a given forecast period
+ */
+function determineNoWindowReason(
+  forecast: HourlyForecastItem[]
+): 'uv-too-low' | 'clouds-blocking' | 'low-exposure' | undefined {
+  if (forecast.length === 0) return undefined;
+
+  // Check if there were any hours with raw UV >= 3
+  const hoursWithRawUV = forecast.filter(
+    (h) => h.uvIndex >= 3 && h.hour >= 8 && h.hour <= 18,
+  );
+
+  if (hoursWithRawUV.length > 0) {
+    // Raw UV was sufficient, but need to determine if clouds or low exposure is the blocker
+    // Calculate effective UV (after cloud attenuation) for hours with raw UV >= 3
+    const hoursWithEffectiveUV = hoursWithRawUV.filter(
+      (h) => h.uvIndex * (1 - h.cloudCover * 0.7) >= 3,
+    );
+
+    if (hoursWithEffectiveUV.length > 0) {
+      // Effective UV is sufficient, so the blocker is low exposure/skin factors
+      return 'low-exposure';
+    } else {
+      // Effective UV is blocked by clouds
+      return 'clouds-blocking';
+    }
+  } else {
+    // Raw UV itself is below threshold
+    return 'uv-too-low';
+  }
 }
 
 /**
@@ -33,7 +123,8 @@ export function calculateOptimalWindows(
   hourlyForecast: HourlyForecastItem[],
   fitzpatrickType: number,
   exposurePercent: number = 50,
-  targetIU: number = 2500
+  targetIU: number = DEFAULT_DAILY_GOAL_IU,
+  age: number | null = null,
 ): DWindowForecast {
   const now = new Date();
   const todayStart = new Date(now);
@@ -46,7 +137,7 @@ export function calculateOptimalWindows(
   // Separate today's and tomorrow's forecasts
   const todayForecast = hourlyForecast.filter((h) => {
     const date = new Date(h.date);
-    return date >= todayStart && date < tomorrowStart && date > now;
+    return date >= todayStart && date < tomorrowStart;
   });
 
   const tomorrowForecast = hourlyForecast.filter((h) => {
@@ -54,17 +145,60 @@ export function calculateOptimalWindows(
     return date >= tomorrowStart && date < tomorrowEnd;
   });
 
-  const todayWindow = findOptimalWindow(todayForecast, 'Today', fitzpatrickType, exposurePercent, targetIU);
+  const todayWindow = findOptimalWindow(
+    todayForecast,
+    'Today',
+    fitzpatrickType,
+    exposurePercent,
+    targetIU,
+    age,
+  );
   const tomorrowWindow = findOptimalWindow(
     tomorrowForecast,
     'Tomorrow',
     fitzpatrickType,
     exposurePercent,
-    targetIU
+    targetIU,
+    age,
   );
 
+  const todaySynthesis = findSynthesisWindow(todayForecast, 'Today');
+  const tomorrowSynthesis = findSynthesisWindow(tomorrowForecast, 'Tomorrow');
+
+  // Null out today's windows if they have already fully passed
+  let effectiveTodayWindow = todayWindow;
+  if (todayWindow) {
+    const endHour = parseWindowEndHour(todayWindow.windowEndTime);
+    const windowEnd = new Date(todayStart);
+    windowEnd.setHours(endHour, 0, 0, 0);
+    if (now > windowEnd) {
+      effectiveTodayWindow = null;
+    }
+  }
+
+  let effectiveTodaySynthesis = todaySynthesis;
+  if (todaySynthesis && now > todaySynthesis.endsAt) {
+    effectiveTodaySynthesis = null;
+  }
+
+  // Calculate max forecasted UV across next 48 hours (for circadian rhythm advice)
+  const allForecast = [...todayForecast, ...tomorrowForecast];
+  const maxForecastedUV =
+    allForecast.length > 0 ? Math.max(...allForecast.map((h) => h.uvIndex)) : 0;
+
+  // Determine why no windows exist (for contextual UI messaging)
+  // Compute reason for today and tomorrow separately
+  const todayNoWindowReason = !effectiveTodayWindow ? determineNoWindowReason(todayForecast) : undefined;
+  const tomorrowNoWindowReason = !tomorrowWindow ? determineNoWindowReason(tomorrowForecast) : undefined;
+
+  // For backwards compatibility, use today's reason, or fall back to tomorrow's if both are null
+  const noWindowReason = todayNoWindowReason || tomorrowNoWindowReason;
+
   // Calculate overall efficiency
-  const bestUV = Math.max(todayWindow?.avgUvIndex || 0, tomorrowWindow?.avgUvIndex || 0);
+  const bestUV = Math.max(
+    effectiveTodayWindow?.avgUvIndex || 0,
+    tomorrowWindow?.avgUvIndex || 0,
+  );
   let efficiency: 'excellent' | 'good' | 'moderate' | 'poor';
   if (bestUV >= 5) efficiency = 'excellent';
   else if (bestUV >= 3) efficiency = 'good';
@@ -72,14 +206,177 @@ export function calculateOptimalWindows(
   else efficiency = 'poor';
 
   // Generate recommendations
-  const recommendations = generateRecommendations(todayWindow, tomorrowWindow, efficiency, targetIU);
+  const recommendations = generateRecommendations(
+    effectiveTodayWindow,
+    tomorrowWindow,
+    efficiency,
+    targetIU,
+    noWindowReason,
+    maxForecastedUV,
+    now,
+  );
 
   return {
-    today: todayWindow,
+    today: effectiveTodayWindow,
     tomorrow: tomorrowWindow,
+    todaySynthesis: effectiveTodaySynthesis,
+    tomorrowSynthesis,
     efficiency,
     recommendations,
+    noWindowReason,
+    todayNoWindowReason,
+    tomorrowNoWindowReason,
   };
+}
+
+/**
+ * Find when vitamin D synthesis is possible (effective UV >= 3, 8 AM–6 PM).
+ */
+function findSynthesisWindow(
+  forecast: HourlyForecastItem[],
+  dayLabel: string,
+): SynthesisWindow | null {
+  const viableHours = forecast
+    .filter(
+      (h) =>
+        h.hour >= 8 &&
+        h.hour <= 18 &&
+        h.uvIndex * (1 - h.cloudCover * 0.7) >= 3,
+    )
+    .sort((a, b) => a.hour - b.hour);
+
+  if (viableHours.length === 0) return null;
+
+  const first = viableHours[0];
+  const last = viableHours[viableHours.length - 1];
+  const startHour = first.hour;
+  const endHour = last.hour + 1;
+
+  const startsAt = buildDateFromHour(first.date, startHour, 0);
+  const endsAt = buildDateFromHour(last.date, endHour, 0);
+
+  return {
+    date: first.date,
+    dayLabel,
+    startTime: formatTime(startHour, 0),
+    endTime: formatTime(endHour, 0),
+    startsAt,
+    endsAt,
+  };
+}
+
+function buildDateFromHour(
+  isoDate: string,
+  hour: number,
+  minute: number,
+): Date {
+  const date = new Date(isoDate);
+  date.setHours(hour, minute, 0, 0);
+  return date;
+}
+
+/**
+ * Live countdown label when approaching today's synthesis window.
+ */
+export function getSynthesisCountdown(
+  synthesis: SynthesisWindow | null,
+  now: Date = new Date(),
+): { minutesUntil: number; label: string } | null {
+  if (!synthesis || now >= synthesis.startsAt) return null;
+
+  const minutesUntil = Math.max(
+    1,
+    Math.ceil((synthesis.startsAt.getTime() - now.getTime()) / 60000),
+  );
+
+  if (minutesUntil > 120) return null;
+
+  return {
+    minutesUntil,
+    label: `D synthesis starts in ${minutesUntil} min`,
+  };
+}
+
+/** Whether the current time is inside the synthesis band. */
+export function isInSynthesisWindow(
+  synthesis: SynthesisWindow | null,
+  now: Date = new Date(),
+): boolean {
+  if (!synthesis) return false;
+  return now >= synthesis.startsAt && now <= synthesis.endsAt;
+}
+
+/**
+ * Secondary synthesis copy for the forecast card (null = hide row).
+ */
+export function getSynthesisSecondaryMessage(
+  synthesis: SynthesisWindow | null,
+  optimal: OptimalWindow | null,
+  now: Date = new Date(),
+): string | null {
+  if (!synthesis) return null;
+
+  const countdown = getSynthesisCountdown(synthesis, now);
+  if (countdown) return countdown.label;
+
+  const inSynthesis = isInSynthesisWindow(synthesis, now);
+
+  if (inSynthesis && optimal) {
+    const optimalStart = parseTimeToDate(optimal.windowStartTime);
+    if (now < optimalStart) {
+      return `You can get vitamin D now · Best window at ${optimal.windowStartTime}`;
+    }
+    return null;
+  }
+
+  if (inSynthesis && !optimal) {
+    return `D synthesis active until ${synthesis.endTime}`;
+  }
+
+  if (!inSynthesis && now < synthesis.startsAt) {
+    if (optimal && synthesis.startTime === optimal.windowStartTime) {
+      return null;
+    }
+    return `Earliest D synthesis: ${synthesis.startTime}`;
+  }
+
+  return null;
+}
+
+/** Subtext for StatMetrics time-to-goal when UV is low or goal is far. */
+export function getSynthesisStatSubtext(
+  synthesis: SynthesisWindow | null,
+  optimal: OptimalWindow | null,
+  now: Date = new Date(),
+): string | null {
+  if (!synthesis) return null;
+
+  const countdown = getSynthesisCountdown(synthesis, now);
+  if (countdown) return countdown.label;
+
+  if (isInSynthesisWindow(synthesis, now)) {
+    return `Window open until ${synthesis.endTime}`;
+  }
+
+  if (now < synthesis.startsAt) {
+    return `Earliest D synthesis: ${synthesis.startTime}`;
+  }
+
+  if (optimal) return null;
+
+  return null;
+}
+
+function parseTimeToDate(timeStr: string): Date {
+  const [time, period] = timeStr.split(' ');
+  let [hours, minutes] = time.split(':').map(Number);
+
+  if (period === 'PM' && hours !== 12) hours += 12;
+  else if (period === 'AM' && hours === 12) hours = 0;
+
+  const date = new Date();
+  date.setHours(hours, minutes || 0, 0, 0);
+  return date;
 }
 
 /**
@@ -90,72 +387,94 @@ function findOptimalWindow(
   dayLabel: string,
   fitzpatrickType: number,
   exposurePercent: number,
-  targetIU: number
+  targetIU: number,
+  age: number | null,
 ): OptimalWindow | null {
   if (forecast.length === 0) return null;
 
-  // Filter for reasonable basking hours (UV >= 2, between 8 AM and 6 PM)
-  const usableHours = forecast.filter((h) => h.uvIndex >= 2 && h.hour >= 8 && h.hour <= 18);
+  // Filter for reasonable basking hours (UV >= 3 for D synthesis, between 8 AM and 6 PM)
+  let usableHours = forecast.filter(
+    (h) => h.uvIndex >= 3 && h.hour >= 8 && h.hour <= 18,
+  );
+
+  // For today, exclude hours that have already passed
+  if (dayLabel === 'Today') {
+    const currentHour = new Date().getHours();
+    usableHours = usableHours.filter((h) => h.hour >= currentHour);
+  }
 
   if (usableHours.length === 0) return null;
 
-  // Score each hour based on UV index, cloud cover, and time of day
-  const scoredHours = usableHours.map((h) => {
-    // Higher UV is better (up to a point)
-    const uvScore = Math.min(h.uvIndex / 8, 1) * 10;
+  // Sort chronologically for contiguous window detection
+  const chronological = [...usableHours].sort((a, b) => a.hour - b.hour);
 
-    // Lower cloud cover is better
-    const cloudScore = (1 - h.cloudCover) * 5;
-
-    // Prefer midday hours (10 AM - 2 PM)
-    const timeScore = h.hour >= 10 && h.hour <= 14 ? 3 : 0;
-
-    const totalScore = uvScore + cloudScore + timeScore;
-
-    return { hour: h, score: totalScore };
-  });
-
-  // Sort by score descending
-  scoredHours.sort((a, b) => b.score - a.score);
-
-  // Find the best contiguous window (1-3 hours)
-  let bestWindow: { start: HourlyForecastItem; hours: HourlyForecastItem[]; avgUV: number } | null = null;
+  // Find the best contiguous 1–3 hour window (by score)
+  let bestWindow: {
+    start: HourlyForecastItem;
+    hours: HourlyForecastItem[];
+    avgUV: number;
+  } | null = null;
   let bestScore = 0;
 
-  for (let i = 0; i < scoredHours.length; i++) {
-    const startHour = scoredHours[i].hour;
-    const window: HourlyForecastItem[] = [startHour];
-    let windowScore = scoredHours[i].score;
+  const scoreHour = (h: HourlyForecastItem) => {
+    const uvScore = Math.min(h.uvIndex / 8, 1) * 10;
+    const cloudScore = (1 - h.cloudCover) * 5;
+    return uvScore + cloudScore;
+  };
 
-    // Try to extend window to adjacent hours
-    for (let j = i + 1; j < Math.min(i + 3, scoredHours.length); j++) {
-      const nextHour = scoredHours[j].hour;
-      if (nextHour.hour === window[window.length - 1].hour + 1) {
-        window.push(nextHour);
-        windowScore += scoredHours[j].score;
+  for (let i = 0; i < chronological.length; i++) {
+    for (let len = 1; len <= 3 && i + len <= chronological.length; len++) {
+      const window = chronological.slice(i, i + len);
+
+      // Require true chronological adjacency (e.g. 10, 11, 12 — not 10, 14)
+      let contiguous = true;
+      for (let k = 1; k < window.length; k++) {
+        if (window[k].hour !== window[k - 1].hour + 1) {
+          contiguous = false;
+          break;
+        }
       }
-    }
+      if (!contiguous) continue;
 
-    const avgUV = window.reduce((sum, h) => sum + h.uvIndex, 0) / window.length;
+      const windowScore = window.reduce((sum, h) => sum + scoreHour(h), 0);
+      const avgUV =
+        window.reduce((sum, h) => sum + h.uvIndex, 0) / window.length;
 
-    if (windowScore > bestScore) {
-      bestScore = windowScore;
-      bestWindow = { start: startHour, hours: window, avgUV };
+      if (windowScore > bestScore) {
+        bestScore = windowScore;
+        bestWindow = { start: window[0], hours: window, avgUV };
+      }
     }
   }
 
   if (!bestWindow) return null;
 
   // Calculate duration needed to reach target IU
-  const avgCloudCover = bestWindow.hours.reduce((sum, h) => sum + h.cloudCover, 0) / bestWindow.hours.length;
+  const avgCloudCover =
+    bestWindow.hours.reduce((sum, h) => sum + h.cloudCover, 0) /
+    bestWindow.hours.length;
+  // Cloud cover approximation: (1 - cloudCover * 0.7) is a rough heuristic
+  // Thin clouds vs. storm clouds differ, but this is acceptable for estimation
   const effectiveUV = bestWindow.avgUV * (1 - avgCloudCover * 0.7);
 
-  const minutesToTarget = calculateMinutesToIU(targetIU, effectiveUV, exposurePercent, fitzpatrickType);
+  const minutesToTarget = calculateMinutesToIU(
+    targetIU,
+    effectiveUV,
+    exposurePercent,
+    fitzpatrickType,
+    age,
+  );
 
   // Cap at 60 minutes for safety
   const durationMinutes = Math.min(minutesToTarget, 60);
 
-  // Format times
+  // Calculate full UV-viable opportunity window (the multi-hour range)
+  const windowStartHour = bestWindow.start.hour;
+  const windowEndHour = bestWindow.hours[bestWindow.hours.length - 1].hour + 1; // +1 because we want the end of the last hour
+  const windowStartTime = formatTime(windowStartHour, 0);
+  const windowEndTime = formatTime(windowEndHour, 0);
+
+  // Calculate recommended session times (within the opportunity window)
   const startHour = bestWindow.start.hour;
   const endHour = startHour + Math.floor(durationMinutes / 60);
   const endMinute = durationMinutes % 60;
@@ -165,8 +484,19 @@ function findOptimalWindow(
 
   // Calculate estimated IU for this window
   const estimatedIU = Math.round(
-    calculateIUForDuration(durationMinutes, effectiveUV, exposurePercent, fitzpatrickType)
+    calculateIUForDuration(
+      durationMinutes,
+      effectiveUV,
+      exposurePercent,
+      fitzpatrickType,
+      age,
+    ),
   );
+
+  // Reject window if effective conditions can't produce meaningful vitamin D
+  if (estimatedIU < MIN_VIABLE_IU) {
+    return null;
+  }
 
   // Generate reason
   let reason = `UV ${bestWindow.avgUV.toFixed(1)}`;
@@ -181,6 +511,8 @@ function findOptimalWindow(
   return {
     date: bestWindow.start.date,
     dayLabel,
+    windowStartTime,
+    windowEndTime,
     startTime,
     endTime,
     durationMinutes,
@@ -193,52 +525,83 @@ function findOptimalWindow(
 
 /**
  * Calculate minutes needed to reach target IU
+ * Uses the same formula as dEngine for consistency
+ * Caps at the burn threshold (biological saturation limit)
  */
 function calculateMinutesToIU(
   targetIU: number,
   uvIndex: number,
   exposurePercent: number,
-  fitzpatrickType: number
+  fitzpatrickType: number,
+  age: number | null,
 ): number {
-  // Holick formula approximation: IU = UVI × duration (min) × BSA (%) × skin_multiplier
-  const skinMultiplier = getSkinMultiplier(fitzpatrickType);
-  const minutesNeeded = targetIU / (uvIndex * (exposurePercent / 100) * skinMultiplier);
-  return Math.max(5, Math.round(minutesNeeded));
+  // Shadow Rule: UV must be >= 3 for vitamin D synthesis
+  if (uvIndex < 3) return Infinity;
+
+  const BASE_IU_PER_MINUTE = 100;
+  const skinMultiplier =
+    SKIN_MULTIPLIERS[fitzpatrickType as FitzpatrickType] ?? 1.6;
+  const exposureFraction = exposurePercent / 100;
+  const uvFactor = uvIndex / 10;
+  const ageFactor = getAgeMultiplier(age);
+
+  // Formula aligned with dEngine: Minutes = IU / (uvFactor * exposure * (1/skin) * age * base)
+  const minutesNeeded =
+    targetIU /
+    (uvFactor *
+      exposureFraction *
+      (1 / skinMultiplier) *
+      ageFactor *
+      BASE_IU_PER_MINUTE);
+
+  // Cap at burn threshold (biological saturation - no more D synthesis after this)
+  const timeToBurn = calculateTimeToBurn(
+    uvIndex,
+    fitzpatrickType as FitzpatrickType,
+  );
+  const cappedMinutes = Math.min(minutesNeeded, timeToBurn);
+
+  return Math.max(5, Math.round(cappedMinutes));
 }
 
 /**
  * Calculate IU for a given duration
+ * Uses the same formula as dEngine for consistency
+ * Caps synthesis at the burn threshold (biological saturation)
  */
 function calculateIUForDuration(
   minutes: number,
   uvIndex: number,
   exposurePercent: number,
-  fitzpatrickType: number
+  fitzpatrickType: number,
+  age: number | null,
 ): number {
-  const skinMultiplier = getSkinMultiplier(fitzpatrickType);
-  return uvIndex * minutes * (exposurePercent / 100) * skinMultiplier;
-}
+  // Shadow Rule: UV must be >= 3 for vitamin D synthesis
+  if (uvIndex < 3) return 0;
 
-/**
- * Get skin type multiplier for D synthesis
- */
-function getSkinMultiplier(type: number): number {
-  switch (type) {
-    case 1:
-      return 10; // Very fair - synthesizes fastest
-    case 2:
-      return 8;
-    case 3:
-      return 6;
-    case 4:
-      return 4;
-    case 5:
-      return 2;
-    case 6:
-      return 1; // Dark - synthesizes slowest
-    default:
-      return 6;
-  }
+  const BASE_IU_PER_MINUTE = 100;
+  const skinMultiplier =
+    SKIN_MULTIPLIERS[fitzpatrickType as FitzpatrickType] ?? 1.6;
+  const exposureFraction = exposurePercent / 100;
+  const uvFactor = uvIndex / 10;
+  const ageFactor = getAgeMultiplier(age);
+
+  // Cap synthesis at the burn threshold (biological saturation)
+  const timeToBurn = calculateTimeToBurn(
+    uvIndex,
+    fitzpatrickType as FitzpatrickType,
+  );
+  const effectiveMinutes = Math.min(minutes, timeToBurn);
+
+  // Formula aligned with dEngine: IU = (UVI/10) * Minutes * Exposure% * (1/SkinMultiplier) * AgeFactor * BaseRate
+  return (
+    uvFactor *
+    effectiveMinutes *
+    exposureFraction *
+    (1 / skinMultiplier) *
+    ageFactor *
+    BASE_IU_PER_MINUTE
+  );
 }
 
 /**
@@ -252,40 +615,154 @@ function formatTime(hour: number, minute: number): string {
 }
 
 /**
+ * Parse a time string like "2:00 PM" back into 24-hour format (14)
+ */
+function parseWindowEndHour(timeStr: string): number {
+  const [time, period] = timeStr.split(' ');
+  let [hours] = time.split(':').map(Number);
+
+  // Convert to 24-hour format
+  if (period === 'PM' && hours !== 12) {
+    hours += 12;
+  } else if (period === 'AM' && hours === 12) {
+    hours = 0;
+  }
+
+  return hours;
+}
+
+function isNowInOpportunityWindow(window: OptimalWindow, now: Date): boolean {
+  const start = parseTimeToDate(window.windowStartTime);
+  const end = parseTimeToDate(window.windowEndTime);
+  return now >= start && now <= end;
+}
+
+/**
  * Generate personalized recommendations
  */
 function generateRecommendations(
   today: OptimalWindow | null,
   tomorrow: OptimalWindow | null,
   efficiency: string,
-  targetIU: number
-): string[] {
-  const recommendations: string[] = [];
+  targetIU: number,
+  noWindowReason?: 'uv-too-low' | 'clouds-blocking' | 'low-exposure',
+  maxForecastedUV?: number,
+  now: Date = new Date(),
+): Recommendation[] {
+  const recommendations: Recommendation[] = [];
 
-  if (today && today.avgUvIndex >= 5) {
-    recommendations.push(
-      `Perfect sun right now! ${today.durationMinutes} min outside will give you ${today.estimatedIU} IU.`
-    );
+  // Today's recommendation
+  if (today && today.avgUvIndex >= 5 && isNowInOpportunityWindow(today, now)) {
+    recommendations.push({
+      type: 'window',
+      priority: 1,
+      content: {
+        headline: 'Perfect sun right now!',
+        details: `${today.durationMinutes} min outside will give you ${today.estimatedIU} IU.`,
+      },
+    });
   } else if (today && today.avgUvIndex >= 3) {
-    recommendations.push(`Good UV today from ${today.startTime}. Plan a ${today.durationMinutes}-min outdoor break.`);
+    recommendations.push({
+      type: 'window',
+      priority: 2,
+      content: {
+        headline: `Good UV today from ${today.startTime}`,
+        details: `Plan a ${today.durationMinutes}-min outdoor break.`,
+      },
+    });
   } else if (today) {
-    recommendations.push(
-      `Low UV today (${today.avgUvIndex.toFixed(1)}). You'll need ${today.durationMinutes} min or consider a supplement.`
-    );
+    recommendations.push({
+      type: 'tip',
+      priority: 3,
+      content: {
+        headline: `Low UV today (${today.avgUvIndex.toFixed(1)})`,
+        details: `You'll need ${today.durationMinutes} min. Some people also consider supplementation — consult your provider.`,
+      },
+    });
   } else {
-    recommendations.push(`No usable UV today. Consider a ${Math.round(targetIU / 40)} IU supplement tonight.`);
+    if (noWindowReason === 'clouds-blocking') {
+      recommendations.push({
+        type: 'alert',
+        priority: 2,
+        content: {
+          headline: 'Cloud cover is blocking UVB today',
+          details: 'Check recommendations below for alternatives.',
+        },
+      });
+    } else {
+      recommendations.push({
+        type: 'alert',
+        priority: 2,
+        content: {
+          headline: 'No usable UV right now',
+          details:
+            'Natural vitamin D synthesis not possible in current conditions.',
+        },
+      });
+    }
   }
 
+  // Tomorrow's recommendation
   if (tomorrow && tomorrow.avgUvIndex >= 5) {
-    recommendations.push(
-      `Tomorrow looks excellent! Best window: ${tomorrow.startTime}–${tomorrow.endTime} (UV ${tomorrow.avgUvIndex.toFixed(1)}).`
-    );
+    recommendations.push({
+      type: 'window',
+      priority: 4,
+      content: {
+        headline: 'Tomorrow looks excellent!',
+        details: `Best window: ${tomorrow.startTime}–${
+          tomorrow.endTime
+        } (UV ${tomorrow.avgUvIndex.toFixed(1)}).`,
+      },
+    });
   } else if (tomorrow && tomorrow.avgUvIndex >= 3) {
-    recommendations.push(`Tomorrow: ${tomorrow.startTime}–${tomorrow.endTime} for ${tomorrow.estimatedIU} IU.`);
+    recommendations.push({
+      type: 'window',
+      priority: 5,
+      content: {
+        headline: `Tomorrow: ${tomorrow.startTime}–${tomorrow.endTime}`,
+        details: `${tomorrow.estimatedIU} IU available.`,
+      },
+    });
+  } else if (!tomorrow && noWindowReason === 'clouds-blocking') {
+    recommendations.push({
+      type: 'alert',
+      priority: 3,
+      content: {
+        headline: "Tomorrow's forecast also shows heavy clouds",
+        details: 'UVB will remain limited through tomorrow.',
+      },
+    });
   }
 
+  // Efficiency warning
   if (efficiency === 'poor') {
-    recommendations.push('UV is weak this week. Increase supplement dose or plan longer outdoor sessions.');
+    recommendations.push({
+      type: 'alert',
+      priority: 4,
+      content: {
+        headline: 'UV is weak this week',
+        details: 'Natural vitamin D production will be limited.',
+      },
+    });
+  }
+
+  // Circadian rhythm advice for consistently low UV OR when clouds block all UV
+  if (
+    (maxForecastedUV !== undefined && maxForecastedUV < 3) ||
+    noWindowReason === 'clouds-blocking'
+  ) {
+    recommendations.push({
+      type: 'action',
+      priority: 0,
+      content: {
+        headline: 'UV too weak for vitamin D synthesis',
+        items: [
+          'Consider discussing vitamin D and cofactors with a clinician',
+          'Morning light exposure can support circadian rhythm during low-UV periods',
+        ],
+        details: 'Supports circadian rhythm during low-UV periods.',
+      },
+    });
   }
 
   return recommendations;

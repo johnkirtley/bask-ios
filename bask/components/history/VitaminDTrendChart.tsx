@@ -1,7 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { sessionsRepository, supplementsRepository } from '../../lib/database';
+import { sessionsRepository, supplementsRepository, userProfileRepository } from '../../lib/database';
+import { useSubscription } from '../../hooks/useSubscription';
+import { DEFAULT_DAILY_GOAL_IU } from '../../lib/constants';
+import ProBadge from '../ui/ProBadge';
 
 interface VitaminDTrendChartProps {
   className?: string;
@@ -16,9 +19,26 @@ interface DayTotal {
 }
 
 export default function VitaminDTrendChart({ className = '' }: VitaminDTrendChartProps) {
+  const { isPremium, presentPaywall } = useSubscription();
   const [data, setData] = useState<DayTotal[]>([]);
   const [loading, setLoading] = useState(true);
-  const [timeRange, setTimeRange] = useState<'7days' | '30days' | '90days'>('30days');
+  const [timeRange, setTimeRange] = useState<'7days' | '30days' | '90days'>('7days');
+  const [dailyGoal, setDailyGoal] = useState(DEFAULT_DAILY_GOAL_IU);
+
+  useEffect(() => {
+    userProfileRepository.get().then((profile) => {
+      if (profile?.daily_goal) {
+        setDailyGoal(profile.daily_goal);
+      }
+    });
+  }, []);
+
+  // Force free users back to 7 days if they have a premium range set
+  useEffect(() => {
+    if (!isPremium && (timeRange === '30days' || timeRange === '90days')) {
+      setTimeRange('7days');
+    }
+  }, [isPremium, timeRange]);
 
   useEffect(() => {
     loadTrendData();
@@ -90,7 +110,7 @@ export default function VitaminDTrendChart({ className = '' }: VitaminDTrendChar
   };
 
   // Calculate chart dimensions and scaling
-  const maxIU = Math.max(...data.map((d) => d.totalIU), 5000); // At least 5000 IU for scale
+  const maxIU = Math.max(...data.map((d) => d.totalIU), dailyGoal);
   const chartHeight = 200;
   const chartPadding = { top: 20, right: 20, bottom: 40, left: 50 };
   const chartWidth = 600; // Will be responsive via viewBox
@@ -162,44 +182,93 @@ export default function VitaminDTrendChart({ className = '' }: VitaminDTrendChar
   };
 
   return (
-    <div className={`backdrop-blur-xl bg-white/10 rounded-2xl p-6 border border-white/20 ${className}`}>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-white">Vitamin D Trend</h2>
-        <div className="flex gap-2">
+    <div className={`backdrop-blur-xl bg-white/70 rounded-2xl p-6 border border-black/5 shadow-sm ${className}`}>
+      {/* Header - Stacked Title and Time Range Selectors */}
+      <div className="mb-6 space-y-4">
+        {/* Title with Solar Accent */}
+        <div className="text-center relative">
+          <div className="absolute left-1/2 -translate-x-1/2 -top-1 w-32 h-8 bg-solar-flare/10 blur-2xl pointer-events-none"></div>
+          <h2 className="text-2xl font-bold text-text-primary tracking-tight relative">
+            Vitamin D Trend
+          </h2>
+        </div>
+
+        {/* Time Range Selectors - Centered */}
+        <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => setTimeRange('7days')}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+            className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all touch-manipulation ${
               timeRange === '7days'
-                ? 'bg-golden-glow text-dark-bg'
-                : 'bg-white/5 text-text-secondary hover:bg-white/10'
-            }`}>
+                ? 'bg-solar-flare text-white shadow-md'
+                : 'bg-white/40 text-text-secondary hover:bg-black/5 active:bg-black/10'
+            }`}
+            aria-label="View 7 day trend">
             7D
           </button>
           <button
-            onClick={() => setTimeRange('30days')}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+            onClick={async () => {
+              if (!isPremium) {
+                await presentPaywall();
+              } else {
+                setTimeRange('30days');
+              }
+            }}
+            className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all touch-manipulation flex items-center justify-center gap-1.5 ${
               timeRange === '30days'
-                ? 'bg-golden-glow text-dark-bg'
-                : 'bg-white/5 text-text-secondary hover:bg-white/10'
-            }`}>
+                ? 'bg-solar-flare text-white shadow-md'
+                : 'bg-white/40 text-text-secondary hover:bg-black/5 active:bg-black/10'
+            }`}
+            aria-label="View 30 day trend">
             30D
+            {!isPremium && (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="w-3 h-3 opacity-60">
+                <path
+                  fillRule="evenodd"
+                  d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            )}
           </button>
           <button
-            onClick={() => setTimeRange('90days')}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+            onClick={async () => {
+              if (!isPremium) {
+                await presentPaywall();
+              } else {
+                setTimeRange('90days');
+              }
+            }}
+            className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all touch-manipulation flex items-center justify-center gap-1.5 ${
               timeRange === '90days'
-                ? 'bg-golden-glow text-dark-bg'
-                : 'bg-white/5 text-text-secondary hover:bg-white/10'
-            }`}>
+                ? 'bg-solar-flare text-white shadow-md'
+                : 'bg-white/40 text-text-secondary hover:bg-black/5 active:bg-black/10'
+            }`}
+            aria-label="View 90 day trend">
             90D
+            {!isPremium && (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="w-3 h-3 opacity-60">
+                <path
+                  fillRule="evenodd"
+                  d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            )}
           </button>
         </div>
       </div>
 
       {loading ? (
         <div className="py-12 text-center">
-          <div className="w-8 h-8 border-4 border-golden-glow/30 border-t-golden-glow rounded-full animate-spin mx-auto"></div>
+          <div className="w-8 h-8 border-4 border-solar-flare/30 border-t-golden-glow rounded-full animate-spin mx-auto"></div>
           <p className="text-text-secondary text-sm mt-3">Loading trend data...</p>
         </div>
       ) : data.length === 0 ? (
@@ -209,21 +278,21 @@ export default function VitaminDTrendChart({ className = '' }: VitaminDTrendChar
       ) : (
         <>
           {/* Stats Cards */}
-          <div className="grid grid-cols-3 gap-3 mb-6">
-            <div className="backdrop-blur-sm bg-white/5 rounded-lg p-3 border border-white/10">
-              <div className="text-text-secondary text-xs mb-1">Avg Daily</div>
-              <div className="text-white text-xl font-bold">{avgDailyIU.toLocaleString()}</div>
-              <div className="text-text-secondary text-xs">IU</div>
+          <div className="grid grid-cols-3 gap-2 mb-6">
+            <div className="backdrop-blur-sm bg-white/70 rounded-lg p-2.5 border border-black/5">
+              <div className="text-text-secondary text-[10px] mb-1 whitespace-nowrap">Avg</div>
+              <div className="text-text-primary text-lg font-bold tabular-nums">{avgDailyIU.toLocaleString()}</div>
+              <div className="text-text-secondary text-[10px]">IU</div>
             </div>
-            <div className="backdrop-blur-sm bg-white/5 rounded-lg p-3 border border-white/10">
-              <div className="text-text-secondary text-xs mb-1">Peak Day</div>
-              <div className="text-golden-glow text-xl font-bold">{peakIU.toLocaleString()}</div>
-              <div className="text-text-secondary text-xs">IU</div>
+            <div className="backdrop-blur-sm bg-white/70 rounded-lg p-2.5 border border-black/5">
+              <div className="text-text-secondary text-[10px] mb-1 whitespace-nowrap">Peak</div>
+              <div className="text-solar-flare text-lg font-bold tabular-nums">{peakIU.toLocaleString()}</div>
+              <div className="text-text-secondary text-[10px]">IU</div>
             </div>
-            <div className="backdrop-blur-sm bg-white/5 rounded-lg p-3 border border-white/10">
-              <div className="text-text-secondary text-xs mb-1">Days Tracked</div>
-              <div className="text-white text-xl font-bold">{totalDaysTracked}</div>
-              <div className="text-text-secondary text-xs">of {data.length}</div>
+            <div className="backdrop-blur-sm bg-white/70 rounded-lg p-2.5 border border-black/5">
+              <div className="text-text-secondary text-[10px] mb-1 whitespace-nowrap">Tracked</div>
+              <div className="text-text-primary text-lg font-bold tabular-nums">{totalDaysTracked}</div>
+              <div className="text-text-secondary text-[10px]">of {data.length}</div>
             </div>
           </div>
 
@@ -236,8 +305,8 @@ export default function VitaminDTrendChart({ className = '' }: VitaminDTrendChar
               {/* Gradient for area fill */}
               <defs>
                 <linearGradient id="areaGradient" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stopColor="#F4B860" stopOpacity="0.3" />
-                  <stop offset="100%" stopColor="#F4B860" stopOpacity="0.05" />
+                  <stop offset="0%" stopColor="#FFB347" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#FFB347" stopOpacity="0.05" />
                 </linearGradient>
               </defs>
 
@@ -250,7 +319,7 @@ export default function VitaminDTrendChart({ className = '' }: VitaminDTrendChar
                       x2={plotWidth}
                       y1={plotHeight * fraction}
                       y2={plotHeight * fraction}
-                      stroke="rgba(255, 255, 255, 0.1)"
+                      stroke="rgba(0, 0, 0, 0.08)"
                       strokeWidth="1"
                     />
                     <text
@@ -264,26 +333,26 @@ export default function VitaminDTrendChart({ className = '' }: VitaminDTrendChar
                   </g>
                 ))}
 
-                {/* Goal line (5000 IU) */}
-                {maxIU >= 5000 && (
+                {/* Goal line */}
+                {maxIU >= dailyGoal && (
                   <>
                     <line
                       x1={0}
                       x2={plotWidth}
-                      y1={scaleY(5000)}
-                      y2={scaleY(5000)}
-                      stroke="#F4B860"
+                      y1={scaleY(dailyGoal)}
+                      y2={scaleY(dailyGoal)}
+                      stroke="#FFB347"
                       strokeWidth="1"
                       strokeDasharray="4 4"
                       opacity="0.5"
                     />
                     <text
                       x={plotWidth}
-                      y={scaleY(5000) - 5}
+                      y={scaleY(dailyGoal) - 5}
                       fontSize="10"
-                      fill="#F4B860"
+                      fill="#FFB347"
                       textAnchor="end">
-                      Goal: 5000 IU
+                      Goal: {dailyGoal.toLocaleString()} IU
                     </text>
                   </>
                 )}
@@ -295,7 +364,7 @@ export default function VitaminDTrendChart({ className = '' }: VitaminDTrendChar
                 <path
                   d={totalPath}
                   fill="none"
-                  stroke="#F4B860"
+                  stroke="#FFB347"
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -310,8 +379,8 @@ export default function VitaminDTrendChart({ className = '' }: VitaminDTrendChar
                       cx={scaleX(index)}
                       cy={scaleY(day.totalIU)}
                       r="3"
-                      fill="#F4B860"
-                      stroke="#1F2937"
+                      fill="#FFB347"
+                      stroke="#F0EDE9"
                       strokeWidth="2"
                     />
                   );
@@ -340,7 +409,7 @@ export default function VitaminDTrendChart({ className = '' }: VitaminDTrendChar
           {/* Legend */}
           <div className="mt-4 flex items-center justify-center gap-4 text-xs text-text-secondary">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-golden-glow"></div>
+              <div className="w-3 h-3 rounded-full bg-solar-flare"></div>
               <span>Daily Total (Sun + Supplements)</span>
             </div>
           </div>

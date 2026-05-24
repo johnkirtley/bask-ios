@@ -1,0 +1,3 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[446],{3446:function(e,t,n){n.r(t),n.d(t,{startStatusTap:function(){return o}});var r=n(4907),s=n(7688),i=n(6450);/*!
+ * (C) Ionic http://ionicframework.com - MIT License
+ */let o=()=>{let e=window;e.addEventListener("statusTap",()=>{(0,r.wj)(()=>{let t=e.innerWidth,n=e.innerHeight,o=document.elementFromPoint(t/2,n/2);if(!o)return;let a=(0,s.a)(o);a&&new Promise(e=>(0,i.c)(a,e)).then(()=>{(0,r.Iu)(async()=>{a.style.setProperty("--overflow","hidden"),await (0,s.s)(a,300),a.style.removeProperty("--overflow")})})})})}}}]);

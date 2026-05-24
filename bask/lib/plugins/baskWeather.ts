@@ -55,6 +55,17 @@ export interface LocationPermissionStatus {
 }
 
 /**
+ * Location information from reverse geocoding
+ */
+export interface LocationInfo {
+  city: string;
+  state: string;
+  country: string;
+  latitude: number;
+  longitude: number;
+}
+
+/**
  * Bask Weather Plugin interface
  * Native iOS plugin for fetching weather data from Apple WeatherKit
  */
@@ -87,6 +98,19 @@ export interface BaskWeatherPlugin {
    * @returns Permission status
    */
   requestLocationPermission(): Promise<LocationPermissionStatus>;
+
+  /**
+   * Get location information (city, state) from current position
+   * Requires location permission
+   * @returns Location details
+   */
+  getLocationInfo(): Promise<LocationInfo>;
+
+  /**
+   * Open the app's settings page in iOS Settings
+   * Allows users to change location and health permissions
+   */
+  openSettings(): Promise<void>;
 }
 
 /**

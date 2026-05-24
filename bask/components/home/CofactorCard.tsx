@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { App } from '@capacitor/app';
 import { cofactorsRepository, CofactorType } from '../../lib/database';
+import GlassCardWrapper from './GlassCardWrapper';
 
 interface CofactorCardProps {
   onCofactorLogged?: () => void;
@@ -21,10 +23,39 @@ export default function CofactorCard({ onCofactorLogged }: CofactorCardProps) {
   const [k2Logged, setK2Logged] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showEducation, setShowEducation] = useState(false);
+  const lastLoadDateRef = useRef<string>(new Date().toDateString());
 
   // Load today's cofactor status
   useEffect(() => {
     loadTodayStatus();
+
+    // Listen for app resume to detect day changes
+    const listener = App.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) {
+        const today = new Date().toDateString();
+        if (today !== lastLoadDateRef.current) {
+          lastLoadDateRef.current = today;
+          loadTodayStatus();
+        }
+      }
+    });
+
+    // Also check on visibility change (for web/PWA)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        const today = new Date().toDateString();
+        if (today !== lastLoadDateRef.current) {
+          lastLoadDateRef.current = today;
+          loadTodayStatus();
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      listener.then((l) => l.remove());
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   const loadTodayStatus = async () => {
@@ -52,7 +83,8 @@ export default function CofactorCard({ onCofactorLogged }: CofactorCardProps) {
     }
 
     try {
-      const isCurrentlyLogged = type === 'magnesium' ? magnesiumLogged : k2Logged;
+      const isCurrentlyLogged =
+        type === 'magnesium' ? magnesiumLogged : k2Logged;
 
       if (!isCurrentlyLogged) {
         // Log the cofactor
@@ -83,86 +115,110 @@ export default function CofactorCard({ onCofactorLogged }: CofactorCardProps) {
   const bothLogged = magnesiumLogged && k2Logged;
 
   return (
-    <div className="w-full px-4 py-3">
-      <div className="bg-white/40 backdrop-blur-sm rounded-2xl p-4 border border-white/50">
+    <div className='w-full'>
+      <GlassCardWrapper>
         {/* Header */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex-1">
-            <p className="text-sm font-medium text-white">
-              {bothLogged ? '✓ Cofactors Logged Today!' : 'Track Your Cofactors'}
-            </p>
-            <p className="text-xs text-white/70 mt-0.5">
-              {bothLogged ? 'Great work! Your D is optimized' : 'Essential for vitamin D absorption'}
-            </p>
-          </div>
+        <div className='mb-4'>
+          <h3 className='text-xs font-semibold uppercase tracking-[0.08em] text-text-secondary mb-2'>
+            Cofactors
+          </h3>
+          <div className='flex items-center justify-between'>
+            <div className='flex-1'>
+              <p className='text-sm font-medium text-text-primary'>
+                {bothLogged
+                  ? '✓ Logged Today!'
+                  : 'Track Your Intake'}
+              </p>
+              <p className='text-xs text-text-secondary mt-0.5'>
+                {bothLogged
+                  ? 'Great work! Your cofactors are logged'
+                  : 'May support vitamin D utilization'}
+              </p>
+            </div>
 
-          {/* Info button */}
-          <button
-            onClick={() => setShowEducation(!showEducation)}
-            className="p-2 rounded-full hover:bg-white/10 transition-colors">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-5 h-5 text-white">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
-              />
-            </svg>
-          </button>
+            {/* Info button */}
+            <button
+              onClick={() => setShowEducation(!showEducation)}
+              aria-label='Learn about cofactors'
+              aria-expanded={showEducation}
+              className='p-2 rounded-full hover:bg-black/5 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center'>
+              <svg
+                xmlns='http://www.w3.org/2000/svg'
+                fill='none'
+                viewBox='0 0 24 24'
+                strokeWidth={2}
+                stroke='currentColor'
+                className='w-5 h-5 text-text-primary'
+                aria-hidden='true'>
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  d='M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z'
+                />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Cofactor toggles */}
-        <div className="space-y-3 pt-2 border-t border-white/20">
+        <div className='space-y-3 pt-2 border-t border-black/5'>
           {/* Magnesium toggle */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                magnesiumLogged ? 'bg-golden-glow' : 'bg-white/20'
-              }`}>
-                <span className="text-lg">🧂</span>
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center gap-3 min-w-0'>
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  magnesiumLogged ? 'bg-solar-flare' : 'bg-black/5'
+                }`}>
+                <span className='text-xs font-bold text-text-primary'>Mg</span>
               </div>
-              <div>
-                <p className="text-sm font-medium text-white">Magnesium</p>
-                <p className="text-xs text-white/60">Activates vitamin D</p>
+              <div className='min-w-0'>
+                <p className='text-sm font-medium text-text-primary'>
+                  Magnesium
+                </p>
+                <p className='text-xs text-text-secondary'>
+                  May support vitamin D activation
+                </p>
               </div>
             </div>
             <button
               onClick={() => handleToggle('magnesium')}
               disabled={isLoading || magnesiumLogged}
-              className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${
+              aria-label={magnesiumLogged ? 'Magnesium logged' : 'Log magnesium intake'}
+              className={`px-4 py-3 rounded-lg text-xs font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                 magnesiumLogged
-                  ? 'bg-golden-glow text-white'
-                  : 'bg-white/20 text-white hover:bg-white/30 active:scale-95'
+                  ? 'bg-solar-flare text-[#4A2800]'
+                  : 'bg-black/5 text-text-primary hover:bg-black/10 active:scale-95'
               } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}>
               {magnesiumLogged ? '✓ Logged' : 'Log'}
             </button>
           </div>
 
           {/* Vitamin K2 toggle */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                k2Logged ? 'bg-golden-glow' : 'bg-white/20'
-              }`}>
-                <span className="text-lg">🦴</span>
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center gap-3 min-w-0'>
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  k2Logged ? 'bg-solar-flare' : 'bg-black/5'
+                }`}>
+                <span className='text-xs font-bold text-text-primary'>K₂</span>
               </div>
-              <div>
-                <p className="text-sm font-medium text-white">Vitamin K2</p>
-                <p className="text-xs text-white/60">Directs calcium to bones</p>
+              <div className='min-w-0'>
+                <p className='text-sm font-medium text-text-primary'>
+                  Vitamin K2
+                </p>
+                <p className='text-xs text-text-secondary'>
+                  May support calcium utilization
+                </p>
               </div>
             </div>
             <button
               onClick={() => handleToggle('vitamin_k2')}
               disabled={isLoading || k2Logged}
-              className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${
+              aria-label={k2Logged ? 'Vitamin K2 logged' : 'Log vitamin K2 intake'}
+              className={`px-4 py-3 rounded-lg text-xs font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                 k2Logged
-                  ? 'bg-golden-glow text-white'
-                  : 'bg-white/20 text-white hover:bg-white/30 active:scale-95'
+                  ? 'bg-solar-flare text-[#4A2800]'
+                  : 'bg-black/5 text-text-primary hover:bg-black/10 active:scale-95'
               } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}>
               {k2Logged ? '✓ Logged' : 'Log'}
             </button>
@@ -171,24 +227,29 @@ export default function CofactorCard({ onCofactorLogged }: CofactorCardProps) {
 
         {/* Educational content (expandable) */}
         {showEducation && (
-          <div className="mt-4 pt-3 border-t border-white/20 space-y-3">
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-white">🧂 Why Magnesium Matters</p>
-              <p className="text-xs text-white/70 leading-relaxed">
-                Your body needs magnesium to convert vitamin D into its active form. Without adequate magnesium,
-                your D levels won&apos;t rise as expected, even with supplementation.
+          <div className='mt-4 pt-3 border-t border-black/5 space-y-3'>
+            <div className='space-y-2'>
+              <p className='text-xs font-medium text-text-primary'>
+                🧂 Why Magnesium Matters
+              </p>
+              <p className='text-xs text-text-secondary leading-relaxed'>
+                Some research suggests your body needs magnesium to convert vitamin D into its active
+                form. Without adequate magnesium, D levels may not rise
+                as expected, even with supplementation.
               </p>
             </div>
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-white">🦴 Why Vitamin K2 Matters</p>
-              <p className="text-xs text-white/70 leading-relaxed">
-                K2 ensures calcium goes to your bones and teeth, not your arteries. When taking high-dose vitamin D,
-                K2 prevents arterial calcification and supports cardiovascular health.
+            <div className='space-y-2'>
+              <p className='text-xs font-medium text-text-primary'>
+                🦴 Why Vitamin K2 Matters
+              </p>
+              <p className='text-xs text-text-secondary leading-relaxed'>
+                Some research suggests K2 may support healthy calcium utilization. When taking
+                higher vitamin D, some people consider K2 supplementation.
               </p>
             </div>
           </div>
         )}
-      </div>
+      </GlassCardWrapper>
     </div>
   );
 }

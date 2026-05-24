@@ -3,23 +3,61 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 48;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
+		34a216e771c4a4e665a15860 /* BaskHealthPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63dade1fc57226a305c5a29b /* BaskHealthPlugin.swift */; };
+		40606ab891514119861fe1db /* BaskWeatherPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = 07fde5f0a10aaa4e4b440cdb /* BaskWeatherPlugin.m */; };
 		50379B232058CBB4000EE86E /* capacitor.config.json in Resources */ = {isa = PBXBuildFile; fileRef = 50379B222058CBB4000EE86E /* capacitor.config.json */; };
 		504EC3081FED79650016851F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC3071FED79650016851F /* AppDelegate.swift */; };
 		504EC30D1FED79650016851F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30B1FED79650016851F /* Main.storyboard */; };
 		504EC30F1FED79650016851F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30E1FED79650016851F /* Assets.xcassets */; };
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
+		6fbff39349734e9129429872 /* BaskHealthPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = c7bdf47bc18d78924857dbbc /* BaskHealthPlugin.m */; };
 		A084ECDBA7D38E1E42DFC39D /* Pods_App.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */; };
+		AA1A187A2F2AEEAA00F43A60 /* BaskBackgroundTaskPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1A18792F2AEEAA00F43A60 /* BaskBackgroundTaskPlugin.swift */; };
+		AA1A187B2F2AEEAA00F43A60 /* BaskBackgroundTaskPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = AA1A18782F2AEEAA00F43A60 /* BaskBackgroundTaskPlugin.m */; };
 		AA1F14682F28743F003E3D11 /* bask-icon-main.icon in Resources */ = {isa = PBXBuildFile; fileRef = AA1F14672F28743F003E3D11 /* bask-icon-main.icon */; };
 		AA6EFDE12C9F5A2400CE7093 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA6EFDE02C9F5A2400CE7093 /* StoreKit.framework */; };
+		AAB67D572F29CA5100234FCD /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AAB67D562F29CA5100234FCD /* WidgetKit.framework */; };
+		AAB67D592F29CA5100234FCD /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AAB67D582F29CA5100234FCD /* SwiftUI.framework */; };
+		AAB67D662F29CA5400234FCD /* BaskWidgetExtensionExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AAB67D552F29CA5100234FCD /* BaskWidgetExtensionExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AB1234567890ABCD12345678 /* BaskSessionAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD9876543210DCBA87654321 /* BaskSessionAttributes.swift */; };
+		AB1234567890ABCD12345679 /* BaskSessionAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD9876543210DCBA87654321 /* BaskSessionAttributes.swift */; };
+		AB1234567890ABCD1234567A /* BaskLiveActivityPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD9876543210DCBA87654322 /* BaskLiveActivityPlugin.swift */; };
+		AB1234567890ABCD1234567B /* BaskLiveActivityPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = CD9876543210DCBA87654323 /* BaskLiveActivityPlugin.m */; };
+		d999b869b19ac9fac19b8ed1 /* BaskWeatherPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 884e730c07f3a893489c4c4a /* BaskWeatherPlugin.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		AAB67D642F29CA5400234FCD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 504EC2FC1FED79650016851F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AAB67D542F29CA5100234FCD;
+			remoteInfo = BaskWidgetExtensionExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AAB67D672F29CA5400234FCD /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				AAB67D662F29CA5400234FCD /* BaskWidgetExtensionExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		07fde5f0a10aaa4e4b440cdb /* BaskWeatherPlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BaskWeatherPlugin.m; sourceTree = "<group>"; };
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
 		50379B222058CBB4000EE86E /* capacitor.config.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = capacitor.config.json; sourceTree = "<group>"; };
 		504EC3041FED79650016851F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -29,13 +67,38 @@
 		504EC3111FED79650016851F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		504EC3131FED79650016851F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
+		63dade1fc57226a305c5a29b /* BaskHealthPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaskHealthPlugin.swift; sourceTree = "<group>"; };
+		884e730c07f3a893489c4c4a /* BaskWeatherPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaskWeatherPlugin.swift; sourceTree = "<group>"; };
+		AA1A18782F2AEEAA00F43A60 /* BaskBackgroundTaskPlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BaskBackgroundTaskPlugin.m; sourceTree = "<group>"; };
+		AA1A18792F2AEEAA00F43A60 /* BaskBackgroundTaskPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaskBackgroundTaskPlugin.swift; sourceTree = "<group>"; };
 		AA1F14662F287420003E3D11 /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
 		AA1F14672F28743F003E3D11 /* bask-icon-main.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "bask-icon-main.icon"; sourceTree = "<group>"; };
 		AA6EFDE02C9F5A2400CE7093 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
+		AAB67D552F29CA5100234FCD /* BaskWidgetExtensionExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BaskWidgetExtensionExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		AAB67D562F29CA5100234FCD /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		AAB67D582F29CA5100234FCD /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_App.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AF51FD2D460BCFE21FA515B2 /* Pods-App.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.release.xcconfig"; path = "Pods/Target Support Files/Pods-App/Pods-App.release.xcconfig"; sourceTree = "<group>"; };
+		CD9876543210DCBA87654321 /* BaskSessionAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaskSessionAttributes.swift; sourceTree = "<group>"; };
+		CD9876543210DCBA87654322 /* BaskLiveActivityPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaskLiveActivityPlugin.swift; sourceTree = "<group>"; };
+		CD9876543210DCBA87654323 /* BaskLiveActivityPlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BaskLiveActivityPlugin.m; sourceTree = "<group>"; };
 		FC68EB0AF532CFC21C3344DD /* Pods-App.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.debug.xcconfig"; path = "Pods/Target Support Files/Pods-App/Pods-App.debug.xcconfig"; sourceTree = "<group>"; };
+		c7bdf47bc18d78924857dbbc /* BaskHealthPlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BaskHealthPlugin.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		AAB67D6A2F29CA5400234FCD /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = AAB67D542F29CA5100234FCD /* BaskWidgetExtensionExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		AAB67D5A2F29CA5100234FCD /* BaskWidgetExtension */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (AAB67D6A2F29CA5400234FCD /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = BaskWidgetExtension; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		504EC3011FED79650016851F /* Frameworks */ = {
@@ -47,6 +110,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AAB67D522F29CA5100234FCD /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AAB67D592F29CA5100234FCD /* SwiftUI.framework in Frameworks */,
+				AAB67D572F29CA5100234FCD /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -55,6 +127,8 @@
 			children = (
 				AA6EFDE02C9F5A2400CE7093 /* StoreKit.framework */,
 				AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */,
+				AAB67D562F29CA5100234FCD /* WidgetKit.framework */,
+				AAB67D582F29CA5100234FCD /* SwiftUI.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -63,6 +137,7 @@
 			isa = PBXGroup;
 			children = (
 				504EC3061FED79650016851F /* App */,
+				AAB67D5A2F29CA5100234FCD /* BaskWidgetExtension */,
 				504EC3051FED79650016851F /* Products */,
 				7F8756D8B27F46E3366F6CEA /* Pods */,
 				27E2DDA53C4D2A4D1A88CE4A /* Frameworks */,
@@ -73,6 +148,7 @@
 			isa = PBXGroup;
 			children = (
 				504EC3041FED79650016851F /* App.app */,
+				AAB67D552F29CA5100234FCD /* BaskWidgetExtensionExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -80,9 +156,18 @@
 		504EC3061FED79650016851F /* App */ = {
 			isa = PBXGroup;
 			children = (
+				AA1A18782F2AEEAA00F43A60 /* BaskBackgroundTaskPlugin.m */,
+				AA1A18792F2AEEAA00F43A60 /* BaskBackgroundTaskPlugin.swift */,
 				AA1F14662F287420003E3D11 /* App.entitlements */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
+				884e730c07f3a893489c4c4a /* BaskWeatherPlugin.swift */,
+				07fde5f0a10aaa4e4b440cdb /* BaskWeatherPlugin.m */,
+				63dade1fc57226a305c5a29b /* BaskHealthPlugin.swift */,
+				c7bdf47bc18d78924857dbbc /* BaskHealthPlugin.m */,
+				CD9876543210DCBA87654321 /* BaskSessionAttributes.swift */,
+				CD9876543210DCBA87654322 /* BaskLiveActivityPlugin.swift */,
+				CD9876543210DCBA87654323 /* BaskLiveActivityPlugin.m */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				AA1F14672F28743F003E3D11 /* bask-icon-main.icon */,
@@ -115,15 +200,39 @@
 				504EC3011FED79650016851F /* Frameworks */,
 				504EC3021FED79650016851F /* Resources */,
 				9592DBEFFC6D2A0C8D5DEB22 /* [CP] Embed Pods Frameworks */,
+				AAB67D672F29CA5400234FCD /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				AAB67D652F29CA5400234FCD /* PBXTargetDependency */,
 			);
 			name = App;
 			productName = App;
 			productReference = 504EC3041FED79650016851F /* App.app */;
 			productType = "com.apple.product-type.application";
+		};
+		AAB67D542F29CA5100234FCD /* BaskWidgetExtensionExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AAB67D6B2F29CA5400234FCD /* Build configuration list for PBXNativeTarget "BaskWidgetExtensionExtension" */;
+			buildPhases = (
+				AAB67D512F29CA5100234FCD /* Sources */,
+				AAB67D522F29CA5100234FCD /* Frameworks */,
+				AAB67D532F29CA5100234FCD /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				AAB67D5A2F29CA5100234FCD /* BaskWidgetExtension */,
+			);
+			name = BaskWidgetExtensionExtension;
+			packageProductDependencies = (
+			);
+			productName = BaskWidgetExtensionExtension;
+			productReference = AAB67D552F29CA5100234FCD /* BaskWidgetExtensionExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -131,13 +240,16 @@
 		504EC2FC1FED79650016851F /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 920;
+				LastSwiftUpdateCheck = 2620;
 				LastUpgradeCheck = 920;
 				TargetAttributes = {
 					504EC3031FED79650016851F = {
 						CreatedOnToolsVersion = 9.2;
 						LastSwiftMigration = 1100;
 						ProvisioningStyle = Automatic;
+					};
+					AAB67D542F29CA5100234FCD = {
+						CreatedOnToolsVersion = 26.2;
 					};
 				};
 			};
@@ -155,6 +267,7 @@
 			projectRoot = "";
 			targets = (
 				504EC3031FED79650016851F /* App */,
+				AAB67D542F29CA5100234FCD /* BaskWidgetExtensionExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -171,6 +284,13 @@
 				50379B232058CBB4000EE86E /* capacitor.config.json in Resources */,
 				504EC30D1FED79650016851F /* Main.storyboard in Resources */,
 				2FAD9763203C412B000D30F8 /* config.xml in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AAB67D532F29CA5100234FCD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -218,10 +338,35 @@
 			buildActionMask = 2147483647;
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
+				d999b869b19ac9fac19b8ed1 /* BaskWeatherPlugin.swift in Sources */,
+				AA1A187A2F2AEEAA00F43A60 /* BaskBackgroundTaskPlugin.swift in Sources */,
+				AA1A187B2F2AEEAA00F43A60 /* BaskBackgroundTaskPlugin.m in Sources */,
+				40606ab891514119861fe1db /* BaskWeatherPlugin.m in Sources */,
+				34a216e771c4a4e665a15860 /* BaskHealthPlugin.swift in Sources */,
+				6fbff39349734e9129429872 /* BaskHealthPlugin.m in Sources */,
+				AB1234567890ABCD12345678 /* BaskSessionAttributes.swift in Sources */,
+				AB1234567890ABCD1234567A /* BaskLiveActivityPlugin.swift in Sources */,
+				AB1234567890ABCD1234567B /* BaskLiveActivityPlugin.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AAB67D512F29CA5100234FCD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AB1234567890ABCD12345679 /* BaskSessionAttributes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AAB67D652F29CA5400234FCD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AAB67D542F29CA5100234FCD /* BaskWidgetExtensionExtension */;
+			targetProxy = AAB67D642F29CA5400234FCD /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		504EC30B1FED79650016851F /* Main.storyboard */ = {
@@ -345,7 +490,8 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
-				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -363,8 +509,11 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Bask;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 4.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 2.1;
 				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" \"-DDEBUG\"";
 				PRODUCT_BUNDLE_IDENTIFIER = io.bask;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -387,11 +536,98 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Bask;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 4.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = io.bask;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		AAB67D682F29CA5400234FCD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = VJS4T4RJFF;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BaskWidgetExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = BaskWidgetExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = io.bask.BaskWidgetExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AAB67D692F29CA5400234FCD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = VJS4T4RJFF;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BaskWidgetExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = BaskWidgetExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = io.bask.BaskWidgetExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -414,6 +650,15 @@
 			buildConfigurations = (
 				504EC3171FED79650016851F /* Debug */,
 				504EC3181FED79650016851F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AAB67D6B2F29CA5400234FCD /* Build configuration list for PBXNativeTarget "BaskWidgetExtensionExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AAB67D682F29CA5400234FCD /* Debug */,
+				AAB67D692F29CA5400234FCD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

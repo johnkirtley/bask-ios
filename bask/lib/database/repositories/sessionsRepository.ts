@@ -13,6 +13,8 @@ export interface BaskSession {
   exposure_percent: number;
   notes: string | null;
   created_at: string;
+  source: 'manual' | 'healthkit';
+  synced_at: string | null;
 }
 
 export interface NewBaskSession {
@@ -23,6 +25,8 @@ export interface NewBaskSession {
   duration_seconds?: number;
   iu_gained?: number;
   notes?: string;
+  source?: 'manual' | 'healthkit';
+  synced_at?: string;
 }
 
 export const sessionsRepository = {
@@ -31,8 +35,8 @@ export const sessionsRepository = {
     const result = await db.run(
       `INSERT INTO bask_sessions (
         started_at, uv_index, clothing_preset_id, exposure_percent,
-        duration_seconds, iu_gained, notes
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        duration_seconds, iu_gained, notes, source, synced_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         session.started_at,
         session.uv_index,
@@ -41,6 +45,8 @@ export const sessionsRepository = {
         session.duration_seconds ?? 0,
         session.iu_gained ?? 0,
         session.notes ?? null,
+        session.source ?? 'manual',
+        session.synced_at ?? null,
       ]
     );
     return result.changes?.lastId ?? 0;
@@ -90,7 +96,7 @@ export const sessionsRepository = {
     const db = await databaseService.getConnection();
     const result = await db.query(
       `SELECT * FROM bask_sessions
-       WHERE date(started_at) = date('now', 'localtime')
+       WHERE date(started_at, 'localtime') = date('now', 'localtime')
        ORDER BY started_at DESC`
     );
     return result.values ?? [];
@@ -112,7 +118,7 @@ export const sessionsRepository = {
     const result = await db.query(
       `SELECT COALESCE(SUM(iu_gained), 0) as total
        FROM bask_sessions
-       WHERE date(started_at) = date('now', 'localtime')`
+       WHERE date(started_at, 'localtime') = date('now', 'localtime')`
     );
     return result.values?.[0]?.total ?? 0;
   },
@@ -120,5 +126,95 @@ export const sessionsRepository = {
   async delete(id: number): Promise<void> {
     const db = await databaseService.getConnection();
     await db.run('DELETE FROM bask_sessions WHERE id = ?', [id]);
+  },
+
+  /**
+   * Upsert a HealthKit-sourced session for a specific day
+   * Only updates if new IU value is >= existing (avoid overwriting with incomplete data)
+   */
+  async upsertHealthKitSession(data: {
+    date: string; // YYYY-MM-DD
+    duration_seconds: number;
+    iu_gained: number;
+    uv_index: number;
+    synced_at: string;
+  }): Promise<void> {
+    const db = await databaseService.getConnection();
+
+    // Check if HealthKit session already exists for this date
+    const existing = await db.query(
+      `SELECT id, iu_gained FROM bask_sessions
+       WHERE date(started_at, 'localtime') = date(?, 'localtime')
+       AND source = 'healthkit'
+       LIMIT 1`,
+      [data.date]
+    );
+
+    if (existing.values && existing.values.length > 0) {
+      const existingSession = existing.values[0];
+      // Always update with latest HealthKit data (including 0 values when user deletes entries)
+      await db.run(
+        `UPDATE bask_sessions
+         SET duration_seconds = ?,
+             iu_gained = ?,
+             uv_index = ?,
+             synced_at = ?
+         WHERE id = ?`,
+        [
+          data.duration_seconds,
+          data.iu_gained,
+          data.uv_index,
+          data.synced_at,
+          existingSession.id,
+        ]
+      );
+    } else {
+      // Create new HealthKit session
+      await db.run(
+        `INSERT INTO bask_sessions (
+          started_at, ended_at, uv_index, clothing_preset_id, exposure_percent,
+          duration_seconds, iu_gained, source, synced_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          `${data.date}T00:00:00`, // Start of day
+          `${data.date}T23:59:59`, // End of day
+          data.uv_index,
+          'healthkit', // Placeholder preset ID
+          50, // Match the exposure percent used in useHealthKitSync calculation
+          data.duration_seconds,
+          data.iu_gained,
+          'healthkit',
+          data.synced_at,
+        ]
+      );
+    }
+  },
+
+  /**
+   * Get total duration of manual sessions for a specific date
+   * Used to subtract from HealthKit timeInDaylight to avoid double-counting
+   */
+  async getManualSessionDuration(date: string): Promise<number> {
+    const db = await databaseService.getConnection();
+    const result = await db.query(
+      `SELECT COALESCE(SUM(duration_seconds), 0) as total
+       FROM bask_sessions
+       WHERE date(started_at, 'localtime') = date(?, 'localtime')
+       AND source = 'manual'`,
+      [date]
+    );
+    return result.values?.[0]?.total ?? 0;
+  },
+
+  /**
+   * Delete HealthKit session for a specific date
+   * Used when user deletes Time in Daylight entry from Apple Health
+   */
+  async deleteHealthKitSession(date: string): Promise<void> {
+    const db = await databaseService.getConnection();
+    await db.run(
+      `DELETE FROM bask_sessions WHERE date(started_at, 'localtime') = date(?, 'localtime') AND source = 'healthkit'`,
+      [date]
+    );
   },
 };

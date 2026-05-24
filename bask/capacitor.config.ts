@@ -6,7 +6,14 @@ const config: CapacitorConfig = {
   webDir: 'out',
   ios: {
     contentInset: 'never',
-    backgroundColor: '#F9F9F7',
+    backgroundColor: '#0A0E1A',
+  },
+  plugins: {
+    LocalNotifications: {
+      smallIcon: 'ic_stat_icon',
+      iconColor: '#FF9500',
+      sound: 'default',
+    },
   },
 };
 

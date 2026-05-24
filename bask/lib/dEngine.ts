@@ -51,32 +51,64 @@ export function deriveFitzpatrickType(skinTone: string, sunReaction: string): Fi
 }
 
 /**
+ * Get age-based multiplier for vitamin D synthesis
+ * As we age, concentration of 7-dehydrocholesterol (vitamin D precursor) drops
+ * A 70-year-old produces ~25-30% of the vitamin D that a 20-year-old does
+ *
+ * @param age - User's age (or null if not provided)
+ * @returns Multiplier from 0.3 to 1.0
+ */
+export function getAgeMultiplier(age: number | null): number {
+  if (age === null) return 1.0; // Conservative: assume peak synthesis if age unknown
+  if (age < 30) return 1.0;      // Peak synthesis
+  if (age < 50) return 0.8;      // 20% reduction
+  if (age < 70) return 0.5;      // 50% reduction
+  return 0.3;                    // 70% reduction for seniors
+}
+
+/**
  * Calculate vitamin D (IU) generated from sun exposure
  * Based on Holick's research on vitamin D photobiology
  *
- * Formula: IU = (UVI/10) × Minutes × Exposure% × (1/SkinMultiplier) × BaseRate
+ * Formula: IU = (UVI/10) × Minutes × Exposure% × (1/SkinMultiplier) × AgeFactor × BaseRate
+ *
+ * Biological Saturation: Vitamin D synthesis is self-limiting. Once you reach ~1 MED
+ * (Minimum Erythemal Dose, aka time to burn), pre-vitamin D3 begins converting to
+ * inert isomers (lumisterol/tachysterol) instead of active vitamin D3. Therefore,
+ * extended sun exposure beyond the burn threshold does not produce additional vitamin D.
  *
  * @param uvIndex - Current UV index (0-11+)
  * @param minutes - Duration of exposure in minutes
  * @param exposurePercent - Percentage of skin exposed (0-100, from clothing preset)
  * @param fitzpatrickType - Skin type (1-6)
+ * @param age - User's age (optional, for age-based synthesis reduction)
  * @returns IU of vitamin D generated
  */
 export function calculateVitaminD(
   uvIndex: number,
   minutes: number,
   exposurePercent: number,
-  fitzpatrickType: FitzpatrickType
+  fitzpatrickType: FitzpatrickType,
+  age?: number | null
 ): number {
-  // Base IU generation rate at UV 10, 100% exposure, Type I skin
+  // Shadow Rule: UVB is fully scattered by atmosphere when sun angle < ~45° (UV < 3)
+  // Below UV 3, users get UVA (skin damage) but zero vitamin D synthesis
+  if (uvIndex < 3) return 0;
+
+  // Base IU generation rate at UV 10, 100% exposure, Type I skin, peak age
   const BASE_IU_PER_MINUTE = 100;
+
+  // Cap synthesis at the burn threshold (biological saturation)
+  const timeToBurn = calculateTimeToBurn(uvIndex, fitzpatrickType);
+  const effectiveMinutes = Math.min(minutes, timeToBurn);
 
   const skinMultiplier = SKIN_MULTIPLIERS[fitzpatrickType] ?? 1.6;
   const exposureFraction = exposurePercent / 100;
   const uvFactor = uvIndex / 10;
+  const ageFactor = getAgeMultiplier(age ?? null);
 
-  // Formula: IU = (UVI/10) * Minutes * Exposure% * (1/SkinMultiplier) * BaseRate
-  const iu = uvFactor * minutes * exposureFraction * (1 / skinMultiplier) * BASE_IU_PER_MINUTE;
+  // Formula: IU = (UVI/10) * Minutes * Exposure% * (1/SkinMultiplier) * AgeFactor * BaseRate
+  const iu = uvFactor * effectiveMinutes * exposureFraction * (1 / skinMultiplier) * ageFactor * BASE_IU_PER_MINUTE;
 
   return Math.round(Math.max(0, iu));
 }
@@ -87,25 +119,35 @@ export function calculateVitaminD(
  * @param uvIndex - Current UV index
  * @param exposurePercent - Percentage of skin exposed (0-100)
  * @param fitzpatrickType - Skin type (1-6)
+ * @param age - User's age (optional, increases time needed for older users)
  * @returns Minutes needed, or Infinity if UV is too low
  */
 export function calculateTimeToGoal(
   targetIU: number,
   uvIndex: number,
   exposurePercent: number,
-  fitzpatrickType: FitzpatrickType
+  fitzpatrickType: FitzpatrickType,
+  age?: number | null
 ): number {
-  if (uvIndex <= 0 || exposurePercent <= 0) return Infinity;
+  // Shadow Rule: UV must be >= 3 for vitamin D synthesis
+  if (uvIndex < 3 || exposurePercent <= 0) return Infinity;
 
   const BASE_IU_PER_MINUTE = 100;
   const skinMultiplier = SKIN_MULTIPLIERS[fitzpatrickType] ?? 1.6;
   const exposureFraction = exposurePercent / 100;
   const uvFactor = uvIndex / 10;
+  const ageFactor = getAgeMultiplier(age ?? null);
 
-  // Rearranged formula: Minutes = IU / (uvFactor * exposure * (1/skin) * base)
-  const minutes = targetIU / (uvFactor * exposureFraction * (1 / skinMultiplier) * BASE_IU_PER_MINUTE);
+  // Rearranged formula: Minutes = IU / (uvFactor * exposure * (1/skin) * age * base)
+  const minutesNeeded =
+    targetIU /
+    (uvFactor * exposureFraction * (1 / skinMultiplier) * ageFactor * BASE_IU_PER_MINUTE);
 
-  return Math.ceil(minutes);
+  // Cap at burn threshold — synthesis stops at ~1 MED (matches calculateVitaminD)
+  const timeToBurn = calculateTimeToBurn(uvIndex, fitzpatrickType);
+  const cappedMinutes = Math.min(minutesNeeded, timeToBurn);
+
+  return Math.ceil(Math.max(0, cappedMinutes));
 }
 
 /**
@@ -142,6 +184,19 @@ export function getBurnRiskLevel(uvIndex: number): BurnRiskLevel {
   if (uvIndex < 8) return 'High';
   if (uvIndex < 11) return 'Very High';
   return 'Extreme';
+}
+
+/**
+ * Format minutes-until-burn for display (matches ActiveSessionView).
+ */
+export function formatTimeToBurn(minutes: number): string {
+  if (!isFinite(minutes) || minutes <= 0) return '—';
+  if (minutes >= 60) {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return m > 0 ? `${h}h ${m}m` : `${h}h`;
+  }
+  return `${minutes}m`;
 }
 
 /**

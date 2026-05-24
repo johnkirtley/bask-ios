@@ -7,8 +7,8 @@ export default function ProgressBar({ currentStep, totalSteps }: ProgressBarProp
   const progressPercent = ((currentStep + 1) / totalSteps) * 100;
 
   return (
-    <div className="w-full px-6 pt-safe">
-      <div className="h-[3px] w-full bg-white/10 rounded-full overflow-hidden">
+    <div className="w-full px-6 pt-2 pb-3">
+      <div className="h-[3px] w-full bg-black/8 rounded-full overflow-hidden">
         <div
           className="h-full onboarding-progress-fill progress-shimmer rounded-full transition-all duration-500 ease-out"
           style={{ width: `${progressPercent}%` }}

@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[822],{3822:function(e,t,a){a.r(t),a.d(t,{BaskWeather:function(){return r}});var n=a(3103);let r=(0,n.fo)("BaskWeather",{web:void 0})}}]);

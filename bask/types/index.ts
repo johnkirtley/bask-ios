@@ -8,35 +8,39 @@ export interface SubscriptionState {
 
 // Onboarding types
 export interface OnboardingAnswers {
-  // Screen 2: Goal Selection
-  primaryGoal: string | null;
+  // Screen 1: Symptoms (multi-select)
+  symptoms: string[];
 
-  // Screen 3: Fitzpatrick Part 1
+  // Fitzpatrick Part 1
   skinTone: string | null;
   eyeColor: string | null;
 
-  // Screen 4: Fitzpatrick Part 2
+  // Fitzpatrick Part 2
   sunReaction: string | null;
 
-  // Screen 5: Lifestyle
+  // Lifestyle
   outdoorTime: string | null;
+  sunscreenFrequency: string | null;
 
-  // Screen 6: Supplementation
+  // Supplementation
   vitaminDSupplementation: string | null;
 
-  // Screen 7: Typical Attire
-  typicalAttire: string | null;
-
-  // Screen 8: Biological Profile
+  // Screen 7: Biological Profile
   age: number | null;
   weight: number | null;
   weightUnit: 'lbs' | 'kg';
 
-  // Screen 9: Medical Disclaimer
+  // Screen 8: Medical Disclaimer
   medicalDisclaimerAccepted: boolean;
 
-  // Screen 10: Location Permission
+  // Screen 9: Location Permission
   locationPermissionGranted: boolean;
+
+  // Screen 10: Notification Permission
+  notificationPermissionGranted: boolean;
+
+  // Screen 11: HealthKit Permission
+  healthKitPermissionGranted: boolean;
 
   // Blood Test Baseline (optional)
   hasBloodTest: boolean;
@@ -54,4 +58,5 @@ export interface OnboardingState {
 }
 
 // Bask session tracking types
+export type PermissionResult = 'granted' | 'denied' | 'skipped';
 export type BaskSessionStatus = 'idle' | 'active' | 'paused' | 'completed';

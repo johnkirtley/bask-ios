@@ -1,6 +1,5 @@
 import UIKit
 import Capacitor
-import AppTrackingTransparency
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -8,30 +7,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(
-      _ application: UIApplication, 
+      _ application: UIApplication,
       didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
-        
-        // Request App Tracking Transparency authorization
-        if #available(iOS 14, *) {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                ATTrackingManager.requestTrackingAuthorization { status in
-                    switch status {
-                    case .authorized:
-                        print("ATT: Authorized")
-                    case .denied:
-                        print("ATT: Denied")
-                    case .notDetermined:
-                        print("ATT: Not Determined")
-                    case .restricted:
-                        print("ATT: Restricted")
-                    @unknown default:
-                        print("ATT: Unknown")
-                    }
-                }
-            }
-        }
-        
+
         return true
     }
 

@@ -7,6 +7,15 @@ export interface UserProfile {
   fitzpatrick_type: number;
   base_d_level: number;
   daily_goal: number;
+  age?: number;
+  weight?: number;
+  weight_unit?: string;
+  default_attire?: string;
+  disclaimer_accepted_at?: string;
+  blood_test_value?: number;
+  blood_test_unit?: string;
+  blood_test_date?: string;
+  blood_test_source?: string;
   created_at: string;
   updated_at: string;
 }
@@ -36,6 +45,22 @@ export const userProfileRepository = {
     if (profile.daily_goal !== undefined) {
       updates.push('daily_goal = ?');
       values.push(profile.daily_goal);
+    }
+    if (profile.blood_test_value !== undefined) {
+      updates.push('blood_test_value = ?');
+      values.push(profile.blood_test_value);
+    }
+    if (profile.blood_test_unit !== undefined) {
+      updates.push('blood_test_unit = ?');
+      values.push(profile.blood_test_unit);
+    }
+    if (profile.blood_test_date !== undefined) {
+      updates.push('blood_test_date = ?');
+      values.push(profile.blood_test_date);
+    }
+    if (profile.blood_test_source !== undefined) {
+      updates.push('blood_test_source = ?');
+      values.push(profile.blood_test_source);
     }
 
     if (updates.length > 0) {

@@ -28,7 +28,7 @@ export const cofactorsRepository = {
     const db = await databaseService.getConnection();
     const result = await db.query(
       `SELECT * FROM bask_cofactors
-       WHERE date(logged_at) = date('now', 'localtime')
+       WHERE date(logged_at, 'localtime') = date('now', 'localtime')
        ORDER BY logged_at DESC`
     );
     return result.values ?? [];
@@ -38,7 +38,7 @@ export const cofactorsRepository = {
     const db = await databaseService.getConnection();
     const result = await db.query(
       `SELECT * FROM bask_cofactors
-       WHERE date(logged_at) = date('now', 'localtime')
+       WHERE date(logged_at, 'localtime') = date('now', 'localtime')
        AND cofactor_type = ?
        ORDER BY logged_at DESC`,
       [cofactorType]
@@ -82,6 +82,25 @@ export const cofactorsRepository = {
       [start, end]
     );
     return result.values ?? [];
+  },
+
+  async update(id: number, data: Partial<Pick<Cofactor, 'notes'>>): Promise<void> {
+    const db = await databaseService.getConnection();
+    const updates: string[] = [];
+    const values: any[] = [];
+
+    if (data.notes !== undefined) {
+      updates.push('notes = ?');
+      values.push(data.notes);
+    }
+
+    if (updates.length > 0) {
+      values.push(id);
+      await db.run(
+        `UPDATE bask_cofactors SET ${updates.join(', ')} WHERE id = ?`,
+        values
+      );
+    }
   },
 
   async delete(id: number): Promise<void> {

@@ -5,14 +5,14 @@ interface AtmosphericBackgroundProps {
 }
 
 /**
- * Dark gradient background matching premium design reference
- * Deep navy/charcoal with warm undertones
+ * Light gradient background for "Wellness Sanctuary" aesthetic
+ * Warm off-white with airy, breathable tones
  */
 export default function AtmosphericBackground({
   children,
 }: AtmosphericBackgroundProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-dark-bg via-dark-surface to-gradient-warm atmospheric-transition">
+    <div className="min-h-screen bg-gradient-to-b from-light-bg via-[#F7F5F2] to-[#FFF8F0] atmospheric-transition">
       {children}
     </div>
   );

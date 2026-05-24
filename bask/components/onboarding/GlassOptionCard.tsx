@@ -28,8 +28,8 @@ export default function GlassOptionCard({
         transition-all duration-200 active:scale-[0.98]
         ${
           isSelected
-            ? 'bg-golden-glow/10 border-golden-glow glass-card-selected'
-            : 'bg-white/10 border-white/20'
+            ? 'bg-solar-flare/10 border-solar-flare glass-card-selected'
+            : 'bg-white/70 border-black/5'
         }
       `}
     >
@@ -48,14 +48,14 @@ export default function GlassOptionCard({
             transition-all duration-200
             ${
               isSelected
-                ? 'bg-golden-glow border-golden-glow'
-                : 'border-white/40 bg-transparent'
+                ? 'bg-solar-flare border-solar-flare'
+                : 'border-black/20 bg-transparent'
             }
           `}
         >
           {isSelected && (
             <svg
-              className="w-4 h-4 text-dark-bg"
+              className="w-4 h-4 text-white"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"

@@ -106,10 +106,10 @@ const tabs: TabConfig[] = [
 export default function TabBar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { isModalOpen } = useModal();
+  const { isModalOpen, isSessionActive } = useModal();
 
-  // Hide TabBar when modal/sheet is open
-  if (isModalOpen) {
+  // Hide TabBar when modal/sheet is open or session is active
+  if (isModalOpen || isSessionActive) {
     return null;
   }
 
@@ -128,13 +128,8 @@ export default function TabBar() {
       // Haptics not available (web preview)
     }
 
-    // Use Next.js router for development, direct navigation for static build
-    if (process.env.NODE_ENV === 'development') {
-      router.push(path);
-    } else {
-      // Production static export uses .html extensions
-      window.location.href = path === '/' ? '/index.html' : `${path}.html`;
-    }
+    // Use Next.js client-side routing for smooth transitions
+    router.push(path);
   };
 
   return (
@@ -148,7 +143,7 @@ export default function TabBar() {
                 key={tab.path}
                 onClick={() => handleTabPress(tab.path)}
                 className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
-                  active ? 'text-golden-glow' : 'text-text-secondary'
+                  active ? 'text-solar-flare' : 'text-text-secondary'
                 }`}>
                 {tab.icon(active)}
                 <span

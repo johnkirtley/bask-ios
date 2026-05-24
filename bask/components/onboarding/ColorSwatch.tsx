@@ -36,7 +36,7 @@ export default function ColorSwatch({
       <div
         className={`
           ${sizeClasses[size]} rounded-full transition-all duration-200
-          ${isSelected ? 'swatch-selected' : 'ring-2 ring-white/20'}
+          ${isSelected ? 'swatch-selected' : 'ring-2 ring-black/10'}
         `}
         style={{ backgroundColor: color }}
       />
