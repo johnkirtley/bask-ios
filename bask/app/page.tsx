@@ -11,7 +11,12 @@ import { useTimeOfDay } from '../hooks/useTimeOfDay';
 import { useModal } from '../contexts/ModalContext';
 import { useDWindowNotifications } from '../hooks/useDWindowNotifications';
 import { useSubscription } from '../hooks/useSubscription';
-import { sessionsRepository, supplementsRepository } from '../lib/database';
+import {
+  sessionsRepository,
+  supplementsRepository,
+  streaksRepository,
+  GoalStreakSummary,
+} from '../lib/database';
 import { userProfileRepository, UserProfile } from '../lib/database/repositories/userProfileRepository';
 import {
   calculateTimeToGoal,
@@ -41,6 +46,7 @@ import SolarWindowChart from '../components/home/SolarWindowChart';
 import SupplementCard from '../components/home/SupplementCard';
 import CofactorCard from '../components/home/CofactorCard';
 import DWindowForecastCard from '../components/home/DWindowForecastCard';
+import StreakCard from '../components/home/StreakCard';
 
 /**
  * Format time to goal in a human-readable way
@@ -86,6 +92,8 @@ export default function Home() {
   // Daily total (sessions + supplements)
   const [todayTotal, setTodayTotal] = useState(0);
   const [todaySunIU, setTodaySunIU] = useState(0);
+  const [goalStreakSummary, setGoalStreakSummary] =
+    useState<GoalStreakSummary | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
@@ -144,16 +152,20 @@ export default function Home() {
   useEffect(() => {
     async function loadTodayTotal() {
       try {
-        const sessionsIU = await sessionsRepository.getTodayTotalIU();
-        const supplementsIU = await supplementsRepository.getTodayTotalIU();
+        const [sessionsIU, supplementsIU, streakSummary] = await Promise.all([
+          sessionsRepository.getTodayTotalIU(),
+          supplementsRepository.getTodayTotalIU(),
+          streaksRepository.getGoalStreakSummary(sunData.vitaminDGoal),
+        ]);
         setTodaySunIU(sessionsIU);
         setTodayTotal(sessionsIU + supplementsIU);
+        setGoalStreakSummary(streakSummary);
       } catch (error) {
         console.error('Failed to load today total:', error);
       }
     }
     loadTodayTotal();
-  }, [session.status, refreshKey, healthKitSync.syncCount]); // Reload when session completes, supplement is logged, or HealthKit syncs
+  }, [session.status, refreshKey, healthKitSync.syncCount, sunData.vitaminDGoal]); // Reload when session completes, supplement is logged, HealthKit syncs, or the goal changes
 
   // Load D-Window Forecast
   const loadForecast = useCallback(async () => {
@@ -196,7 +208,7 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [loadForecast]); // loadForecast now includes uvIndex in its deps
 
-  const handleSupplementLogged = () => {
+  const handleProgressChanged = () => {
     setRefreshKey((prev) => prev + 1);
   };
 
@@ -358,7 +370,10 @@ export default function Home() {
             vitaminDProgress={(todayTotal / sunData.vitaminDGoal) * 100}
             vitaminDGoal={sunData.vitaminDGoal}
             vitaminDCurrent={todayTotal}
-            onGoalUpdated={refreshGoal}
+            onGoalUpdated={() => {
+              refreshGoal();
+              handleProgressChanged();
+            }}
           />
 
           {/* Bask Now Button - directly under ring */}
@@ -373,6 +388,15 @@ export default function Home() {
                   ? 'Checking current UV conditions…'
                   : 'UV too low for vitamin D synthesis right now'
               }
+            />
+          </div>
+
+          {/* Daily Goal Streak */}
+          <div className='px-6 mt-6'>
+            <StreakCard
+              summary={goalStreakSummary}
+              todayTotalIU={todayTotal}
+              vitaminDGoal={sunData.vitaminDGoal}
             />
           </div>
 
@@ -427,7 +451,7 @@ export default function Home() {
           {/* Supplement Quick-Add Card with Weather-Adjusted Recommendations */}
           <div className='px-6 mt-6'>
             <SupplementCard
-              onSupplementLogged={handleSupplementLogged}
+              onSupplementLogged={handleProgressChanged}
               todaySunIU={todaySunIU}
               uvIndex={isLoading ? undefined : effectiveUV}
               vitaminDGoal={sunData.vitaminDGoal}
@@ -437,7 +461,7 @@ export default function Home() {
 
           {/* Cofactor Tracking Card */}
           <div className='px-6 mt-6'>
-            <CofactorCard onCofactorLogged={handleSupplementLogged} />
+            <CofactorCard onCofactorLogged={handleProgressChanged} />
           </div>
 
           {/* WeatherKit Attribution */}

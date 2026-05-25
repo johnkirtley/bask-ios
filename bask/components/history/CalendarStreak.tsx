@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { sessionsRepository, userProfileRepository } from '../../lib/database';
+import { streaksRepository, userProfileRepository } from '../../lib/database';
 import { DEFAULT_DAILY_GOAL_IU } from '../../lib/constants';
 
 interface CalendarStreakProps {
@@ -11,7 +11,10 @@ interface CalendarStreakProps {
 interface DayData {
   date: Date;
   hasActivity: boolean;
+  goalMet: boolean;
   iuTotal: number;
+  sunIU: number;
+  supplementIU: number;
   isCurrentMonth: boolean;
 }
 
@@ -61,6 +64,8 @@ export default function CalendarStreak({ className = '' }: CalendarStreakProps) 
   const [calendarDays, setCalendarDays] = useState<DayData[]>([]);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [longestStreak, setLongestStreak] = useState(0);
+  const [hitToday, setHitToday] = useState(false);
+  const [streakAtRisk, setStreakAtRisk] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [loading, setLoading] = useState(true);
   const [dailyGoal, setDailyGoal] = useState(DEFAULT_DAILY_GOAL_IU);
@@ -74,133 +79,79 @@ export default function CalendarStreak({ className = '' }: CalendarStreakProps) 
   }, []);
 
   useEffect(() => {
+    const calculateStreaks = async () => {
+      try {
+        const summary = await streaksRepository.getGoalStreakSummary(dailyGoal);
+
+        setCurrentStreak(summary.currentStreak);
+        setLongestStreak(summary.longestStreak);
+        setHitToday(summary.hitToday);
+        setStreakAtRisk(summary.streakAtRisk);
+      } catch (error) {
+        console.error('Failed to calculate streaks:', error);
+      }
+    };
+
+    const loadCalendarData = async () => {
+      setLoading(true);
+      try {
+        // Get first and last day of current month view
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth();
+
+        const firstDayOfMonth = new Date(year, month, 1);
+        const lastDayOfMonth = new Date(year, month + 1, 0);
+
+        // Get first day to show (start of week containing first day of month)
+        const firstDayOfWeek = new Date(firstDayOfMonth);
+        firstDayOfWeek.setDate(firstDayOfWeek.getDate() - firstDayOfWeek.getDay());
+
+        // Get last day to show (end of week containing last day of month)
+        const lastDayOfWeek = new Date(lastDayOfMonth);
+        lastDayOfWeek.setDate(lastDayOfWeek.getDate() + (6 - lastDayOfWeek.getDay()));
+
+        const [dailyProgress] = await Promise.all([
+          streaksRepository.getDailyGoalProgress(
+            firstDayOfWeek,
+            lastDayOfWeek,
+            dailyGoal,
+          ),
+          calculateStreaks(),
+        ]);
+
+        const progressMap = new Map(
+          dailyProgress.map((progress) => [progress.date.toDateString(), progress]),
+        );
+
+        // Build calendar grid
+        const days: DayData[] = [];
+        const current = new Date(firstDayOfWeek);
+
+        while (current <= lastDayOfWeek) {
+          const dateKey = current.toDateString();
+          const progress = progressMap.get(dateKey);
+          days.push({
+            date: new Date(current),
+            hasActivity: (progress?.totalIU ?? 0) > 0,
+            goalMet: progress?.goalMet ?? false,
+            iuTotal: progress?.totalIU ?? 0,
+            sunIU: progress?.sunIU ?? 0,
+            supplementIU: progress?.supplementIU ?? 0,
+            isCurrentMonth: current.getMonth() === month,
+          });
+          current.setDate(current.getDate() + 1);
+        }
+
+        setCalendarDays(days);
+      } catch (error) {
+        console.error('Failed to load calendar data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadCalendarData();
-  }, [currentMonth]);
-
-  const loadCalendarData = async () => {
-    setLoading(true);
-    try {
-      // Get first and last day of current month view
-      const year = currentMonth.getFullYear();
-      const month = currentMonth.getMonth();
-
-      const firstDayOfMonth = new Date(year, month, 1);
-      const lastDayOfMonth = new Date(year, month + 1, 0);
-
-      // Get first day to show (start of week containing first day of month)
-      const firstDayOfWeek = new Date(firstDayOfMonth);
-      firstDayOfWeek.setDate(firstDayOfWeek.getDate() - firstDayOfWeek.getDay());
-
-      // Get last day to show (end of week containing last day of month)
-      const lastDayOfWeek = new Date(lastDayOfMonth);
-      lastDayOfWeek.setDate(lastDayOfWeek.getDate() + (6 - lastDayOfWeek.getDay()));
-
-      // Fetch all sessions for the date range
-      const sessions = await sessionsRepository.getByDateRange(
-        firstDayOfWeek.toISOString(),
-        lastDayOfWeek.toISOString()
-      );
-
-      // Create a map of date -> total IU
-      const dateMap = new Map<string, number>();
-      sessions.forEach((session) => {
-        const dateKey = new Date(session.started_at).toDateString();
-        dateMap.set(dateKey, (dateMap.get(dateKey) || 0) + session.iu_gained);
-      });
-
-      // Build calendar grid
-      const days: DayData[] = [];
-      const current = new Date(firstDayOfWeek);
-
-      while (current <= lastDayOfWeek) {
-        const dateKey = current.toDateString();
-        days.push({
-          date: new Date(current),
-          hasActivity: dateMap.has(dateKey),
-          iuTotal: dateMap.get(dateKey) || 0,
-          isCurrentMonth: current.getMonth() === month,
-        });
-        current.setDate(current.getDate() + 1);
-      }
-
-      setCalendarDays(days);
-
-      // Calculate streaks (from all-time data)
-      await calculateStreaks();
-    } catch (error) {
-      console.error('Failed to load calendar data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const calculateStreaks = async () => {
-    try {
-      // Fetch all sessions from the past year
-      const oneYearAgo = new Date();
-      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-
-      const allSessions = await sessionsRepository.getByDateRange(
-        oneYearAgo.toISOString(),
-        new Date().toISOString()
-      );
-
-      // Get unique dates with activity
-      const activeDates = new Set<string>();
-      allSessions.forEach((session) => {
-        const dateKey = new Date(session.started_at).toDateString();
-        activeDates.add(dateKey);
-      });
-
-      // Calculate current streak (consecutive days from today backwards)
-      let streak = 0;
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      for (let i = 0; i < 365; i++) {
-        const checkDate = new Date(today);
-        checkDate.setDate(checkDate.getDate() - i);
-
-        if (activeDates.has(checkDate.toDateString())) {
-          streak++;
-        } else if (i > 0) {
-          // Allow 1-day grace (check if yesterday had activity before breaking)
-          break;
-        }
-      }
-
-      setCurrentStreak(streak);
-
-      // Calculate longest streak
-      const sortedDates = Array.from(activeDates)
-        .map(d => new Date(d))
-        .sort((a, b) => a.getTime() - b.getTime());
-
-      let maxStreak = 0;
-      let tempStreak = 0;
-      let prevDate: Date | null = null;
-
-      sortedDates.forEach((date) => {
-        if (prevDate) {
-          const daysDiff = Math.round((date.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
-          if (daysDiff === 1) {
-            tempStreak++;
-          } else {
-            maxStreak = Math.max(maxStreak, tempStreak);
-            tempStreak = 1;
-          }
-        } else {
-          tempStreak = 1;
-        }
-        prevDate = date;
-      });
-
-      maxStreak = Math.max(maxStreak, tempStreak);
-      setLongestStreak(maxStreak);
-    } catch (error) {
-      console.error('Failed to calculate streaks:', error);
-    }
-  };
+  }, [currentMonth, dailyGoal]);
 
   const changeMonth = (direction: 'prev' | 'next') => {
     const newMonth = new Date(currentMonth);
@@ -216,8 +167,9 @@ export default function CalendarStreak({ className = '' }: CalendarStreakProps) 
   const isCurrentMonthView = currentMonth.getMonth() === new Date().getMonth() &&
                             currentMonth.getFullYear() === new Date().getFullYear();
 
-  const isNewRecord = currentStreak > 0 && currentStreak >= longestStreak;
-  const motivationalText = currentStreak === 0 ? 'Start your streak!' :
+  const isNewRecord = currentStreak > 0 && hitToday && currentStreak >= longestStreak;
+  const motivationalText = currentStreak === 0 ? 'Hit your goal to start!' :
+                          streakAtRisk ? "Today's goal keeps it alive" :
                           isNewRecord ? 'New record! 🎉' :
                           'Keep it going!';
 
@@ -232,7 +184,7 @@ export default function CalendarStreak({ className = '' }: CalendarStreakProps) 
         <div className="text-center relative">
           <div className="absolute left-1/2 -translate-x-1/2 -top-1 w-32 h-8 bg-solar-flare/10 blur-2xl pointer-events-none"></div>
           <h2 className="text-2xl font-bold text-text-primary tracking-tight relative">
-            Basking Calendar
+            Goal Streak Calendar
           </h2>
         </div>
 
@@ -359,7 +311,11 @@ export default function CalendarStreak({ className = '' }: CalendarStreakProps) 
                     hover:scale-105
                   `}
                   style={{ animationDelay: `${index * 30}ms` }}
-                  title={day.hasActivity ? `${day.iuTotal.toLocaleString()} IU` : 'No activity'}>
+                  title={
+                    day.hasActivity
+                      ? `${day.iuTotal.toLocaleString()} IU of ${dailyGoal.toLocaleString()} IU goal (${day.sunIU.toLocaleString()} sun + ${day.supplementIU.toLocaleString()} supplement)`
+                      : 'No IU logged'
+                  }>
 
                   {/* Heat glow effect for active days */}
                   {getHeatGlow(intensity)}
@@ -367,19 +323,21 @@ export default function CalendarStreak({ className = '' }: CalendarStreakProps) 
                   {/* Day number */}
                   <span className="relative z-10">{day.date.getDate()}</span>
 
-                  {/* Small dot indicator for active days */}
-                  {day.hasActivity && (
-                    <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-white opacity-80"></div>
+                  {/* Check indicator for days where the IU goal was met */}
+                  {day.goalMet && (
+                    <div className="absolute top-1 right-1 flex h-3 w-3 items-center justify-center rounded-full bg-white/90 text-[8px] font-bold text-solar-warm">
+                      ✓
+                    </div>
                   )}
                 </div>
               );
             })}
           </div>
 
-          {/* Heat Intensity Legend - Gradient Bar */}
+          {/* Goal Completion Legend - Gradient Bar */}
           <div className="mt-6 space-y-2">
             <div className="text-center text-[10px] text-text-secondary uppercase tracking-wider mb-2">
-              Intensity Scale
+              Goal Completion Scale
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[10px] text-text-secondary flex-shrink-0">Low</span>
@@ -392,7 +350,7 @@ export default function CalendarStreak({ className = '' }: CalendarStreakProps) 
               <span className="text-[10px] text-text-secondary flex-shrink-0">High</span>
             </div>
             <div className="text-center text-[10px] text-text-secondary">
-              Based on daily goal of {dailyGoal.toLocaleString()} IU
+              Based on daily goal of {dailyGoal.toLocaleString()} IU. Checkmarks mark goal-hit days.
             </div>
           </div>
         </>
