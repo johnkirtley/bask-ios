@@ -79,79 +79,79 @@ export default function CalendarStreak({ className = '' }: CalendarStreakProps) 
   }, []);
 
   useEffect(() => {
+    const calculateStreaks = async () => {
+      try {
+        const summary = await streaksRepository.getGoalStreakSummary(dailyGoal);
+
+        setCurrentStreak(summary.currentStreak);
+        setLongestStreak(summary.longestStreak);
+        setHitToday(summary.hitToday);
+        setStreakAtRisk(summary.streakAtRisk);
+      } catch (error) {
+        console.error('Failed to calculate streaks:', error);
+      }
+    };
+
+    const loadCalendarData = async () => {
+      setLoading(true);
+      try {
+        // Get first and last day of current month view
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth();
+
+        const firstDayOfMonth = new Date(year, month, 1);
+        const lastDayOfMonth = new Date(year, month + 1, 0);
+
+        // Get first day to show (start of week containing first day of month)
+        const firstDayOfWeek = new Date(firstDayOfMonth);
+        firstDayOfWeek.setDate(firstDayOfWeek.getDate() - firstDayOfWeek.getDay());
+
+        // Get last day to show (end of week containing last day of month)
+        const lastDayOfWeek = new Date(lastDayOfMonth);
+        lastDayOfWeek.setDate(lastDayOfWeek.getDate() + (6 - lastDayOfWeek.getDay()));
+
+        const [dailyProgress] = await Promise.all([
+          streaksRepository.getDailyGoalProgress(
+            firstDayOfWeek,
+            lastDayOfWeek,
+            dailyGoal,
+          ),
+          calculateStreaks(),
+        ]);
+
+        const progressMap = new Map(
+          dailyProgress.map((progress) => [progress.date.toDateString(), progress]),
+        );
+
+        // Build calendar grid
+        const days: DayData[] = [];
+        const current = new Date(firstDayOfWeek);
+
+        while (current <= lastDayOfWeek) {
+          const dateKey = current.toDateString();
+          const progress = progressMap.get(dateKey);
+          days.push({
+            date: new Date(current),
+            hasActivity: (progress?.totalIU ?? 0) > 0,
+            goalMet: progress?.goalMet ?? false,
+            iuTotal: progress?.totalIU ?? 0,
+            sunIU: progress?.sunIU ?? 0,
+            supplementIU: progress?.supplementIU ?? 0,
+            isCurrentMonth: current.getMonth() === month,
+          });
+          current.setDate(current.getDate() + 1);
+        }
+
+        setCalendarDays(days);
+      } catch (error) {
+        console.error('Failed to load calendar data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadCalendarData();
   }, [currentMonth, dailyGoal]);
-
-  const loadCalendarData = async () => {
-    setLoading(true);
-    try {
-      // Get first and last day of current month view
-      const year = currentMonth.getFullYear();
-      const month = currentMonth.getMonth();
-
-      const firstDayOfMonth = new Date(year, month, 1);
-      const lastDayOfMonth = new Date(year, month + 1, 0);
-
-      // Get first day to show (start of week containing first day of month)
-      const firstDayOfWeek = new Date(firstDayOfMonth);
-      firstDayOfWeek.setDate(firstDayOfWeek.getDate() - firstDayOfWeek.getDay());
-
-      // Get last day to show (end of week containing last day of month)
-      const lastDayOfWeek = new Date(lastDayOfMonth);
-      lastDayOfWeek.setDate(lastDayOfWeek.getDate() + (6 - lastDayOfWeek.getDay()));
-
-      const [dailyProgress] = await Promise.all([
-        streaksRepository.getDailyGoalProgress(
-          firstDayOfWeek,
-          lastDayOfWeek,
-          dailyGoal,
-        ),
-        calculateStreaks(),
-      ]);
-
-      const progressMap = new Map(
-        dailyProgress.map((progress) => [progress.date.toDateString(), progress]),
-      );
-
-      // Build calendar grid
-      const days: DayData[] = [];
-      const current = new Date(firstDayOfWeek);
-
-      while (current <= lastDayOfWeek) {
-        const dateKey = current.toDateString();
-        const progress = progressMap.get(dateKey);
-        days.push({
-          date: new Date(current),
-          hasActivity: (progress?.totalIU ?? 0) > 0,
-          goalMet: progress?.goalMet ?? false,
-          iuTotal: progress?.totalIU ?? 0,
-          sunIU: progress?.sunIU ?? 0,
-          supplementIU: progress?.supplementIU ?? 0,
-          isCurrentMonth: current.getMonth() === month,
-        });
-        current.setDate(current.getDate() + 1);
-      }
-
-      setCalendarDays(days);
-    } catch (error) {
-      console.error('Failed to load calendar data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const calculateStreaks = async () => {
-    try {
-      const summary = await streaksRepository.getGoalStreakSummary(dailyGoal);
-
-      setCurrentStreak(summary.currentStreak);
-      setLongestStreak(summary.longestStreak);
-      setHitToday(summary.hitToday);
-      setStreakAtRisk(summary.streakAtRisk);
-    } catch (error) {
-      console.error('Failed to calculate streaks:', error);
-    }
-  };
 
   const changeMonth = (direction: 'prev' | 'next') => {
     const newMonth = new Date(currentMonth);
