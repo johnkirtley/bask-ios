@@ -8,6 +8,7 @@ interface StatMetricsProps {
   timeToGoalSubtext?: string;
   isLoading?: boolean;
   burnRisk: string;
+  burnRiskSubtext?: string;
   dailyDecay: number;
   decaySubtext: string;
   decayInfoText: string;
@@ -23,6 +24,7 @@ export default function StatMetrics({
   timeToGoalSubtext,
   isLoading,
   burnRisk,
+  burnRiskSubtext,
   dailyDecay,
   decaySubtext,
   decayInfoText,
@@ -62,14 +64,19 @@ export default function StatMetrics({
         {/* Divider */}
         <div className='border-t border-black/[0.06]' />
 
-        {/* Burn Risk / Time to Burn */}
+        {/* Sunburn Risk */}
         <div>
           <div className='text-xs font-semibold text-text-secondary uppercase tracking-[0.08em] mb-1'>
-            Est. Time Before Sunburn
+            Sunburn Risk
           </div>
           <div className='text-2xl font-bold text-text-primary tabular-nums'>
             {burnRisk}
           </div>
+          {burnRiskSubtext && (
+            <div className='text-[11px] text-text-muted mt-0.5'>
+              {burnRiskSubtext}
+            </div>
+          )}
         </div>
 
         {/* Divider */}

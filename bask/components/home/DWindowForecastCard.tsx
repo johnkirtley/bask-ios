@@ -242,7 +242,7 @@ export default function DWindowForecastCard({
   const isWindowActive = isInSynthesisWindow(forecast.todaySynthesis, now);
 
   return (
-    <div className='w-full'>
+    <div id='dwindow-forecast' className='w-full'>
       <GlassCardWrapper>
         {/* Header */}
         <div className='mb-4'>
@@ -323,10 +323,10 @@ export default function DWindowForecastCard({
                   {forecast.todayNoWindowReason === 'clouds-blocking'
                     ? 'Cloud cover is blocking UV'
                     : forecast.todayNoWindowReason === 'low-exposure'
-                    ? 'More skin exposure needed'
+                    ? 'UV available · exposure may be limiting'
                     : forecast.todayNoWindowReason === 'uv-too-low'
                     ? 'UV levels too low'
-                    : 'Check recommendations below'}
+                    : 'Forecast still updating'}
                 </p>
               </div>
             )}
@@ -373,7 +373,7 @@ export default function DWindowForecastCard({
                   {forecast.tomorrowNoWindowReason === 'clouds-blocking'
                     ? 'Cloud cover is blocking UV'
                     : forecast.tomorrowNoWindowReason === 'low-exposure'
-                    ? 'More skin exposure needed'
+                    ? 'UV available · exposure may be limiting'
                     : forecast.tomorrowNoWindowReason === 'uv-too-low'
                     ? 'UV levels too low'
                     : "We'll keep updating"}
@@ -495,7 +495,7 @@ function SynthesisOnlyDisplay({
       <SynthesisRow message={message} />
       <p className='text-xs text-text-secondary'>
         {noWindowReason === 'low-exposure'
-          ? 'UV is sufficient · More skin exposure needed for meaningful IU'
+          ? 'UV is sufficient · exposure may be limiting meaningful IU'
           : 'No optimal session window today'}
       </p>
     </div>

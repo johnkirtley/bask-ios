@@ -1,14 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { IonAlert, IonToggle, IonToast, IonModal } from '@ionic/react';
 import { Browser } from '@capacitor/browser';
+import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { useSubscription } from '../../hooks/useSubscription';
 import { useOnboardingContext } from '../../contexts/OnboardingContext';
 import { legalContent } from '../../lib/onboardingData';
 import { FEEDBACK_EMAIL } from '../../lib/constants';
-import { BaskWeather } from '../../lib/plugins';
+import {
+  getLocationPermissionState,
+  handleLocationPermissionAction,
+  locationPermissionLabel,
+  LocationPermissionState,
+} from '../../lib/locationPermissionUtils';
 import packageJson from '../../package.json';
 import { normalizeToNgMl } from '../../lib/bloodTestUtils';
 import {
@@ -206,6 +212,30 @@ export default function SettingsPage() {
   const [bloodTestValue, setBloodTestValue] = useState<number | null>(null);
   const [bloodTestUnit, setBloodTestUnit] = useState<'ng/mL' | 'nmol/L'>('ng/mL');
   const [bloodTestDate, setBloodTestDate] = useState<string | null>(null);
+  const [locationPermission, setLocationPermission] =
+    useState<LocationPermissionState | null>(null);
+
+  const loadLocationPermission = async () => {
+    if (!Capacitor.isNativePlatform()) return;
+    const status = await getLocationPermissionState();
+    setLocationPermission(status);
+  };
+
+  const loadNotificationPermission = async () => {
+    if (!Capacitor.isNativePlatform()) return false;
+    const permission = await notificationService.checkPermission();
+    setNotificationPermission(permission);
+    return permission;
+  };
+
+  const reconcileNotifications = useCallback(async () => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    await notificationService.reconcileDWindowNotifications({
+      forecast: notificationService.getLastForecast(),
+      isPremium,
+    });
+  }, [isPremium]);
 
   const disclaimerPoints = [
     'This app is for informational and educational purposes only. It is not a medical device.',
@@ -235,6 +265,9 @@ export default function SettingsPage() {
         if (result.values && result.values.length > 0) {
           setHealthKitEnabled(result.values[0].value === 'true');
         }
+
+        await loadLocationPermission();
+        await loadNotificationPermission();
       }
 
       // Load blood test data
@@ -247,6 +280,27 @@ export default function SettingsPage() {
     }
     loadSettings();
   }, []);
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    let listenerHandle: { remove: () => void } | undefined;
+
+    App.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) {
+        void loadLocationPermission();
+        void loadNotificationPermission().then(() => {
+          void reconcileNotifications();
+        });
+      }
+    }).then((handle) => {
+      listenerHandle = handle;
+    });
+
+    return () => {
+      listenerHandle?.remove();
+    };
+  }, [isPremium, reconcileNotifications]);
 
   const handleRestore = async () => {
     const restored = await restore();
@@ -303,12 +357,11 @@ export default function SettingsPage() {
     handleOpenLink('https://apps.apple.com/us/app/bask-app-id');
   };
 
-  const handleOpenAppSettings = async () => {
+  const handleLocationPermissionPress = async () => {
     if (Capacitor.isNativePlatform()) {
-      try {
-        await BaskWeather.openSettings();
-      } catch (error) {
-        console.warn('Failed to open settings:', error);
+      const status = await handleLocationPermissionAction();
+      if (status) {
+        setLocationPermission(status);
       }
     }
   };
@@ -320,19 +373,24 @@ export default function SettingsPage() {
       return;
     }
 
-    if (!notificationPermission) {
-      const granted = await notificationService.requestPermission();
-      setNotificationPermission(granted);
+    const turningOn = !notificationSettings.enabled;
+
+    if (turningOn) {
+      let granted = notificationPermission;
+      if (!granted) {
+        granted = await notificationService.requestPermission();
+        setNotificationPermission(granted);
+      }
       if (!granted) return;
     }
 
     const newSettings = {
       ...notificationSettings,
-      enabled: !notificationSettings.enabled,
+      enabled: turningOn,
     };
     await notificationService.saveSettings(newSettings);
     setNotificationSettings(newSettings);
-    await notificationService.applySettingsChange();
+    await notificationService.applySettingsChange({ isPremium });
   };
 
   const handleLeadTimeChange = async (minutes: number) => {
@@ -342,7 +400,7 @@ export default function SettingsPage() {
     };
     await notificationService.saveSettings(newSettings);
     setNotificationSettings(newSettings);
-    await notificationService.applySettingsChange();
+    await notificationService.applySettingsChange({ isPremium });
   };
 
   const handleToggleHealthKit = async () => {
@@ -469,7 +527,7 @@ export default function SettingsPage() {
             <div className='backdrop-blur-xl bg-white/70 border border-black/5 shadow-sm rounded-xl overflow-hidden'>
               {/* Location */}
               <button
-                onClick={handleOpenAppSettings}
+                onClick={handleLocationPermissionPress}
                 className='w-full p-4 flex items-center gap-3 text-left border-b border-black/5 active:bg-black/5 transition-all'>
                 <span className='text-text-secondary'>
                   <LocationIcon />
@@ -477,7 +535,9 @@ export default function SettingsPage() {
                 <div className='flex-1'>
                   <span className='text-text-primary'>Location</span>
                   <p className='text-xs text-text-secondary'>
-                    Required for UV and weather data
+                    {locationPermission
+                      ? locationPermissionLabel(locationPermission)
+                      : 'Required for UV and weather data'}
                   </p>
                 </div>
                 <span className='text-text-primary/40'>
@@ -562,10 +622,10 @@ export default function SettingsPage() {
                   </span>
                   <div>
                     <span className='text-text-primary'>
-                      Optimal Vitamin D Alerts
+                      Vitamin D Timing Alerts
                     </span>
                     <p className='text-xs text-text-secondary'>
-                      Get notified before optimal vitamin D windows
+                      Optimal windows, synthesis start, and end-of-day reminders
                     </p>
                   </div>
                 </div>
@@ -583,7 +643,7 @@ export default function SettingsPage() {
               {notificationSettings.enabled && isPremium && (
                 <div className='p-4 border-b border-black/5'>
                   <p className='text-xs text-text-secondary mb-3'>
-                    Alert me before window starts:
+                    Advance reminder (before optimal window and before synthesis ends):
                   </p>
                   <div className='flex gap-2'>
                     {[10, 20, 30].map((minutes) => (

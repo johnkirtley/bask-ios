@@ -1,15 +1,17 @@
 'use client';
 
+import { getLocalDateKey } from '../../streakUtils';
 import { databaseService } from '../connection';
+import { streakStateRepository } from './streakStateRepository';
 
 export interface UserProfile {
   id: number;
   fitzpatrick_type: number;
   base_d_level: number;
   daily_goal: number;
-  age?: number;
-  weight?: number;
-  weight_unit?: string;
+  age?: number | null;
+  weight?: number | null;
+  weight_unit?: string | null;
   default_attire?: string;
   disclaimer_accepted_at?: string;
   blood_test_value?: number;
@@ -62,6 +64,22 @@ export const userProfileRepository = {
       updates.push('blood_test_source = ?');
       values.push(profile.blood_test_source);
     }
+    if (profile.age !== undefined) {
+      updates.push('age = ?');
+      values.push(profile.age);
+    }
+    if (profile.weight !== undefined) {
+      updates.push('weight = ?');
+      values.push(profile.weight);
+    }
+    if (profile.weight_unit !== undefined) {
+      updates.push('weight_unit = ?');
+      values.push(profile.weight_unit);
+    }
+    if (profile.disclaimer_accepted_at !== undefined) {
+      updates.push('disclaimer_accepted_at = ?');
+      values.push(profile.disclaimer_accepted_at);
+    }
 
     if (updates.length > 0) {
       updates.push("updated_at = datetime('now')");
@@ -78,9 +96,27 @@ export const userProfileRepository = {
 
   async setDailyGoal(goal: number): Promise<void> {
     await this.update({ daily_goal: goal });
+    await streakStateRepository.upsertGoalSnapshot(getLocalDateKey(new Date()), goal);
   },
 
   async setBaseDLevel(level: number): Promise<void> {
     await this.update({ base_d_level: level });
+  },
+
+  /**
+   * Clear biological fields re-collected during onboarding.
+   */
+  async resetBiologicalFields(): Promise<void> {
+    const db = await databaseService.getConnection();
+    await db.run(
+      `UPDATE bask_user_profile SET
+        fitzpatrick_type = 2,
+        age = NULL,
+        weight = NULL,
+        weight_unit = NULL,
+        disclaimer_accepted_at = NULL,
+        updated_at = datetime('now')
+      WHERE id = 1`,
+    );
   },
 };

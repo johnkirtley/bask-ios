@@ -74,10 +74,10 @@ export default function NotificationPermissionScreen({
       <div className="relative z-10 flex flex-col h-full">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-gray-900 leading-tight mb-2">
-            Never miss your D-Window
+            Never miss your vitamin D timing
           </h2>
           <p className="text-base text-gray-700">
-            Get notified right before your optimal vitamin D window approaches, so you can prepare to step outside and make the most of natural sunlight.
+            Get alerts for optimal windows, when D synthesis starts, and before it ends for the day. You can turn these on anytime in Settings.
           </p>
         </div>
 

@@ -14,6 +14,9 @@ import SwipeableCard from '../../components/history/SwipeableCard';
 import EditEntryModal from '../../components/history/EditEntryModal';
 import { useSubscription } from '../../hooks/useSubscription';
 import ProBadge from '../../components/ui/ProBadge';
+import StreakSummaryRow from '../../components/history/StreakSummaryRow';
+import StreakDetailSheet from '../../components/streaks/StreakDetailSheet';
+import { useStreakState } from '../../hooks/useStreakState';
 
 type HistoryEntry = {
   type: 'session' | 'supplement' | 'cofactor';
@@ -38,6 +41,8 @@ export default function History() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editTarget, setEditTarget] = useState<HistoryEntry | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [isStreakSheetOpen, setIsStreakSheetOpen] = useState(false);
+  const { summary: streakSummary, state: streakState, refreshStreak } = useStreakState();
 
   // Force free users back to 7 days if they somehow have a premium range set
   useEffect(() => {
@@ -48,7 +53,8 @@ export default function History() {
 
   useEffect(() => {
     loadHistory();
-  }, [dateRange]);
+    void refreshStreak('app_open');
+  }, [dateRange, refreshStreak]);
 
   // Refresh history when app returns to foreground (to reflect HealthKit sync deletions)
   useEffect(() => {
@@ -60,6 +66,7 @@ export default function History() {
       const listener = await App.addListener('appStateChange', ({ isActive }) => {
         if (isActive) {
           loadHistory();
+          void refreshStreak('app_open');
         }
       });
       cleanup = () => listener.remove();
@@ -70,7 +77,7 @@ export default function History() {
     return () => {
       if (cleanup) cleanup();
     };
-  }, [dateRange]);
+  }, [dateRange, refreshStreak]);
 
   const loadHistory = async () => {
     setLoading(true);
@@ -684,6 +691,10 @@ export default function History() {
                       <span className='text-2xl font-semibold text-solar-warm/70 mb-2'>IU</span>
                     </div>
                     <p className='text-text-secondary text-sm font-medium tracking-wide'>Total Vitamin D</p>
+                    <StreakSummaryRow
+                      currentStreak={streakSummary?.currentStreak ?? 0}
+                      onPress={() => setIsStreakSheetOpen(true)}
+                    />
                   </div>
                 </div>
 
@@ -781,6 +792,13 @@ export default function History() {
           }}
           entry={editTarget}
           onSave={handleEditSave}
+        />
+
+        <StreakDetailSheet
+          isOpen={isStreakSheetOpen}
+          onClose={() => setIsStreakSheetOpen(false)}
+          summary={streakSummary}
+          state={streakState}
         />
       </div>
     </AtmosphericBackground>

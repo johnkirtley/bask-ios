@@ -120,7 +120,7 @@ export function calculateVitaminD(
  * @param exposurePercent - Percentage of skin exposed (0-100)
  * @param fitzpatrickType - Skin type (1-6)
  * @param age - User's age (optional, increases time needed for older users)
- * @returns Minutes needed, or Infinity if UV is too low
+ * @returns Uncapped minutes needed, or Infinity if UV is too low
  */
 export function calculateTimeToGoal(
   targetIU: number,
@@ -130,7 +130,7 @@ export function calculateTimeToGoal(
   age?: number | null
 ): number {
   // Shadow Rule: UV must be >= 3 for vitamin D synthesis
-  if (uvIndex < 3 || exposurePercent <= 0) return Infinity;
+  if (uvIndex < 3 || exposurePercent <= 0 || targetIU <= 0) return Infinity;
 
   const BASE_IU_PER_MINUTE = 100;
   const skinMultiplier = SKIN_MULTIPLIERS[fitzpatrickType] ?? 1.6;
@@ -138,16 +138,12 @@ export function calculateTimeToGoal(
   const uvFactor = uvIndex / 10;
   const ageFactor = getAgeMultiplier(age ?? null);
 
-  // Rearranged formula: Minutes = IU / (uvFactor * exposure * (1/skin) * age * base)
-  const minutesNeeded =
-    targetIU /
-    (uvFactor * exposureFraction * (1 / skinMultiplier) * ageFactor * BASE_IU_PER_MINUTE);
+  const ratePerMinute =
+    uvFactor * exposureFraction * (1 / skinMultiplier) * ageFactor * BASE_IU_PER_MINUTE;
+  if (ratePerMinute <= 0) return Infinity;
 
-  // Cap at burn threshold — synthesis stops at ~1 MED (matches calculateVitaminD)
-  const timeToBurn = calculateTimeToBurn(uvIndex, fitzpatrickType);
-  const cappedMinutes = Math.min(minutesNeeded, timeToBurn);
-
-  return Math.ceil(Math.max(0, cappedMinutes));
+  // Uncapped — callers compare against timeToBurn for safety-aware UI
+  return Math.ceil(targetIU / ratePerMinute);
 }
 
 /**
@@ -187,16 +183,40 @@ export function getBurnRiskLevel(uvIndex: number): BurnRiskLevel {
 }
 
 /**
- * Format minutes-until-burn for display (matches ActiveSessionView).
+ * Format minutes as a human-readable duration (no upper cap).
  */
-export function formatTimeToBurn(minutes: number): string {
+export function formatDurationMinutes(minutes: number): string {
   if (!isFinite(minutes) || minutes <= 0) return '—';
   if (minutes >= 60) {
     const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
+    const m = Math.round(minutes % 60);
     return m > 0 ? `${h}h ${m}m` : `${h}h`;
   }
-  return `${minutes}m`;
+  return `${Math.round(minutes)}m`;
+}
+
+/**
+ * Format minutes-until-burn for display (matches ActiveSessionView).
+ */
+export function formatTimeToBurn(minutes: number): string {
+  const formatted = formatDurationMinutes(minutes);
+  return formatted === '—' ? formatted : `~${formatted}`;
+}
+
+/**
+ * Format live sunburn countdown for active sessions (M:SS or H:MM:SS).
+ */
+export function formatSunburnCountdown(remainingSeconds: number): string {
+  if (remainingSeconds <= 0) return 'Now';
+
+  const hours = Math.floor(remainingSeconds / 3600);
+  const mins = Math.floor((remainingSeconds % 3600) / 60);
+  const secs = remainingSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
 /**

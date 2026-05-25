@@ -8,6 +8,44 @@ interface SolarWindowChartProps {
   sweetSpotStart: number; // hour (e.g., 10)
   sweetSpotEnd: number; // hour (e.g., 14)
   hasOptimalWindow: boolean; // whether sweet spot is viable
+  sunriseTime: string;
+  solarNoonTime: string;
+  sunsetTime: string;
+}
+
+interface SolarMarker {
+  kind: 'sunrise' | 'solarNoon' | 'sunset';
+  hour: number;
+  label: string;
+  shortLabel: string;
+}
+
+/** Parse "6:32 AM" / "12:36 PM" to fractional hour (0–24). */
+function parseTimeToHour(timeStr: string): number | null {
+  if (!timeStr || timeStr === '--') return null;
+
+  const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return null;
+
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const period = match[3].toUpperCase();
+
+  if (period === 'PM' && hours !== 12) hours += 12;
+  else if (period === 'AM' && hours === 12) hours = 0;
+
+  return hours + minutes / 60;
+}
+
+function shortSolarLabel(kind: SolarMarker['kind']): string {
+  switch (kind) {
+    case 'sunrise':
+      return 'Sunrise';
+    case 'solarNoon':
+      return 'Noon';
+    case 'sunset':
+      return 'Sunset';
+  }
 }
 
 const MIN_HOUR = 6;
@@ -76,6 +114,9 @@ export default function SolarWindowChart({
   sweetSpotStart,
   sweetSpotEnd,
   hasOptimalWindow,
+  sunriseTime,
+  solarNoonTime,
+  sunsetTime,
 }: SolarWindowChartProps) {
   const [now, setNow] = useState(() => new Date());
 
@@ -88,8 +129,8 @@ export default function SolarWindowChart({
 
   // Use viewBox for responsive sizing
   const viewBoxWidth = 350;
-  const viewBoxHeight = 180;
-  const padding = { top: 20, right: 20, bottom: 30, left: 35 };
+  const viewBoxHeight = 196;
+  const padding = { top: 20, right: 20, bottom: 44, left: 35 };
   const chartWidth = viewBoxWidth - padding.left - padding.right;
   const chartHeight = viewBoxHeight - padding.top - padding.bottom;
 
@@ -98,6 +139,11 @@ export default function SolarWindowChart({
 
   const scaleX = (hour: number) => {
     return ((hour - MIN_HOUR) / (MAX_HOUR - MIN_HOUR)) * chartWidth;
+  };
+
+  const clampedScaleX = (hour: number) => {
+    const clamped = Math.max(MIN_HOUR, Math.min(MAX_HOUR, hour));
+    return scaleX(clamped);
   };
 
   const scaleY = (uvIndex: number) => {
@@ -151,6 +197,27 @@ export default function SolarWindowChart({
     return topPath + bottomPath;
   }, [filledCurve, sweetSpotStart, sweetSpotEnd]);
 
+  const solarMarkers = useMemo((): SolarMarker[] => {
+    const candidates: { kind: SolarMarker['kind']; time: string }[] = [
+      { kind: 'sunrise', time: sunriseTime },
+      { kind: 'solarNoon', time: solarNoonTime },
+      { kind: 'sunset', time: sunsetTime },
+    ];
+
+    return candidates
+      .map(({ kind, time }) => {
+        const hour = parseTimeToHour(time);
+        if (hour === null) return null;
+        return {
+          kind,
+          hour,
+          label: time,
+          shortLabel: shortSolarLabel(kind),
+        };
+      })
+      .filter((m): m is SolarMarker => m !== null);
+  }, [sunriseTime, solarNoonTime, sunsetTime]);
+
   // X-axis labels (every 2 hours)
   const xLabels = [6, 8, 10, 12, 14, 16, 18, 20];
 
@@ -173,8 +240,72 @@ export default function SolarWindowChart({
         className="mx-auto w-full h-auto"
         preserveAspectRatio="xMidYMid meet"
         role="img"
-        aria-label="UV intensity chart showing hourly UV index from 6am to 8pm">
+        aria-label="UV intensity chart with sunrise, solar noon, and sunset markers from 6am to 8pm">
         <g transform={`translate(${padding.left}, ${padding.top})`}>
+          {/* Sunrise / sunset / solar noon markers (behind curve) */}
+          {solarMarkers.map((marker) => {
+            const x = clampedScaleX(marker.hour);
+            const isNoon = marker.kind === 'solarNoon';
+            const noonUvY =
+              isNoon && filledCurve.length > 0
+                ? scaleY(interpolateUVAtHour(filledCurve, marker.hour))
+                : null;
+
+            return (
+              <g key={marker.kind}>
+                <line
+                  x1={x}
+                  y1={0}
+                  x2={x}
+                  y2={chartHeight}
+                  stroke={
+                    isNoon ? 'rgba(255, 179, 71, 0.35)' : 'rgba(0, 0, 0, 0.18)'
+                  }
+                  strokeWidth={isNoon ? 1 : 1}
+                  strokeDasharray={isNoon ? undefined : '2,3'}
+                />
+                {isNoon && (
+                  <>
+                    {noonUvY !== null && (
+                      <line
+                        x1={x}
+                        y1={10}
+                        x2={x}
+                        y2={noonUvY}
+                        stroke="rgba(255, 179, 71, 0.25)"
+                        strokeWidth={1}
+                      />
+                    )}
+                    <circle cx={x} cy={8} r={9} fill="rgba(255, 179, 71, 0.15)" />
+                    <circle cx={x} cy={8} r={5} fill="#FFB347" />
+                    <circle
+                      cx={x}
+                      cy={8}
+                      r={5}
+                      fill="none"
+                      stroke="rgba(255, 255, 255, 0.6)"
+                      strokeWidth={1}
+                    />
+                  </>
+                )}
+                <text
+                  x={x}
+                  y={chartHeight + 28}
+                  textAnchor="middle"
+                  className="text-[10px] fill-text-muted">
+                  {marker.shortLabel}
+                </text>
+                <text
+                  x={x}
+                  y={chartHeight + 38}
+                  textAnchor="middle"
+                  className="text-[10px] fill-text-secondary font-medium">
+                  {marker.label}
+                </text>
+              </g>
+            );
+          })}
+
           {/* Y-axis grid lines */}
           {yLabels.map((label) => (
             <g key={label}>

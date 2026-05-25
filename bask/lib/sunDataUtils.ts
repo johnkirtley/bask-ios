@@ -17,6 +17,7 @@ export interface SunData {
   vitaminDGoal: number; // IU
   vitaminDCurrent: number; // IU
   sunriseTime: string; // "6:32 AM"
+  solarNoonTime: string; // "12:36 PM"
   sunsetTime: string; // "7:45 PM"
   sweetSpotStart: number; // hour (e.g., 10)
   sweetSpotEnd: number; // hour (e.g., 14)
@@ -35,6 +36,15 @@ export interface ClothingPreset {
   id: string;
   name: string;
   coveragePercent: number; // affects vitamin D calculation
+}
+
+/** Format a Date as "h:mm AM/PM" (matches WeatherKit plugin output). */
+export function formatTime12Hour(date: Date): string {
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const displayHour = hours % 12 === 0 ? 12 : hours % 12;
+  return `${displayHour}:${minutes.toString().padStart(2, '0')} ${period}`;
 }
 
 /**
@@ -106,6 +116,7 @@ export function generateMockSunData(): SunData {
     vitaminDGoal: 5000, // Suggested goal (IU) - consult your healthcare provider
     vitaminDCurrent: Math.round((vitaminDProgress / 100) * 5000),
     sunriseTime: '6:32 AM',
+    solarNoonTime: '12:00 PM',
     sunsetTime: '7:45 PM',
     sweetSpotStart: 10, // 10am
     sweetSpotEnd: 14, // 2pm

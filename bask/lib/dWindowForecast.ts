@@ -214,6 +214,7 @@ export function calculateOptimalWindows(
     noWindowReason,
     maxForecastedUV,
     now,
+    todayNoWindowReason,
   );
 
   return {
@@ -457,16 +458,27 @@ function findOptimalWindow(
   // Thin clouds vs. storm clouds differ, but this is acceptable for estimation
   const effectiveUV = bestWindow.avgUV * (1 - avgCloudCover * 0.7);
 
-  const minutesToTarget = calculateMinutesToIU(
+  const minutesToFullGoal = calculateMinutesToIU(
     targetIU,
     effectiveUV,
     exposurePercent,
     fitzpatrickType,
     age,
   );
+  const timeToBurn = calculateTimeToBurn(
+    effectiveUV,
+    fitzpatrickType as FitzpatrickType,
+  );
 
-  // Cap at 60 minutes for safety
-  const durationMinutes = Math.min(minutesToTarget, 60);
+  // Recommend one burn-safe session (or less if the goal is already within reach)
+  const durationMinutes = Math.max(
+    5,
+    Math.min(
+      isFinite(minutesToFullGoal) ? minutesToFullGoal : timeToBurn,
+      timeToBurn,
+      60,
+    ),
+  );
 
   // Calculate full UV-viable opportunity window (the multi-hour range)
   const windowStartHour = bestWindow.start.hour;
@@ -524,9 +536,7 @@ function findOptimalWindow(
 }
 
 /**
- * Calculate minutes needed to reach target IU
- * Uses the same formula as dEngine for consistency
- * Caps at the burn threshold (biological saturation limit)
+ * Uncapped minutes needed to reach target IU (aligned with dEngine.calculateTimeToGoal)
  */
 function calculateMinutesToIU(
   targetIU: number,
@@ -535,8 +545,7 @@ function calculateMinutesToIU(
   fitzpatrickType: number,
   age: number | null,
 ): number {
-  // Shadow Rule: UV must be >= 3 for vitamin D synthesis
-  if (uvIndex < 3) return Infinity;
+  if (uvIndex < 3 || exposurePercent <= 0 || targetIU <= 0) return Infinity;
 
   const BASE_IU_PER_MINUTE = 100;
   const skinMultiplier =
@@ -545,23 +554,15 @@ function calculateMinutesToIU(
   const uvFactor = uvIndex / 10;
   const ageFactor = getAgeMultiplier(age);
 
-  // Formula aligned with dEngine: Minutes = IU / (uvFactor * exposure * (1/skin) * age * base)
-  const minutesNeeded =
-    targetIU /
-    (uvFactor *
-      exposureFraction *
-      (1 / skinMultiplier) *
-      ageFactor *
-      BASE_IU_PER_MINUTE);
+  const ratePerMinute =
+    uvFactor *
+    exposureFraction *
+    (1 / skinMultiplier) *
+    ageFactor *
+    BASE_IU_PER_MINUTE;
+  if (ratePerMinute <= 0) return Infinity;
 
-  // Cap at burn threshold (biological saturation - no more D synthesis after this)
-  const timeToBurn = calculateTimeToBurn(
-    uvIndex,
-    fitzpatrickType as FitzpatrickType,
-  );
-  const cappedMinutes = Math.min(minutesNeeded, timeToBurn);
-
-  return Math.max(5, Math.round(cappedMinutes));
+  return Math.ceil(targetIU / ratePerMinute);
 }
 
 /**
@@ -648,10 +649,14 @@ function generateRecommendations(
   noWindowReason?: 'uv-too-low' | 'clouds-blocking' | 'low-exposure',
   maxForecastedUV?: number,
   now: Date = new Date(),
+  todayNoWindowReason?: 'uv-too-low' | 'clouds-blocking' | 'low-exposure',
 ): Recommendation[] {
   const recommendations: Recommendation[] = [];
+  const isLowUvScenario =
+    (maxForecastedUV !== undefined && maxForecastedUV < 3) ||
+    noWindowReason === 'clouds-blocking';
 
-  // Today's recommendation
+  // Today's recommendation — only when a window exists (status rows cover no-window cases)
   if (today && today.avgUvIndex >= 5 && isNowInOpportunityWindow(today, now)) {
     recommendations.push({
       type: 'window',
@@ -679,30 +684,9 @@ function generateRecommendations(
         details: `You'll need ${today.durationMinutes} min. Some people also consider supplementation — consult your provider.`,
       },
     });
-  } else {
-    if (noWindowReason === 'clouds-blocking') {
-      recommendations.push({
-        type: 'alert',
-        priority: 2,
-        content: {
-          headline: 'Cloud cover is blocking UVB today',
-          details: 'Check recommendations below for alternatives.',
-        },
-      });
-    } else {
-      recommendations.push({
-        type: 'alert',
-        priority: 2,
-        content: {
-          headline: 'No usable UV right now',
-          details:
-            'Natural vitamin D synthesis not possible in current conditions.',
-        },
-      });
-    }
   }
 
-  // Tomorrow's recommendation
+  // Tomorrow's recommendation — only actionable windows (forecast card covers no-window cases)
   if (tomorrow && tomorrow.avgUvIndex >= 5) {
     recommendations.push({
       type: 'window',
@@ -723,19 +707,27 @@ function generateRecommendations(
         details: `${tomorrow.estimatedIU} IU available.`,
       },
     });
-  } else if (!tomorrow && noWindowReason === 'clouds-blocking') {
+  }
+
+  // Low-exposure guidance — UV is available but current exposure setup limits yield
+  if (!today && todayNoWindowReason === 'low-exposure') {
     recommendations.push({
-      type: 'alert',
-      priority: 3,
+      type: 'action',
+      priority: 1,
       content: {
-        headline: "Tomorrow's forecast also shows heavy clouds",
-        details: 'UVB will remain limited through tomorrow.',
+        headline: 'More skin exposure could make today viable',
+        items: [
+          'Try a lighter clothing preset if accurate',
+          'Use the forecast window for a short outdoor break if comfortable',
+        ],
+        details:
+          'UV is available, but your current exposure estimate is too low for a meaningful D-window.',
       },
     });
   }
 
-  // Efficiency warning
-  if (efficiency === 'poor') {
+  // Efficiency warning — skip when the low-UV action card already covers it
+  if (efficiency === 'poor' && !isLowUvScenario) {
     recommendations.push({
       type: 'alert',
       priority: 4,
@@ -746,11 +738,8 @@ function generateRecommendations(
     });
   }
 
-  // Circadian rhythm advice for consistently low UV OR when clouds block all UV
-  if (
-    (maxForecastedUV !== undefined && maxForecastedUV < 3) ||
-    noWindowReason === 'clouds-blocking'
-  ) {
+  // Actionable guidance for consistently low UV or cloud-blocked conditions
+  if (isLowUvScenario) {
     recommendations.push({
       type: 'action',
       priority: 0,
@@ -760,7 +749,6 @@ function generateRecommendations(
           'Consider discussing vitamin D and cofactors with a clinician',
           'Morning light exposure can support circadian rhythm during low-UV periods',
         ],
-        details: 'Supports circadian rhythm during low-UV periods.',
       },
     });
   }

@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { IonToast } from '@ionic/react';
 import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { useSunData } from '../hooks/useSunData';
 import { useOnboardingContext } from '../contexts/OnboardingContext';
@@ -10,18 +12,19 @@ import { useHealthKitSync } from '../hooks/useHealthKitSync';
 import { useTimeOfDay } from '../hooks/useTimeOfDay';
 import { useModal } from '../contexts/ModalContext';
 import { useDWindowNotifications } from '../hooks/useDWindowNotifications';
+import { useStreakState } from '../hooks/useStreakState';
 import { useSubscription } from '../hooks/useSubscription';
 import {
   sessionsRepository,
   supplementsRepository,
-  streaksRepository,
-  GoalStreakSummary,
+  StreakTransitionReason,
 } from '../lib/database';
 import { userProfileRepository, UserProfile } from '../lib/database/repositories/userProfileRepository';
 import {
   calculateTimeToGoal,
   calculateTimeToBurn,
   formatTimeToBurn,
+  formatDurationMinutes,
   calculateDailyDecayAmount,
 } from '../lib/dEngine';
 import { resolveFitzpatrickType } from '../lib/profileUtils';
@@ -36,6 +39,7 @@ import {
   getSynthesisStatSubtext,
 } from '../lib/dWindowForecast';
 import { BaskWeather } from '../lib/plugins';
+import { handleLocationPermissionAction } from '../lib/locationPermissionUtils';
 import AtmosphericBackground from '../components/home/AtmosphericBackground';
 import BaskRing from '../components/home/BaskRing';
 import StatMetrics from '../components/home/StatMetrics';
@@ -47,22 +51,16 @@ import SupplementCard from '../components/home/SupplementCard';
 import CofactorCard from '../components/home/CofactorCard';
 import DWindowForecastCard from '../components/home/DWindowForecastCard';
 import StreakCard from '../components/home/StreakCard';
+import StreakBadge from '../components/home/StreakBadge';
+import StreakDetailSheet from '../components/streaks/StreakDetailSheet';
+import StreakMilestoneOverlay from '../components/streaks/StreakMilestoneOverlay';
 
 /**
- * Format time to goal in a human-readable way
- * < 60min: "23m"
- * 60min-2h: "1h 15m" or "2h"
- * > 2h: "2h+" (not practical today)
- * > 24h or not achievable: "--"
+ * Format time to goal for the home stat (shows actual duration when achievable).
  */
 function formatTimeToGoal(minutes: number): string {
-  if (!isFinite(minutes) || minutes > 120) return '2h+';
-  if (minutes >= 60) {
-    const h = Math.floor(minutes / 60);
-    const m = Math.round(minutes % 60);
-    return m > 0 ? `${h}h ${m}m` : `${h}h`;
-  }
-  return `${Math.round(minutes)}m`;
+  if (!isFinite(minutes)) return '--';
+  return formatDurationMinutes(minutes);
 }
 
 export default function Home() {
@@ -85,6 +83,7 @@ export default function Home() {
   // Clothing preset state
   const [selectedPresetId, setSelectedPresetId] = useState('t-shirt-shorts');
   const [isPresetSelectorOpen, setIsPresetSelectorOpen] = useState(false);
+  const [isStreakSheetOpen, setIsStreakSheetOpen] = useState(false);
   const presets = getMockClothingPresets();
   const selectedPreset =
     presets.find((p) => p.id === selectedPresetId) ?? presets[2];
@@ -92,9 +91,8 @@ export default function Home() {
   // Daily total (sessions + supplements)
   const [todayTotal, setTodayTotal] = useState(0);
   const [todaySunIU, setTodaySunIU] = useState(0);
-  const [goalStreakSummary, setGoalStreakSummary] =
-    useState<GoalStreakSummary | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const refreshReasonRef = useRef<StreakTransitionReason>('app_open');
 
   useEffect(() => {
     userProfileRepository
@@ -129,6 +127,7 @@ export default function Home() {
     fitzpatrickType,
     age: answers.age ?? null,
   } : undefined);
+  const previousHealthKitSyncCountRef = useRef(healthKitSync.syncCount);
 
   // Update session active state for UI hiding (TabBar, etc.)
   useEffect(() => {
@@ -146,26 +145,46 @@ export default function Home() {
     return () => clearInterval(id);
   }, []);
 
-  // Schedule notifications when forecast changes - premium only
-  useDWindowNotifications(isPremium ? dWindowForecast : null);
+  const {
+    summary: goalStreakSummary,
+    state: streakState,
+    firstLogToastOpen,
+    pendingMilestone,
+    refreshStreak,
+    dismissFirstLogToast,
+    dismissMilestone,
+  } = useStreakState(sunData.vitaminDGoal);
+
+  // Reconcile notifications when forecast, premium eligibility, or streak state changes
+  useDWindowNotifications(dWindowForecast, isPremium, goalStreakSummary);
+
+  const loadTodayTotal = useCallback(async (
+    reason: StreakTransitionReason = 'manual',
+  ) => {
+    try {
+      const [sessionsIU, supplementsIU] = await Promise.all([
+        sessionsRepository.getTodayTotalIU(),
+        supplementsRepository.getTodayTotalIU(),
+      ]);
+      setTodaySunIU(sessionsIU);
+      setTodayTotal(sessionsIU + supplementsIU);
+      await refreshStreak(reason);
+    } catch (error) {
+      console.error('Failed to load today total:', error);
+    }
+  }, [refreshStreak]);
 
   useEffect(() => {
-    async function loadTodayTotal() {
-      try {
-        const [sessionsIU, supplementsIU, streakSummary] = await Promise.all([
-          sessionsRepository.getTodayTotalIU(),
-          supplementsRepository.getTodayTotalIU(),
-          streaksRepository.getGoalStreakSummary(sunData.vitaminDGoal),
-        ]);
-        setTodaySunIU(sessionsIU);
-        setTodayTotal(sessionsIU + supplementsIU);
-        setGoalStreakSummary(streakSummary);
-      } catch (error) {
-        console.error('Failed to load today total:', error);
-      }
-    }
-    loadTodayTotal();
-  }, [session.status, refreshKey, healthKitSync.syncCount, sunData.vitaminDGoal]); // Reload when session completes, supplement is logged, HealthKit syncs, or the goal changes
+    const healthKitSynced =
+      healthKitSync.syncCount !== previousHealthKitSyncCountRef.current;
+    const reason =
+      session.status === 'completed' || healthKitSynced
+        ? 'log'
+        : refreshReasonRef.current;
+    previousHealthKitSyncCountRef.current = healthKitSync.syncCount;
+    refreshReasonRef.current = 'manual';
+    void loadTodayTotal(reason);
+  }, [session.status, refreshKey, healthKitSync.syncCount, loadTodayTotal]); // Reload when session completes, supplement is logged, HealthKit syncs, or the goal changes
 
   // Load D-Window Forecast
   const loadForecast = useCallback(async () => {
@@ -208,7 +227,40 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [loadForecast]); // loadForecast now includes uvIndex in its deps
 
-  const handleProgressChanged = () => {
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    let listenerHandle: { remove: () => void } | undefined;
+
+    App.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) {
+        void loadForecast();
+        void loadTodayTotal('app_open');
+      }
+    }).then((handle) => {
+      listenerHandle = handle;
+    });
+
+    return () => {
+      listenerHandle?.remove();
+    };
+  }, [loadForecast, loadTodayTotal]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('focus') !== 'dwindow') return;
+
+    document
+      .getElementById('dwindow-forecast')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [dWindowForecast]);
+
+  const handleProgressChanged = (
+    reason: StreakTransitionReason = 'manual',
+  ) => {
+    refreshReasonRef.current = reason;
     setRefreshKey((prev) => prev + 1);
   };
 
@@ -237,6 +289,11 @@ export default function Home() {
     answers.age,
   );
 
+  const timeToBurnMinutes =
+    !isLoading && effectiveUV >= 3
+      ? calculateTimeToBurn(sunData.uvIndex, fitzpatrickType)
+      : Infinity;
+
   // Personalized time to burn (matches active session model)
   const burnRisk =
     isLoading || effectiveUV <= 0
@@ -262,9 +319,26 @@ export default function Home() {
   );
 
   const timeToGoalSubtext = (() => {
+    if (remainingIU <= 0) return "Today's goal reached";
+
+    if (
+      isFinite(timeToGoal) &&
+      isFinite(timeToBurnMinutes) &&
+      timeToGoal > timeToBurnMinutes
+    ) {
+      const goalLabel = formatDurationMinutes(timeToGoal);
+      const burnLabel = formatTimeToBurn(timeToBurnMinutes);
+      return `Goal may take ~${goalLabel} today. Limit each sun session to ${burnLabel} before taking a break.`;
+    }
+
     if (labGuidanceHint && (effectiveUV <= 0 || !isFinite(timeToGoal) || timeToGoal > 120)) {
       return labGuidanceHint;
     }
+
+    if (isFinite(timeToGoal) && timeToGoal > 120) {
+      return 'Try multiple shorter sessions or a supplement to reach your goal today.';
+    }
+
     if (isFinite(timeToGoal) && timeToGoal <= 120) return undefined;
     if (synthesisStatSubtext) return synthesisStatSubtext;
     if (!isFinite(timeToGoal) || timeToGoal > 24 * 60) {
@@ -272,7 +346,6 @@ export default function Home() {
         ? 'Based on current UV'
         : 'Consider supplementing today';
     }
-    if (timeToGoal > 120) return 'Consider supplementing today';
     return undefined;
   })();
 
@@ -294,11 +367,7 @@ export default function Home() {
 
   // Handle location warning press
   const handleLocationWarningPress = async () => {
-    try {
-      await BaskWeather.openSettings();
-    } catch (error) {
-      console.warn('Failed to open settings:', error);
-    }
+    await handleLocationPermissionAction();
   };
 
   // Handle session start
@@ -315,7 +384,8 @@ export default function Home() {
       <ActiveSessionView
         formattedTime={session.formattedTime}
         currentIU={session.currentIU}
-        projectedTimeToBurn={session.projectedTimeToBurn}
+        sunburnCountdown={session.formattedSunburnCountdown}
+        remainingSunburnSeconds={session.remainingSunburnSeconds}
         isPaused={session.isPaused}
         onPause={session.pauseSession}
         onResume={session.resumeSession}
@@ -337,9 +407,15 @@ export default function Home() {
           <div className='px-6 py-6'>
             <div className='flex justify-between items-center'>
               <div>
-                <h1 className='text-3xl font-semibold text-text-primary'>
-                  {greeting}
-                </h1>
+                <div className='flex items-center gap-3'>
+                  <h1 className='text-3xl font-semibold text-text-primary'>
+                    {greeting}
+                  </h1>
+                  <StreakBadge
+                    currentStreak={goalStreakSummary?.currentStreak ?? 0}
+                    onPress={() => setIsStreakSheetOpen(true)}
+                  />
+                </div>
                 {isLive && (
                   <div className='flex items-center gap-1.5 mt-1' role='status' aria-label='Live weather monitoring active'>
                     <div className='w-2 h-2 rounded-full bg-green-400 animate-pulse-live' aria-hidden='true' />
@@ -372,7 +448,7 @@ export default function Home() {
             vitaminDCurrent={todayTotal}
             onGoalUpdated={() => {
               refreshGoal();
-              handleProgressChanged();
+              handleProgressChanged('goal_change');
             }}
           />
 
@@ -413,6 +489,11 @@ export default function Home() {
               }
               isLoading={isLoading}
               burnRisk={burnRisk}
+              burnRiskSubtext={
+                !isLoading && effectiveUV >= 3
+                  ? 'Estimated time to skin redness at current UV'
+                  : undefined
+              }
               dailyDecay={dailyDecay}
               decaySubtext={(() => {
                 const remaining = dailyDecay - todayTotal;
@@ -445,13 +526,16 @@ export default function Home() {
               sweetSpotStart={sunData.sweetSpotStart}
               sweetSpotEnd={sunData.sweetSpotEnd}
               hasOptimalWindow={sunData.hasOptimalWindow}
+              sunriseTime={sunData.sunriseTime}
+              solarNoonTime={sunData.solarNoonTime}
+              sunsetTime={sunData.sunsetTime}
             />
           </div>
 
           {/* Supplement Quick-Add Card with Weather-Adjusted Recommendations */}
           <div className='px-6 mt-6'>
             <SupplementCard
-              onSupplementLogged={handleProgressChanged}
+              onSupplementLogged={() => handleProgressChanged('log')}
               todaySunIU={todaySunIU}
               uvIndex={isLoading ? undefined : effectiveUV}
               vitaminDGoal={sunData.vitaminDGoal}
@@ -493,6 +577,26 @@ export default function Home() {
         }}
         presets={presets}
         selectedId={selectedPresetId}
+      />
+
+      <StreakDetailSheet
+        isOpen={isStreakSheetOpen}
+        onClose={() => setIsStreakSheetOpen(false)}
+        summary={goalStreakSummary}
+        state={streakState}
+      />
+
+      <StreakMilestoneOverlay
+        milestone={pendingMilestone}
+        onDismiss={dismissMilestone}
+      />
+
+      <IonToast
+        isOpen={firstLogToastOpen}
+        onDidDismiss={dismissFirstLogToast}
+        message='Streak started 🔥 Log again tomorrow to keep it going.'
+        duration={4000}
+        position='top'
       />
 
     </>

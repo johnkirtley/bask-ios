@@ -8,7 +8,8 @@ import type { SunData } from '../../lib/sunDataUtils';
 interface ActiveSessionViewProps {
   formattedTime: string;
   currentIU: number;
-  projectedTimeToBurn: number;
+  sunburnCountdown: string;
+  remainingSunburnSeconds: number;
   isPaused: boolean;
   onPause: () => void;
   onResume: () => void;
@@ -25,7 +26,8 @@ interface ActiveSessionViewProps {
 export default function ActiveSessionView({
   formattedTime,
   currentIU,
-  projectedTimeToBurn,
+  sunburnCountdown,
+  remainingSunburnSeconds,
   isPaused,
   onPause,
   onResume,
@@ -207,17 +209,18 @@ export default function ActiveSessionView({
               {/* Divider */}
               <div className='w-px h-12 bg-black/10 flex-shrink-0' />
 
-              {/* Time Before Burn */}
+              {/* Sunburn Risk */}
               <div className='flex flex-col items-end min-w-0'>
-                <span className='text-[9px] font-semibold text-text-secondary uppercase tracking-tight text-right leading-tight'>
-                  Est. Time Before Sunburn
+                <span className='text-[11px] font-semibold text-text-secondary uppercase tracking-[0.08em] text-right leading-tight'>
+                  Sunburn Risk In
                 </span>
-                <span className='text-2xl font-bold text-ember-alert tabular-nums mt-1'>
-                  {projectedTimeToBurn >= 60
-                    ? `${Math.floor(projectedTimeToBurn / 60)}h ${
-                        projectedTimeToBurn % 60
-                      }m`
-                    : `${projectedTimeToBurn}m`}
+                <span
+                  className={`text-2xl font-bold tabular-nums mt-1 ${
+                    remainingSunburnSeconds <= 120
+                      ? 'text-ember-alert'
+                      : 'text-text-primary'
+                  }`}>
+                  {sunburnCountdown}
                 </span>
               </div>
             </div>

@@ -14,6 +14,7 @@ public class BaskWeatherPlugin: CAPPlugin, CLLocationManagerDelegate {
     private let cacheExpirationMinutes: Double = 10
 
     private var locationCompletionHandlers: [(Result<CLLocation, Error>) -> Void] = []
+    private var pendingPermissionCall: CAPPluginCall?
 
     public override func load() {
         locationManager = CLLocationManager()
@@ -23,6 +24,27 @@ public class BaskWeatherPlugin: CAPPlugin, CLLocationManagerDelegate {
 
     // MARK: - Location Permission
 
+    private func permissionStatusString(_ status: CLAuthorizationStatus) -> String {
+        switch status {
+        case .notDetermined:
+            return "prompt"
+        case .authorizedWhenInUse, .authorizedAlways:
+            return "granted"
+        case .denied, .restricted:
+            return "denied"
+        @unknown default:
+            return "denied"
+        }
+    }
+
+    @objc func getLocationPermissionStatus(_ call: CAPPluginCall) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            let status = CLLocationManager.authorizationStatus()
+            call.resolve(["status": self.permissionStatusString(status)])
+        }
+    }
+
     @objc func requestLocationPermission(_ call: CAPPluginCall) {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
@@ -31,22 +53,10 @@ public class BaskWeatherPlugin: CAPPlugin, CLLocationManagerDelegate {
 
             switch status {
             case .notDetermined:
+                self.pendingPermissionCall = call
                 self.locationManager?.requestWhenInUseAuthorization()
-                call.resolve([
-                    "status": "prompt"
-                ])
-            case .authorizedWhenInUse, .authorizedAlways:
-                call.resolve([
-                    "status": "granted"
-                ])
-            case .denied, .restricted:
-                call.resolve([
-                    "status": "denied"
-                ])
-            @unknown default:
-                call.resolve([
-                    "status": "denied"
-                ])
+            default:
+                call.resolve(["status": self.permissionStatusString(status)])
             }
         }
     }
@@ -78,18 +88,20 @@ public class BaskWeatherPlugin: CAPPlugin, CLLocationManagerDelegate {
     public func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         let status = manager.authorizationStatus
 
+        guard let call = pendingPermissionCall else { return }
+
         switch status {
         case .authorizedWhenInUse, .authorizedAlways:
-            // Permission granted, we can now get location when needed
-            break
+            pendingPermissionCall = nil
+            call.resolve(["status": "granted"])
         case .denied, .restricted:
-            // Permission denied
-            break
+            pendingPermissionCall = nil
+            call.resolve(["status": "denied"])
         case .notDetermined:
-            // Still waiting for user decision
             break
         @unknown default:
-            break
+            pendingPermissionCall = nil
+            call.resolve(["status": "denied"])
         }
     }
 

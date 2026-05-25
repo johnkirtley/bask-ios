@@ -104,6 +104,34 @@ const migrations: Migration[] = [
       `ALTER TABLE bask_sessions ADD COLUMN synced_at TEXT`,
     ],
   },
+  {
+    version: 5,
+    up: [
+      // Persist streak transition state for milestone/death/revival side effects.
+      `CREATE TABLE IF NOT EXISTS bask_streak_state (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        current_streak INTEGER NOT NULL DEFAULT 0,
+        longest_streak INTEGER NOT NULL DEFAULT 0,
+        last_qualifying_date TEXT,
+        last_streak_death_date TEXT,
+        last_streak_death_length INTEGER NOT NULL DEFAULT 0,
+        streak_revival_notif_fired INTEGER NOT NULL DEFAULT 0,
+        last_revival_notif_date TEXT,
+        milestones_achieved TEXT NOT NULL DEFAULT '[]',
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )`,
+      `INSERT OR IGNORE INTO bask_streak_state (id) VALUES (1)`,
+      // Store the user's end-of-day goal per local date so goal changes do not
+      // retroactively rewrite existing streak history.
+      `CREATE TABLE IF NOT EXISTS bask_daily_goal_snapshots (
+        date_key TEXT PRIMARY KEY,
+        goal_iu INTEGER NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )`,
+    ],
+  },
 ];
 
 export async function runMigrations(): Promise<void> {

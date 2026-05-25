@@ -2,11 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { generateMockSunData, SunData, getUVLevel, UVDataPoint } from '../lib/sunDataUtils';
+import {
+  generateMockSunData,
+  SunData,
+  getUVLevel,
+  UVDataPoint,
+  formatTime12Hour,
+} from '../lib/sunDataUtils';
 import { BaskWeather } from '../lib/plugins';
 import { userProfileRepository } from '../lib/database/repositories/userProfileRepository';
 import { calculateTimeToBurn, FitzpatrickType } from '../lib/dEngine';
 import { resolveDailyGoal, resolveFitzpatrickType } from '../lib/profileUtils';
+import { useOnboardingContext } from '../contexts/OnboardingContext';
 
 /**
  * Creates an empty sun data object for when real data is unavailable
@@ -21,6 +28,7 @@ function createEmptySunData(): SunData {
     vitaminDGoal: 5000, // Default - user can edit
     vitaminDCurrent: 0,
     sunriseTime: '--',
+    solarNoonTime: '--',
     sunsetTime: '--',
     sweetSpotStart: 0,
     sweetSpotEnd: 0,
@@ -38,6 +46,7 @@ function createEmptySunData(): SunData {
  * Updates every 5 minutes to stay current
  */
 export function useSunData(): SunData & { isLive: boolean; locationDenied: boolean; isLoading: boolean; locationCity?: string; locationState?: string; refreshGoal: () => void } {
+  const { answers } = useOnboardingContext();
   const [sunData, setSunData] = useState<SunData>(() => createEmptySunData());
   const [isLive, setIsLive] = useState(false);
   const [locationDenied, setLocationDenied] = useState(false);
@@ -62,7 +71,7 @@ export function useSunData(): SunData & { isLive: boolean; locationDenied: boole
         const userProfile = await userProfileRepository.get();
         currentGoal = resolveDailyGoal(userProfile);
         setUserGoal(currentGoal);
-        fitzpatrickType = resolveFitzpatrickType(userProfile, null);
+        fitzpatrickType = resolveFitzpatrickType(userProfile, answers);
       } catch (error) {
         console.warn('Failed to fetch user profile, using defaults:', error);
       }
@@ -83,6 +92,27 @@ export function useSunData(): SunData & { isLive: boolean; locationDenied: boole
       }
 
       try {
+        const permission = await BaskWeather.getLocationPermissionStatus().catch(() => null);
+
+        if (permission?.status === 'denied') {
+          setLocationDenied(true);
+          setSunData(createEmptySunData());
+          setIsLive(false);
+          setIsLoading(false);
+          clearTimeout(safetyTimeout);
+          return;
+        }
+
+        setLocationDenied(false);
+
+        if (permission?.status !== 'granted') {
+          setSunData(createEmptySunData());
+          setIsLive(false);
+          setIsLoading(false);
+          clearTimeout(safetyTimeout);
+          return;
+        }
+
         // Request all data in parallel
         const [currentWeather, hourlyForecast, solarEvents, locationInfo] = await Promise.all([
           BaskWeather.getCurrentWeather(),
@@ -129,6 +159,9 @@ export function useSunData(): SunData & { isLive: boolean; locationDenied: boole
           vitaminDGoal: currentGoal,
           vitaminDCurrent: Math.round((vitaminDProgress / 100) * currentGoal),
           sunriseTime: solarEvents.sunriseFormatted || '--',
+          solarNoonTime: solarEvents.solarNoon
+            ? formatTime12Hour(new Date(solarEvents.solarNoon))
+            : '--',
           sunsetTime: solarEvents.sunsetFormatted || '--',
           sweetSpotStart,
           sweetSpotEnd,
@@ -148,10 +181,8 @@ export function useSunData(): SunData & { isLive: boolean; locationDenied: boole
         // Show empty state on native error
         console.warn('Failed to fetch WeatherKit data:', error);
 
-        // Detect location permission denial from native plugin
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        const isDenied = errorMessage.includes('Location permission not granted');
-        setLocationDenied(isDenied);
+        const permission = await BaskWeather.getLocationPermissionStatus().catch(() => null);
+        setLocationDenied(permission?.status === 'denied');
 
         setSunData(createEmptySunData());
         setIsLive(false);
@@ -177,7 +208,7 @@ export function useSunData(): SunData & { isLive: boolean; locationDenied: boole
       clearInterval(interval);
       clearTimeout(safetyTimeout);
     };
-  }, [goalRefreshTrigger]);
+  }, [goalRefreshTrigger, answers.skinTone, answers.sunReaction]);
 
   return { ...sunData, isLive, locationDenied, isLoading, locationCity, locationState, refreshGoal };
 }

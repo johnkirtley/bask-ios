@@ -5,6 +5,10 @@ import { Capacitor } from '@capacitor/core';
 import { OnboardingState, OnboardingAnswers } from '../types';
 import { STORAGE_KEYS } from '../lib/constants';
 import { databaseService, runMigrations } from '../lib/database';
+import {
+  resetOnboardingProfileFields,
+  syncProfileFromOnboarding,
+} from '../lib/profileUtils';
 
 const DEFAULT_ONBOARDING: OnboardingState = {
   isComplete: false,
@@ -178,6 +182,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
             `INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, ?)`,
             [STORAGE_KEYS.onboarding, JSON.stringify(newState), now]
           );
+          await syncProfileFromOnboarding(answers, now);
         } catch (err) {
           console.error('Failed to persist onboarding to SQLite:', err);
         }
@@ -219,6 +224,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
         await db.run(`DELETE FROM settings WHERE key = ?`, [
           STORAGE_KEYS.onboarding,
         ]);
+        await resetOnboardingProfileFields();
       } catch (err) {
         console.error('Failed to reset onboarding in database:', err);
       }

@@ -1,31 +1,34 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { DWindowForecast } from '../lib/dWindowForecast';
+import { GoalStreakSummary } from '../lib/database';
 import { notificationService } from '../lib/services/notificationService';
 
 /**
- * Hook that schedules D-window notifications when forecast changes
+ * Hook that reconciles D-window notifications when forecast or eligibility changes.
+ * Dedupe lives in notificationService so Home remounts do not re-trigger scheduling.
  */
-export function useDWindowNotifications(forecast: DWindowForecast | null) {
-  const lastForecastRef = useRef<string | null>(null);
-
+export function useDWindowNotifications(
+  forecast: DWindowForecast | null,
+  isPremium: boolean,
+  streakSummary?: GoalStreakSummary | null,
+) {
   useEffect(() => {
-    if (!Capacitor.isNativePlatform() || !forecast) return;
+    if (!Capacitor.isNativePlatform()) return;
 
-    // Create a simple hash to detect forecast changes
-    const forecastHash = JSON.stringify({
-      today: forecast.today?.startTime,
-      tomorrow: forecast.tomorrow?.startTime,
-    });
-
-    // Only reschedule if forecast actually changed
-    if (forecastHash === lastForecastRef.current) return;
-    lastForecastRef.current = forecastHash;
-
-    // Schedule notifications
-    notificationService.scheduleDWindowNotifications(forecast).catch(console.warn);
-
-  }, [forecast]);
+    notificationService
+      .reconcileDWindowNotifications({
+        forecast,
+        isPremium,
+        streakContext: streakSummary
+          ? {
+              currentStreak: streakSummary.currentStreak,
+              hitToday: streakSummary.hitToday,
+            }
+          : null,
+      })
+      .catch(console.warn);
+  }, [forecast, isPremium, streakSummary]);
 }

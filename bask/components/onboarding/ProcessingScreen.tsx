@@ -14,6 +14,7 @@ const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI'] as const;
 type ProcessingRow = {
   icon: string;
   pendingLabel: string;
+  processingMs: number;
   getDoneLabel: (ctx: { fitzpatrickType: FitzpatrickType }) => string;
   isDone: (ctx: { isReady: boolean }) => boolean;
 };
@@ -22,6 +23,7 @@ const PROCESSING_ROWS: ProcessingRow[] = [
   {
     icon: '👤',
     pendingLabel: 'Analyzing your skin type...',
+    processingMs: 650,
     getDoneLabel: ({ fitzpatrickType }) =>
       `${formatSkinTypeLabel(fitzpatrickType)} identified`,
     isDone: () => true,
@@ -29,22 +31,32 @@ const PROCESSING_ROWS: ProcessingRow[] = [
   {
     icon: '☀️',
     pendingLabel: 'Checking local UV conditions...',
+    processingMs: 1500,
     getDoneLabel: () => 'Local UV conditions synced',
     isDone: ({ isReady }) => isReady,
   },
   {
     icon: '⏱️',
     pendingLabel: 'Calculating sunburn threshold...',
+    processingMs: 900,
     getDoneLabel: () => 'Sunburn threshold calculated',
     isDone: ({ isReady }) => isReady,
   },
   {
     icon: '⏰',
     pendingLabel: 'Estimating daily Vitamin D window...',
+    processingMs: 1200,
     getDoneLabel: () => 'Daily Vitamin D plan ready',
     isDone: ({ isReady }) => isReady,
   },
 ];
+
+const POLL_INTERVAL_MS = 50;
+const RESULTS_DELAY_MS = 500;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 function formatSkinTypeLabel(type: FitzpatrickType): string {
   return `Skin Type ${ROMAN[type - 1]}`;
@@ -68,9 +80,13 @@ export default function ProcessingScreen({
 }: ProcessingScreenProps) {
   const [isReady, setIsReady] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [doneStep, setDoneStep] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const [reviewRequested, setReviewRequested] = useState(false);
   const reviewTriggeredRef = useRef(false);
+  const isReadyRef = useRef(isReady);
+
+  isReadyRef.current = isReady;
 
   useEffect(() => {
     let cancelled = false;
@@ -106,22 +122,40 @@ export default function ProcessingScreen({
   );
 
   useEffect(() => {
-    if (currentStep < PROCESSING_ROWS.length) {
-      const timer = setTimeout(() => {
-        setCurrentStep((prev) => prev + 1);
-      }, 800);
+    let cancelled = false;
 
-      return () => clearTimeout(timer);
+    async function runSequence() {
+      for (let i = 0; i < PROCESSING_ROWS.length; i++) {
+        if (cancelled) return;
+
+        const row = PROCESSING_ROWS[i];
+        setCurrentStep(i + 1);
+        const start = Date.now();
+
+        while (!cancelled) {
+          const elapsed = Date.now() - start;
+          if (
+            elapsed >= row.processingMs &&
+            row.isDone({ isReady: isReadyRef.current })
+          ) {
+            setDoneStep(i + 1);
+            break;
+          }
+          await sleep(POLL_INTERVAL_MS);
+        }
+      }
+
+      if (cancelled) return;
+      await sleep(RESULTS_DELAY_MS);
+      if (!cancelled) setShowResults(true);
     }
 
-    if (!showResults && isReady) {
-      const resultTimer = setTimeout(() => {
-        setShowResults(true);
-      }, 500);
+    runSequence();
 
-      return () => clearTimeout(resultTimer);
-    }
-  }, [currentStep, showResults, isReady]);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!showResults || reviewTriggeredRef.current) return;
@@ -165,7 +199,7 @@ export default function ProcessingScreen({
         <div className='space-y-4 mb-8'>
           {PROCESSING_ROWS.map((row, index) => {
             const isRevealed = currentStep > index;
-            const isDone = isRevealed && row.isDone({ isReady });
+            const isDone = doneStep > index;
             const label = isDone
               ? row.getDoneLabel({ fitzpatrickType })
               : row.pendingLabel;

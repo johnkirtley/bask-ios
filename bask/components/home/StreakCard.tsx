@@ -12,17 +12,19 @@ interface StreakCardProps {
 function getStatusMessage(
   summary: GoalStreakSummary | null,
   fallbackRemainingIU: number,
+  currentStreak: number,
 ): string {
   if (!summary) {
-    return 'Track sun or supplements today to start building momentum.';
+    return 'Hit your vitamin D goal today to start a streak.';
   }
 
   if (summary.hitToday) {
-    return 'Goal locked in for today. Come back tomorrow to keep it going.';
+    return 'Goal complete. Come back tomorrow to keep it going.';
   }
 
-  if (summary.streakAtRisk) {
-    return `${summary.remainingTodayIU.toLocaleString()} IU left today to protect your streak.`;
+  if (currentStreak > 0) {
+    const remaining = summary.remainingTodayIU;
+    return `${remaining.toLocaleString()} IU left today to keep your streak alive.`;
   }
 
   return `${fallbackRemainingIU.toLocaleString()} IU left today to start a streak.`;
@@ -37,22 +39,18 @@ export default function StreakCard({
   const longestStreak = summary?.longestStreak ?? 0;
   const remainingTodayIU =
     summary?.remainingTodayIU ?? Math.max(0, vitaminDGoal - todayTotalIU);
-  const nextMilestone = summary?.nextMilestone ?? 3;
-  const daysToNextMilestone =
-    summary?.daysToNextMilestone ?? Math.max(0, nextMilestone - currentStreak);
   const progressPercent = Math.min(100, (todayTotalIU / vitaminDGoal) * 100);
-  const statusMessage = getStatusMessage(summary, remainingTodayIU);
-
-  const milestoneText =
-    daysToNextMilestone === 0
-      ? `${nextMilestone}-day milestone reached`
-      : `${daysToNextMilestone} day${daysToNextMilestone === 1 ? '' : 's'} to ${nextMilestone}`;
+  const statusMessage = getStatusMessage(
+    summary,
+    remainingTodayIU,
+    currentStreak,
+  );
 
   return (
     <div className='w-full'>
       <GlassCardWrapper>
-        <div className='flex items-start justify-between gap-4'>
-          <div>
+        <div className='flex items-start justify-between gap-3'>
+          <div className='min-w-0 flex-1'>
             <h3 className='text-xs font-semibold uppercase tracking-[0.08em] text-text-secondary mb-2'>
               Daily Goal Streak
             </h3>
@@ -66,15 +64,15 @@ export default function StreakCard({
             </div>
           </div>
 
-          <div className='text-right'>
-            <div className='inline-flex items-center gap-1.5 rounded-full bg-solar-flare/15 px-3 py-1.5 text-xs font-semibold text-solar-warm'>
-              <span className='h-2 w-2 rounded-full bg-solar-flare shadow-[0_0_8px_rgba(255,179,71,0.8)]' />
-              {milestoneText}
-            </div>
-            <p className='mt-2 text-xs text-text-secondary'>
-              Best: <span className='font-semibold text-text-primary'>{longestStreak}</span> days
+          {longestStreak > 0 && (
+            <p className='shrink-0 text-xs text-text-secondary whitespace-nowrap'>
+              Best:{' '}
+              <span className='font-semibold text-text-primary'>
+                {longestStreak}
+              </span>{' '}
+              days
             </p>
-          </div>
+          )}
         </div>
 
         <p className='mt-4 text-sm leading-relaxed text-text-primary'>
@@ -99,7 +97,6 @@ export default function StreakCard({
         {summary?.recentDays && summary.recentDays.length > 0 && (
           <div className='mt-4 grid grid-cols-7 gap-2'>
             {summary.recentDays.map((day) => {
-              const dayProgress = Math.min(1, day.totalIU / day.goalIU);
               const isGoalMet = day.goalMet;
 
               return (
@@ -108,13 +105,13 @@ export default function StreakCard({
                     className={
                       isGoalMet
                         ? 'mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-solar-flare to-solar-warm text-xs font-bold text-white shadow-md'
-                        : 'mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-black/5 text-xs font-semibold text-text-secondary'
+                        : 'mx-auto h-8 w-8 rounded-full bg-black/5'
                     }
                     title={`${day.totalIU.toLocaleString()} IU`}
                     aria-label={`${day.date.toLocaleDateString('en-US', {
                       weekday: 'long',
                     })}: ${day.totalIU.toLocaleString()} IU`}>
-                    {isGoalMet ? (
+                    {isGoalMet && (
                       <svg
                         xmlns='http://www.w3.org/2000/svg'
                         fill='none'
@@ -128,8 +125,6 @@ export default function StreakCard({
                           d='M4.5 12.75l6 6 9-13.5'
                         />
                       </svg>
-                    ) : (
-                      <span>{Math.round(dayProgress * 100)}%</span>
                     )}
                   </div>
                   <div className='mt-1 text-[10px] font-medium uppercase text-text-muted'>

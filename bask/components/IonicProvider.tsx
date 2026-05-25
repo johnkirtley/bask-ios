@@ -7,6 +7,7 @@ import { SubscriptionProvider } from '../contexts/SubscriptionContext';
 import { OnboardingProvider, useOnboardingContext } from '../contexts/OnboardingContext';
 import { useSubscription } from '../hooks/useSubscription';
 import OnboardingFlow from './onboarding/OnboardingFlow';
+import NotificationBootstrap from './NotificationBootstrap';
 
 // Initialize Ionic React with iOS mode
 setupIonicReact({
@@ -83,6 +84,7 @@ function OnboardingGate({ children }: { children: React.ReactNode }) {
 export default function IonicProvider({ children }: IonicProviderProps) {
   return (
     <IonApp>
+      <NotificationBootstrap />
       <SubscriptionProvider>
         <OnboardingProvider>
           <ModalProvider>

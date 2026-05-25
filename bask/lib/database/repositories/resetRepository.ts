@@ -1,8 +1,10 @@
 'use client';
 
 import { Capacitor } from '@capacitor/core';
+import { notificationService } from '../../services/notificationService';
 import { databaseService } from '../connection';
 import { STORAGE_KEYS } from '@/lib/constants';
+import { streakStateRepository } from './streakStateRepository';
 
 export const resetRepository = {
   /**
@@ -11,6 +13,10 @@ export const resetRepository = {
    * This operation cannot be undone.
    */
   async deleteAllUserData(): Promise<void> {
+    await notificationService.cancelDWindowNotifications();
+    await notificationService.cancelStreakRevivalNotifications();
+    await streakStateRepository.reset();
+
     if (Capacitor.isNativePlatform()) {
       try {
         const db = await databaseService.getConnection();

@@ -5,7 +5,7 @@ import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { sessionsRepository } from '../lib/database';
-import { calculateVitaminD, calculateTimeToBurn, getExposurePercent } from '../lib/dEngine';
+import { calculateVitaminD, calculateTimeToBurn, getExposurePercent, formatSunburnCountdown } from '../lib/dEngine';
 import { BaskLiveActivity } from '../lib/plugins';
 import type { BaskSessionStatus } from '../types';
 import type { FitzpatrickType } from '../lib/dEngine';
@@ -430,12 +430,19 @@ export function useBaskSession(
     }
   }, [state.sessionId, state.liveActivityId]);
 
+  const remainingSunburnSeconds = Math.max(
+    0,
+    state.projectedTimeToBurn * 60 - state.elapsedSeconds,
+  );
+
   return {
     // State
     status: state.status,
     elapsedSeconds: state.elapsedSeconds,
     currentIU: state.currentIU,
     projectedTimeToBurn: state.projectedTimeToBurn,
+    remainingSunburnSeconds,
+    formattedSunburnCountdown: formatSunburnCountdown(remainingSunburnSeconds),
     clothingPresetId: state.clothingPresetId,
 
     // Actions

@@ -93,6 +93,12 @@ export interface BaskWeatherPlugin {
   getSolarEvents(): Promise<SolarEvents>;
 
   /**
+   * Get current location permission status without prompting
+   * @returns Permission status
+   */
+  getLocationPermissionStatus(): Promise<LocationPermissionStatus>;
+
+  /**
    * Request location permission from the user
    * On iOS, this will show the permission prompt if not yet determined
    * @returns Permission status
