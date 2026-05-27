@@ -236,7 +236,8 @@ export const leaderboardService = {
   },
 
   async randomizeName(): Promise<string> {
-    const newName = generateAnonymousName();
+    const current = await settingsRepository.get(LEADERBOARD_SETTINGS.anonymousName);
+    const newName = generateAnonymousName(current ?? undefined);
     await this.updateAnonymousName(newName);
     return newName;
   },

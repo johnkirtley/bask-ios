@@ -26,8 +26,13 @@ const NOUNS = [
   'aspen', 'basalt', 'coral', 'drift', 'finch', 'granite', 'harbor',
 ];
 
-export function generateAnonymousName(): string {
-  const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
-  const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)];
-  return `${adj}-${noun}`;
+export function generateAnonymousName(exclude?: string): string {
+  const normalizedExclude = exclude?.trim().toLowerCase();
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
+    const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)];
+    const name = `${adj}-${noun}`;
+    if (name !== normalizedExclude) return name;
+  }
+  return `${ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)]}-${Date.now().toString(36).slice(-4)}`;
 }
