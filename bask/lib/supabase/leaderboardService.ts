@@ -191,7 +191,8 @@ export const leaderboardService = {
     }
 
     await settingsRepository.set(LEADERBOARD_SETTINGS.optedIn, 'true');
-    return { anonymousName };
+    const finalName = await this.getOrCreateAnonymousName();
+    return { anonymousName: finalName };
   },
 
   async optOut(): Promise<void> {

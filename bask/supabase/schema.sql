@@ -140,13 +140,18 @@ BEGIN
   v_token := encode(extensions.gen_random_bytes(32), 'hex');
   v_user_id := gen_random_uuid();
 
-  INSERT INTO leaderboard_users (
-    public_user_id, anonymous_name, country_code, region_label,
-    city_label, location_precision, opted_in_at, updated_at
-  ) VALUES (
-    v_user_id, v_name, NULLIF(trim(p_country_code), ''), NULLIF(trim(p_region_label), ''),
-    NULLIF(trim(p_city_label), ''), COALESCE(p_location_precision, 'none'), now(), now()
-  );
+  BEGIN
+    INSERT INTO leaderboard_users (
+      public_user_id, anonymous_name, country_code, region_label,
+      city_label, location_precision, opted_in_at, updated_at
+    ) VALUES (
+      v_user_id, v_name, NULLIF(trim(p_country_code), ''), NULLIF(trim(p_region_label), ''),
+      NULLIF(trim(p_city_label), ''), COALESCE(p_location_precision, 'none'), now(), now()
+    );
+  EXCEPTION
+    WHEN unique_violation THEN
+      RAISE EXCEPTION 'anonymous_name_taken';
+  END;
 
   INSERT INTO leaderboard_user_secrets (public_user_id, write_token_hash)
   VALUES (v_user_id, hash_write_token(v_token));
@@ -173,9 +178,23 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public, extensions
 AS $$
+DECLARE
+  v_name TEXT;
 BEGIN
   IF NOT verify_write_token(p_public_user_id, p_write_token) THEN
     RAISE EXCEPTION 'Invalid credentials';
+  END IF;
+
+  IF p_anonymous_name IS NOT NULL THEN
+    v_name := validate_anonymous_name(p_anonymous_name);
+    IF EXISTS (
+      SELECT 1
+      FROM leaderboard_users u
+      WHERE u.anonymous_name = v_name
+        AND u.public_user_id <> p_public_user_id
+    ) THEN
+      RAISE EXCEPTION 'anonymous_name_taken';
+    END IF;
   END IF;
 
   UPDATE leaderboard_users

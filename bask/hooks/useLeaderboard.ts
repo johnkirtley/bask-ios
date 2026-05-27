@@ -101,7 +101,8 @@ export function useLeaderboard(): UseLeaderboardResult {
 
   const updateName = useCallback(async (name: string) => {
     await leaderboardService.updateAnonymousName(name);
-    setAnonymousName(name.trim().toLowerCase().replace(/\s+/g, '-'));
+    const saved = await leaderboardService.getOrCreateAnonymousName();
+    setAnonymousName(saved);
   }, []);
 
   const randomizeName = useCallback(async () => {

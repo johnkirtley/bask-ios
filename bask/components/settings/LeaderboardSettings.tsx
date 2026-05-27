@@ -30,6 +30,7 @@ export default function LeaderboardSettings() {
   const [showNameEdit, setShowNameEdit] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showLocationEdit, setShowLocationEdit] = useState(false);
+  const [nameTakenMessage, setNameTakenMessage] = useState<string | null>(null);
 
   const handleToggle = async () => {
     if (isOptedIn) {
