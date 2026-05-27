@@ -274,6 +274,7 @@ We integrate with:
 - **Apple WeatherKit:** For real-time UV index, weather forecasts, and solar event data. Subject to [Apple's Privacy Policy](https://www.apple.com/legal/privacy/).
 - **RevenueCat:** For in-app subscription management. Subject to [RevenueCat's Privacy Policy](https://www.revenuecat.com/privacy).
 - **Apple HealthKit:** For bidirectional sync of vitamin D and daylight data. Subject to [Apple's Privacy Policy](https://www.apple.com/legal/privacy/).
+- **Supabase (optional leaderboard only):** If you opt into the Touch Grass Leaderboard, anonymous session scores are stored for public rankings. Subject to [Supabase's Privacy Policy](https://supabase.com/privacy).
 
 ---
 
@@ -291,7 +292,8 @@ We use your information to:
 
 ### 3. Data Storage & Security
 
-- **Local Storage:** All personal data is stored **locally on your device** using SQLite. We do **not** transmit your personal health data to our servers.
+- **Local Storage:** All personal data is stored **locally on your device** using SQLite. We do **not** transmit your personal health data to our servers by default.
+- **Optional Leaderboard:** If you opt into the Touch Grass Leaderboard, only an anonymous name, a random public ID, per-session sun-exposure IU/duration, and optional coarse location labels (country/region/city you choose) are sent to our leaderboard service (Supabase). Supplements and Apple Health data are never included.
 - **Cloud Backup:** If you use iCloud backup, your device data may be included in your iCloud backups (controlled by your iOS settings).
 - **Security Measures:** We use industry-standard encryption and security practices to protect your data.
 

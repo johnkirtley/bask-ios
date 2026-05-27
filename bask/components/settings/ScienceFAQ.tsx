@@ -55,7 +55,7 @@ const faqItems: FAQItem[] = [
     id: 'data-privacy',
     question: 'Where is my data stored?',
     answer:
-      "Privacy by design:\n\n• All calculations happen on your device - we never send health data to external servers\n• Session history, supplement logs, and profile data are stored locally\n• Weather/UV data is fetched from Apple WeatherKit, but your health metrics stay private\n• Apple Health sync (if enabled) goes directly to your Health app - we're just the bridge\n• No tracking, no analytics servers, no third-party data sharing\n\nYour vitamin D data is yours alone. Even we can't see it.",
+      "Privacy by default:\n\n• All calculations happen on your device. Your health data is never sent anywhere — unless you opt into the Touch Grass Leaderboard.\n• If you join the leaderboard, only an anonymous name, a random public ID, and your per-session sun-exposure IU + duration are sent. Optional country/region/city labels are only sent if you choose to show them.\n• Session history, supplement logs, and profile data always stay local.\n• Weather/UV data is fetched from Apple WeatherKit, but your health metrics stay private unless you opt in.\n• Apple Health sync (if enabled) goes directly to your Health app.\n• The leaderboard is fully opt-in and can be turned off or deleted anytime in Settings.",
   },
 ];
 

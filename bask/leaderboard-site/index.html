@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Touch Grass Leaderboard — Bask</title>
+  <meta name="description" content="Live anonymous vitamin D leaderboard. See who's getting the most sun today and this week." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bg-glow"></div>
+  <header class="header">
+    <div class="header-inner">
+      <div class="brand">
+        <span class="brand-mark">☀️</span>
+        <div>
+          <h1>Touch Grass Leaderboard</h1>
+          <p class="subtitle">Live sun exposure competition · powered by Bask</p>
+        </div>
+      </div>
+      <a href="https://getbask.app" class="cta-button" target="_blank" rel="noopener">Get Bask</a>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="controls">
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-period="today" role="tab" aria-selected="true">Today</button>
+        <button class="tab" data-period="week" role="tab" aria-selected="false">This Week</button>
+      </div>
+      <div class="filters">
+        <label for="country-filter">Country</label>
+        <select id="country-filter">
+          <option value="">All countries</option>
+        </select>
+      </div>
+      <p class="updated" id="last-updated">Loading…</p>
+    </section>
+
+    <section class="stats-bar" id="stats-bar">
+      <div class="stat">
+        <span class="stat-value" id="stat-players">—</span>
+        <span class="stat-label">Competitors</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="stat-iu">—</span>
+        <span class="stat-label">Top IU</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="stat-minutes">—</span>
+        <span class="stat-label">Top Sun Time</span>
+      </div>
+    </section>
+
+    <section class="leaderboard-card">
+      <div class="table-header">
+        <span>#</span>
+        <span>Name</span>
+        <span>Location</span>
+        <span>Sun</span>
+        <span>IU</span>
+      </div>
+      <div id="leaderboard-body" class="table-body">
+        <div class="loading">Loading leaderboard…</div>
+      </div>
+    </section>
+
+    <section class="join-cta">
+      <h2>Want on the board?</h2>
+      <p>Opt in from Bask Settings → Community. Anonymous by default. Supplements never count.</p>
+      <a href="https://getbask.app" class="cta-button cta-button-large" target="_blank" rel="noopener">Join in the Bask app</a>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Estimates only · Not medical advice · <a href="https://www.getbask.app/privacy">Privacy</a></p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

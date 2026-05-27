@@ -1,0 +1,270 @@
+'use client';
+
+import { useState } from 'react';
+import { IonToggle, IonAlert } from '@ionic/react';
+import { useLeaderboard } from '../../hooks/useLeaderboard';
+import { LEADERBOARD_COUNTRIES } from '../../lib/leaderboard/countries';
+import type { LocationPrecision } from '../../lib/leaderboard/countries';
+
+const DATA_DISCLOSURE = [
+  { sent: 'Random public ID + write token (not linked to Apple ID)', never: 'Name, email, Apple ID' },
+  { sent: 'Your chosen anonymous name', never: 'Precise GPS coordinates' },
+  { sent: 'Sun IU + duration per completed session', never: 'Skin type, age, weight, blood tests' },
+  { sent: 'Optional country/region/city (if you choose)', never: 'Supplements, cofactors, HealthKit data' },
+];
+
+export default function LeaderboardSettings() {
+  const {
+    isOptedIn,
+    anonymousName,
+    location,
+    isLoading,
+    optIn,
+    optOut,
+    deleteLeaderboardData,
+    updateName,
+    randomizeName,
+    setLocation,
+  } = useLeaderboard();
+
+  const [showNameEdit, setShowNameEdit] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showLocationEdit, setShowLocationEdit] = useState(false);
+
+  const handleToggle = async () => {
+    if (isOptedIn) {
+      await optOut();
+    } else {
+      await optIn();
+    }
+  };
+
+  const handleLocationPrecisionChange = async (precision: LocationPrecision) => {
+    await setLocation({ locationPrecision: precision });
+  };
+
+  if (isLoading) return null;
+
+  return (
+    <>
+      <div className='backdrop-blur-xl bg-white/70 border border-black/5 shadow-sm rounded-xl overflow-hidden'>
+        <div className='p-4 flex items-center justify-between border-b border-black/5'>
+          <div className='flex items-center gap-3'>
+            <span className='text-text-secondary'>
+              <svg
+                xmlns='http://www.w3.org/2000/svg'
+                viewBox='0 0 24 24'
+                fill='none'
+                stroke='currentColor'
+                strokeWidth='2'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                className='w-5 h-5'>
+                <path d='M8 21h8m-4-4v4m-5-8a5 5 0 0 1-3-5V4h16v4a5 5 0 0 1-3 5' />
+                <path d='M5 4H3v3a3 3 0 0 0 3 3M19 4h2v3a3 3 0 0 1-3 3' />
+              </svg>
+            </span>
+            <div>
+              <span className='text-text-primary'>Touch Grass Leaderboard</span>
+              <p className='text-xs text-text-secondary mt-0.5'>
+                Opt-in anonymous community leaderboard
+              </p>
+            </div>
+          </div>
+          <IonToggle checked={isOptedIn} onIonChange={handleToggle} />
+        </div>
+
+        <div className='p-4 border-b border-black/5'>
+          <p className='text-xs text-text-secondary mb-3'>
+            Bask is private by default. If you join, only the items below are sent after each
+            completed sun session. Supplements are never included.
+          </p>
+          <div className='rounded-lg bg-black/[0.03] overflow-hidden text-xs'>
+            <div className='grid grid-cols-2 gap-px bg-black/5'>
+              <div className='bg-white/80 p-2 font-medium text-text-primary'>Sent when opted in</div>
+              <div className='bg-white/80 p-2 font-medium text-text-primary'>Never sent</div>
+            </div>
+            {DATA_DISCLOSURE.map((row, i) => (
+              <div key={i} className='grid grid-cols-2 gap-px bg-black/5 border-t border-black/5'>
+                <div className='bg-white/80 p-2 text-text-secondary'>{row.sent}</div>
+                <div className='bg-white/80 p-2 text-text-secondary'>{row.never}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {isOptedIn && anonymousName && (
+          <>
+            <div className='p-4 flex items-center justify-between border-b border-black/5'>
+              <div>
+                <span className='text-xs text-text-secondary'>Your name</span>
+                <p className='font-medium text-text-primary'>{anonymousName}</p>
+              </div>
+              <div className='flex gap-2'>
+                <button
+                  onClick={() => randomizeName()}
+                  className='px-3 py-1.5 rounded-lg bg-black/5 text-text-secondary text-xs font-medium active:bg-black/10 transition-all'>
+                  Shuffle
+                </button>
+                <button
+                  onClick={() => setShowNameEdit(true)}
+                  className='px-3 py-1.5 rounded-lg bg-black/5 text-text-primary text-xs font-medium active:bg-black/10 transition-all'>
+                  Edit
+                </button>
+              </div>
+            </div>
+
+            <div className='p-4 border-b border-black/5'>
+              <div className='flex items-center justify-between mb-3'>
+                <div>
+                  <span className='text-xs text-text-secondary'>Public location</span>
+                  <p className='text-sm text-text-primary mt-0.5'>
+                    {location.locationPrecision === 'none'
+                      ? 'Hidden'
+                      : location.locationPrecision === 'country'
+                        ? LEADERBOARD_COUNTRIES.find((c) => c.code === location.countryCode)?.name ??
+                          location.countryCode
+                        : location.locationPrecision === 'region'
+                          ? `${location.regionLabel || '—'}, ${location.countryCode}`
+                          : `${location.cityLabel || '—'}, ${location.regionLabel || '—'}`}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowLocationEdit(true)}
+                  className='px-3 py-1.5 rounded-lg bg-black/5 text-text-primary text-xs font-medium active:bg-black/10 transition-all'>
+                  Edit
+                </button>
+              </div>
+              <p className='text-xs text-text-secondary'>
+                Optional. Never uses precise GPS — you choose what appears on the public leaderboard.
+              </p>
+            </div>
+
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className='w-full p-4 text-left text-sm text-red-600 active:bg-red-50 transition-all'>
+              Delete my leaderboard data
+            </button>
+          </>
+        )}
+      </div>
+
+      <IonAlert
+        isOpen={showNameEdit}
+        onDidDismiss={() => setShowNameEdit(false)}
+        header='Change Name'
+        message='Enter a new anonymous name (3-30 characters, lowercase, hyphens allowed)'
+        inputs={[
+          {
+            name: 'newName',
+            type: 'text',
+            value: anonymousName ?? '',
+            placeholder: 'e.g. swift-meadow',
+          },
+        ]}
+        buttons={[
+          { text: 'Cancel', role: 'cancel' },
+          {
+            text: 'Save',
+            handler: (data: { newName?: string }) => {
+              if (data.newName) updateName(data.newName);
+            },
+          },
+        ]}
+      />
+
+      <IonAlert
+        isOpen={showLocationEdit}
+        onDidDismiss={() => setShowLocationEdit(false)}
+        header='Public Location'
+        message='Choose what appears on the leaderboard. This is optional.'
+        inputs={[
+          {
+            name: 'precision',
+            type: 'radio',
+            label: 'Hide location',
+            value: 'none',
+            checked: location.locationPrecision === 'none',
+          },
+          {
+            name: 'precision',
+            type: 'radio',
+            label: 'Show country only',
+            value: 'country',
+            checked: location.locationPrecision === 'country',
+          },
+          {
+            name: 'precision',
+            type: 'radio',
+            label: 'Show region/state + country',
+            value: 'region',
+            checked: location.locationPrecision === 'region',
+          },
+          {
+            name: 'precision',
+            type: 'radio',
+            label: 'Show city + region',
+            value: 'city',
+            checked: location.locationPrecision === 'city',
+          },
+          {
+            name: 'countryCode',
+            type: 'text',
+            placeholder: 'Country code (e.g. US)',
+            value: location.countryCode,
+          },
+          {
+            name: 'regionLabel',
+            type: 'text',
+            placeholder: 'State/region (e.g. TX)',
+            value: location.regionLabel,
+          },
+          {
+            name: 'cityLabel',
+            type: 'text',
+            placeholder: 'City (e.g. Austin)',
+            value: location.cityLabel,
+          },
+        ]}
+        buttons={[
+          { text: 'Cancel', role: 'cancel' },
+          {
+            text: 'Save',
+            handler: async (data: {
+              precision?: LocationPrecision;
+              countryCode?: string;
+              regionLabel?: string;
+              cityLabel?: string;
+            }) => {
+              const precision = (data.precision ?? 'none') as LocationPrecision;
+              await handleLocationPrecisionChange(precision);
+              await setLocation({
+                countryCode: (data.countryCode ?? '').trim().toUpperCase(),
+                regionLabel: (data.regionLabel ?? '').trim(),
+                cityLabel: (data.cityLabel ?? '').trim(),
+                locationPrecision: precision,
+              });
+            },
+          },
+        ]}
+      />
+
+      <IonAlert
+        isOpen={showDeleteConfirm}
+        onDidDismiss={() => setShowDeleteConfirm(false)}
+        header='Delete Leaderboard Data?'
+        message='This removes your scores and profile from the public leaderboard. Your local Bask data is not affected.'
+        buttons={[
+          { text: 'Cancel', role: 'cancel' },
+          {
+            text: 'Delete',
+            role: 'destructive',
+            handler: () => {
+              void deleteLeaderboardData();
+            },
+          },
+        ]}
+      />
+    </>
+  );
+}

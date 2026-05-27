@@ -27,6 +27,7 @@ import AtmosphericBackground from '../../components/home/AtmosphericBackground';
 import { resetRepository } from '../../lib/database/repositories/resetRepository';
 import ProBadge from '../../components/ui/ProBadge';
 import ScienceFAQ from '../../components/settings/ScienceFAQ';
+import LeaderboardSettings from '../../components/settings/LeaderboardSettings';
 import BloodTestModal from '../../components/settings/BloodTestModal';
 import { userProfileRepository } from '../../lib/database/repositories/userProfileRepository';
 
@@ -664,6 +665,14 @@ export default function SettingsPage() {
             </div>
           </section>
 
+          {/* Community Section */}
+          <section className='mb-6'>
+            <h2 className='text-xs font-medium text-text-secondary uppercase tracking-wide mb-3 px-1'>
+              Community
+            </h2>
+            <LeaderboardSettings />
+          </section>
+
           {/* Your Data Section */}
           {/* <section className='mb-6'>
             <h2 className='text-xs font-medium text-text-secondary uppercase tracking-wide mb-3 px-1'>
@@ -738,6 +747,10 @@ export default function SettingsPage() {
                     app.
                   </li>
                   <li>Your data is stored locally on your device.</li>
+                  <li>
+                    If you opt into the Touch Grass Leaderboard, only your anonymous score is
+                    shared — see Community settings above.
+                  </li>
                 </ul>
               </div>
               <button

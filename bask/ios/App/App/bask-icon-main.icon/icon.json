@@ -1,6 +1,6 @@
 {
   "fill" : {
-    "solid" : "srgb:0.05098,0.10588,0.23529,1.00000"
+    "solid" : "srgb:0.08627,0.63529,0.63922,1.00000"
   },
   "groups" : [
     {
@@ -8,10 +8,10 @@
         {
           "blend-mode" : "normal",
           "glass" : false,
-          "image-name" : "Untitled design (7).png",
-          "name" : "Untitled design (7)",
+          "image-name" : "Gemini_Generated_Image_s2tm4rs2tm4rs2tm-Photoroom.png",
+          "name" : "Gemini_Generated_Image_s2tm4rs2tm4rs2tm-Photoroom",
           "position" : {
-            "scale" : 1.5,
+            "scale" : 0.52,
             "translation-in-points" : [
               0,
               0

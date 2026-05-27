@@ -5,6 +5,7 @@ import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { sessionsRepository } from '../lib/database';
+import { leaderboardService } from '../lib/supabase/leaderboardService';
 import { calculateVitaminD, calculateTimeToBurn, getExposurePercent, formatSunburnCountdown } from '../lib/dEngine';
 import { BaskLiveActivity } from '../lib/plugins';
 import type { BaskSessionStatus } from '../types';
@@ -357,6 +358,15 @@ export function useBaskSession(
           duration_seconds: state.elapsedSeconds,
           iu_gained: state.currentIU,
         });
+
+        // Sync basking session to opt-in leaderboard (fire-and-forget, manual sessions only)
+        leaderboardService
+          .submitSession({
+            localSessionId: state.sessionId,
+            iuGained: state.currentIU,
+            durationSeconds: state.elapsedSeconds,
+          })
+          .catch(() => {});
       }
 
       // Auto-sync vitamin D to Apple Health

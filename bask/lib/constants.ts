@@ -61,3 +61,19 @@ export const REVIEW_MILESTONES = {
 
 // Feedback Email
 export const FEEDBACK_EMAIL = 'support@getbask.app';
+
+// Leaderboard Settings Keys (stored in local SQLite `settings` table)
+export const LEADERBOARD_SETTINGS = {
+  optedIn: 'leaderboard_opted_in',
+  publicUserId: 'leaderboard_public_user_id',
+  writeToken: 'leaderboard_write_token',
+  anonymousName: 'leaderboard_anonymous_name',
+  countryCode: 'leaderboard_country_code',
+  regionLabel: 'leaderboard_region_label',
+  cityLabel: 'leaderboard_city_label',
+  locationPrecision: 'leaderboard_location_precision',
+  nudgeDismissed: 'leaderboard_nudge_dismissed',
+} as const;
+
+// Public URL of the separately deployed leaderboard site
+export const LEADERBOARD_URL = 'https://leaderboard.getbask.app';
