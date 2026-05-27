@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { IonToggle, IonAlert } from '@ionic/react';
 import { useLeaderboard } from '../../hooks/useLeaderboard';
 import { LEADERBOARD_COUNTRIES } from '../../lib/leaderboard/countries';
-import type { LocationPrecision } from '../../lib/leaderboard/countries';
+import LeaderboardLocationModal from './LeaderboardLocationModal';
 
 const DATA_DISCLOSURE = [
   { sent: 'Random public ID + write token (not linked to Apple ID)', never: 'Name, email, Apple ID' },
@@ -38,10 +38,6 @@ export default function LeaderboardSettings() {
     } else {
       await optIn();
     }
-  };
-
-  const handleLocationPrecisionChange = async (precision: LocationPrecision) => {
-    await setLocation({ locationPrecision: precision });
   };
 
   if (isLoading) return null;
@@ -174,80 +170,11 @@ export default function LeaderboardSettings() {
         ]}
       />
 
-      <IonAlert
+      <LeaderboardLocationModal
         isOpen={showLocationEdit}
-        onDidDismiss={() => setShowLocationEdit(false)}
-        header='Public Location'
-        message='Choose what appears on the leaderboard. This is optional.'
-        inputs={[
-          {
-            name: 'precision',
-            type: 'radio',
-            label: 'Hide location',
-            value: 'none',
-            checked: location.locationPrecision === 'none',
-          },
-          {
-            name: 'precision',
-            type: 'radio',
-            label: 'Show country only',
-            value: 'country',
-            checked: location.locationPrecision === 'country',
-          },
-          {
-            name: 'precision',
-            type: 'radio',
-            label: 'Show region/state + country',
-            value: 'region',
-            checked: location.locationPrecision === 'region',
-          },
-          {
-            name: 'precision',
-            type: 'radio',
-            label: 'Show city + region',
-            value: 'city',
-            checked: location.locationPrecision === 'city',
-          },
-          {
-            name: 'countryCode',
-            type: 'text',
-            placeholder: 'Country code (e.g. US)',
-            value: location.countryCode,
-          },
-          {
-            name: 'regionLabel',
-            type: 'text',
-            placeholder: 'State/region (e.g. TX)',
-            value: location.regionLabel,
-          },
-          {
-            name: 'cityLabel',
-            type: 'text',
-            placeholder: 'City (e.g. Austin)',
-            value: location.cityLabel,
-          },
-        ]}
-        buttons={[
-          { text: 'Cancel', role: 'cancel' },
-          {
-            text: 'Save',
-            handler: async (data: {
-              precision?: LocationPrecision;
-              countryCode?: string;
-              regionLabel?: string;
-              cityLabel?: string;
-            }) => {
-              const precision = (data.precision ?? 'none') as LocationPrecision;
-              await handleLocationPrecisionChange(precision);
-              await setLocation({
-                countryCode: (data.countryCode ?? '').trim().toUpperCase(),
-                regionLabel: (data.regionLabel ?? '').trim(),
-                cityLabel: (data.cityLabel ?? '').trim(),
-                locationPrecision: precision,
-              });
-            },
-          },
-        ]}
+        location={location}
+        onClose={() => setShowLocationEdit(false)}
+        onSave={setLocation}
       />
 
       <IonAlert
