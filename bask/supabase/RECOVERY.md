@@ -16,6 +16,7 @@ Use this guide when setup partially succeeded or re-running the full schema fail
 |-----------|----------|
 | **Fresh project** (no leaderboard tables yet) | [`schema.sql`](schema.sql) |
 | **Tables already exist** + register RPC fails | [`fix-pgcrypto-search-path.sql`](fix-pgcrypto-search-path.sql) |
+| **Enforce unique anonymous names** (existing project) | [`unique-anonymous-name.sql`](unique-anonymous-name.sql) |
 | **Tables exist** + functions already patched | Nothing — run smoke test only |
 
 ## Recovery steps (your current situation)

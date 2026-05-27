@@ -107,6 +107,18 @@ async function main() {
   }
   ok(`register_leaderboard_user works (name: ${testName})`);
 
+  // 2b. Duplicate name rejected
+  const { error: dupErr } = await supabase.rpc('register_leaderboard_user', {
+    p_anonymous_name: testName,
+    p_location_precision: 'none',
+  });
+  if (!dupErr || !dupErr.message.includes('anonymous_name_taken')) {
+    fail(
+      `Expected anonymous_name_taken on duplicate register, got: ${dupErr?.message ?? 'no error'}`,
+    );
+  }
+  ok('duplicate anonymous_name rejected on register');
+
   // 3. Submit test session
   const { error: submitErr } = await supabase.rpc('submit_leaderboard_session', {
     p_public_user_id: row.public_user_id,
