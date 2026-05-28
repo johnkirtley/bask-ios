@@ -26,6 +26,12 @@ const config: Config = {
     'text-cloud-dancer',
     'text-grove-green',
     'text-grove-green-dark',
+    'bg-bask-teal',
+    'bg-bask-pink',
+    'bg-bask-brown',
+    'text-bask-teal',
+    'text-bask-brown',
+    'border-bask-teal',
     // Gradient colors
     'from-morning-peach',
     'to-morning-gold',
@@ -40,44 +46,59 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Solar Vitality Light Mode Palette
-        'light-bg': '#F0EDE9',         // Cloud Dancer - warm off-white background
+        // Bask Sunny Palette — warm, playful, fun
+        'light-bg': '#FBF6EB',         // Warm cream background
         'light-surface': '#FAFAF7',    // Light card surfaces
-        'solar-flare': '#FFB347',      // Solar Flare - primary accent
-        'solar-warm': '#FF9F1C',       // Active/warm accent state
-        'ember-alert': '#E86F1B',      // Warning/danger (unchanged)
+        'solar-flare': '#FFC93C',      // Primary brand yellow
+        'solar-warm': '#F4A536',       // Deeper amber accent
+        'ember-alert': '#E97B4F',      // Softer burn-risk warning
         'vitality-mint': '#A8DADC',    // Wellness green for cofactors
-        'cloud-dancer': '#F0EDE9',     // Alias for light-bg
+        'cloud-dancer': '#FBF6EB',     // Alias for light-bg
+        'coral-accent': '#FF8A66',     // Coral accent (used sparingly)
+
+        // New accent colors for variety/contrast
+        'bask-teal': '#1AA1A2',        // Secondary accent — charts, nav, info
+        'bask-teal-light': '#1AA1A233', // 20% teal for backgrounds
+        'bask-pink': '#F8A3A1',        // Sunburn/risk indicators (decorative only)
+        'bask-pink-light': '#F8A3A120', // 12% pink for backgrounds
+        'bask-brown': '#572A19',       // Rich dark brown — depth, selected states
+        'bask-brown-light': '#572A1920', // 12% brown for backgrounds
 
         // Grove Green - Positive/Active Accent
-        'grove-green': '#6B9E6B',      // Primary positive/active accent
-        'grove-green-light': '#8FBF8F', // Light backgrounds, badges
-        'grove-green-dark': '#4A7A4A',  // Text on light backgrounds
+        'grove-green': '#5BB47A',      // Brighter positive/active accent
+        'grove-green-light': '#7DC89A', // Light backgrounds, badges
+        'grove-green-dark': '#3F8C58',  // Text on light backgrounds
 
-        // Glass/Frosted Effects (Light Mode)
-        'glass-warm': 'rgba(255, 255, 255, 0.7)',
+        // Glass/Frosted Effects
+        'glass-warm': 'rgba(255, 255, 255, 0.78)',
         'glass-border': 'rgba(0, 0, 0, 0.06)',
 
-        // Text Colors (Light Mode)
-        'text-primary': '#2D3436',     // Deep Slate - high legibility
-        'text-secondary': '#545B64',   // Secondary text - WCAG AA compliant (~5:1 on light-bg)
-        'text-muted': '#6B7075',       // Muted text - WCAG AA compliant (~4.5:1 on light-bg)
+        // Text Colors — warm brown-tinted
+        'text-primary': '#2A2419',     // Warm dark ink
+        'text-secondary': '#7A6E58',   // Warm muted secondary
+        'text-muted': '#7A6E58',       // Warm muted captions
 
-        // Gradients (Light Mode)
-        'gradient-light-start': '#F0EDE9',
+        // Gradients
+        'gradient-light-start': '#FBF6EB',
         'gradient-light-mid': '#F7F5F2',
         'gradient-warm': '#FFF8F0',    // Warm light gradient
 
-        // Legacy/Backwards compatibility (now aliased to new values)
-        'dark-bg': '#F0EDE9',          // Now maps to light-bg
+        // Legacy/Backwards compatibility (aliased to new values)
+        'dark-bg': '#FBF6EB',          // Now maps to light-bg
         'dark-surface': '#FAFAF7',     // Now maps to light-surface
-        'golden-glow': '#FFB347',      // Now maps to solar-flare
-        'amber-glow': '#FF9F1C',       // Now maps to solar-warm
-        'ember-glow': '#E86F1B',       // Now maps to ember-alert
-        'solar-amber': '#FFB347',      // Now maps to solar-flare
-        'deep-charcoal': '#2D3436',    // Now maps to text-primary
-        'cloud-white': '#F0EDE9',      // Now maps to light-bg
-        'border-light': '#E5E5E5',     // Light border
+        'golden-glow': '#FFC93C',      // Now maps to solar-flare
+        'amber-glow': '#F4A536',       // Now maps to solar-warm
+        'ember-glow': '#E97B4F',       // Now maps to ember-alert
+        'solar-amber': '#FFC93C',      // Now maps to solar-flare
+        'deep-charcoal': '#2A2419',    // Now maps to text-primary
+        'cloud-white': '#FBF6EB',      // Now maps to light-bg
+        'border-light': '#E5E0D4',     // Warmer light border
+      },
+      borderRadius: {
+        'card': '28px',
+        'sheet': '32px',
+        'tab': '32px',
+        'tile': '12px',
       },
     },
   },
@@ -88,16 +109,16 @@ const config: Config = {
     themes: [
       {
         mytheme: {
-          primary: '#FFB347',        // solar-flare
-          secondary: '#E86F1B',      // ember-alert
-          accent: '#FF9F1C',         // solar-warm
-          neutral: '#2D3436',        // text-primary (Deep Slate)
-          'base-100': '#F0EDE9',     // light-bg (Cloud Dancer)
+          primary: '#FFC93C',        // solar-flare (bright yellow)
+          secondary: '#E97B4F',      // ember-alert (softer warning)
+          accent: '#F4A536',         // solar-warm (amber)
+          neutral: '#2A2419',        // text-primary (warm dark)
+          'base-100': '#FBF6EB',     // light-bg (warm cream)
           'base-200': '#F7F5F2',     // gradient-light-mid
-          'base-300': '#E5E5E5',     // border-light
-          info: '#FFB347',
-          success: '#6B9E6B',        // grove-green
-          warning: '#E86F1B',        // ember-alert
+          'base-300': '#E5E0D4',     // border-light (warmer)
+          info: '#1AA1A2',
+          success: '#5BB47A',        // grove-green (brighter)
+          warning: '#E97B4F',        // ember-alert
           error: '#C96B6B',
         },
       },

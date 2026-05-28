@@ -51,8 +51,8 @@ export default function WhyZeroIUTooltip({
       description: 'Too much clothing coverage',
       detail:
         'UVB rays cannot penetrate fabric. If only your face and hands are exposed, your "solar panels" are too small to generate meaningful vitamin D. Expose arms, legs, or torso for best results.',
-      gradient: 'from-blue-400/20 to-cyan-300/10',
-      accentColor: 'border-blue-500/30',
+      gradient: 'from-bask-teal/20 to-bask-teal/5',
+      accentColor: 'border-bask-teal/30',
     },
     {
       id: 2,
@@ -88,7 +88,7 @@ export default function WhyZeroIUTooltip({
             </div>
             <button
               onClick={onClose}
-              className='w-10 h-10 rounded-full bg-black/5 hover:bg-black/10 active:scale-95 transition-all flex items-center justify-center'>
+              className='w-10 h-10 rounded-full bg-black/5 hover:bg-black/10 active:scale-[0.98] transition-all flex items-center justify-center'>
               <svg
                 className='w-5 h-5 text-text-primary'
                 fill='none'

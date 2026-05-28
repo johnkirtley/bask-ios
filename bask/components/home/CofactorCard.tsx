@@ -119,7 +119,7 @@ export default function CofactorCard({ onCofactorLogged }: CofactorCardProps) {
       <GlassCardWrapper>
         {/* Header */}
         <div className='mb-4'>
-          <h3 className='text-xs font-semibold uppercase tracking-[0.08em] text-text-secondary mb-2'>
+          <h3 className='text-[11px] font-extrabold uppercase tracking-[0.12em] text-text-secondary mb-2'>
             Cofactors
           </h3>
           <div className='flex items-center justify-between'>
@@ -167,7 +167,7 @@ export default function CofactorCard({ onCofactorLogged }: CofactorCardProps) {
             <div className='flex items-center gap-3 min-w-0'>
               <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  magnesiumLogged ? 'bg-solar-flare' : 'bg-black/5'
+                  magnesiumLogged ? 'bg-grove-green' : 'bg-black/5'
                 }`}>
                 <span className='text-xs font-bold text-text-primary'>Mg</span>
               </div>
@@ -186,8 +186,8 @@ export default function CofactorCard({ onCofactorLogged }: CofactorCardProps) {
               aria-label={magnesiumLogged ? 'Magnesium logged' : 'Log magnesium intake'}
               className={`px-4 py-3 rounded-lg text-xs font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                 magnesiumLogged
-                  ? 'bg-solar-flare text-[#4A2800]'
-                  : 'bg-black/5 text-text-primary hover:bg-black/10 active:scale-95'
+                  ? 'bg-grove-green text-white'
+                  : 'bg-black/5 text-text-primary hover:bg-black/10 active:scale-[0.98]'
               } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}>
               {magnesiumLogged ? '✓ Logged' : 'Log'}
             </button>
@@ -198,7 +198,7 @@ export default function CofactorCard({ onCofactorLogged }: CofactorCardProps) {
             <div className='flex items-center gap-3 min-w-0'>
               <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  k2Logged ? 'bg-solar-flare' : 'bg-black/5'
+                  k2Logged ? 'bg-bask-teal' : 'bg-black/5'
                 }`}>
                 <span className='text-xs font-bold text-text-primary'>K₂</span>
               </div>
@@ -217,8 +217,8 @@ export default function CofactorCard({ onCofactorLogged }: CofactorCardProps) {
               aria-label={k2Logged ? 'Vitamin K2 logged' : 'Log vitamin K2 intake'}
               className={`px-4 py-3 rounded-lg text-xs font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                 k2Logged
-                  ? 'bg-solar-flare text-[#4A2800]'
-                  : 'bg-black/5 text-text-primary hover:bg-black/10 active:scale-95'
+                  ? 'bg-bask-teal text-white'
+                  : 'bg-black/5 text-text-primary hover:bg-black/10 active:scale-[0.98]'
               } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}>
               {k2Logged ? '✓ Logged' : 'Log'}
             </button>

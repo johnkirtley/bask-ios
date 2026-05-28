@@ -22,8 +22,8 @@ async function createShareImage(milestone: number): Promise<string | null> {
   if (!ctx) return null;
 
   const gradient = ctx.createLinearGradient(0, 0, 1200, 630);
-  gradient.addColorStop(0, '#FFB347');
-  gradient.addColorStop(1, '#FF8A1C');
+  gradient.addColorStop(0, '#FFC93C');
+  gradient.addColorStop(1, '#F4A536');
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, 1200, 630);
 
@@ -122,13 +122,13 @@ export default function StreakMilestoneOverlay({
               type='button'
               onClick={handleShare}
               disabled={isSharing}
-              className='rounded-full bg-black/5 px-4 py-3 text-sm font-semibold text-text-primary active:scale-95 disabled:opacity-60'>
+              className='rounded-full bg-black/5 px-4 py-3 text-sm font-semibold text-text-primary active:scale-[0.98] disabled:opacity-60'>
               {isSharing ? 'Sharing...' : 'Share'}
             </button>
             <button
               type='button'
               onClick={onDismiss}
-              className='rounded-full bg-gradient-to-r from-solar-flare to-solar-warm px-4 py-3 text-sm font-bold text-white shadow-lg active:scale-95'>
+              className='rounded-full bg-gradient-to-r from-solar-flare to-solar-warm px-4 py-3 text-sm font-bold text-white shadow-lg active:scale-[0.98]'>
               Continue
             </button>
           </div>

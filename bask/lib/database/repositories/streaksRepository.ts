@@ -13,6 +13,7 @@ import {
   startOfLocalDay,
   STREAK_LOOKBACK_DAYS,
 } from '../../streakUtils';
+import { getSeed } from '../devSeed';
 import { sessionsRepository } from './sessionsRepository';
 import {
   StreakState,
@@ -83,31 +84,6 @@ function resolveGoalIU(dailyGoal?: number): number {
   return dailyGoal && dailyGoal > 0 ? dailyGoal : DEFAULT_DAILY_GOAL_IU;
 }
 
-function buildRecentEmptyDays(today: Date, goalIU: number): DailyGoalProgress[] {
-  const recentDays: DailyGoalProgress[] = [];
-  for (let i = 6; i >= 0; i--) {
-    recentDays.push(createEmptyProgress(addDays(today, -i), goalIU));
-  }
-  return recentDays;
-}
-
-function createEmptyStreakSummary(goalIU: number): GoalStreakSummary {
-  const today = startOfLocalDay(new Date());
-  return {
-    currentStreak: 0,
-    longestStreak: 0,
-    hitToday: false,
-    streakAtRisk: false,
-    todayTotalIU: 0,
-    todayGoalIU: goalIU,
-    remainingTodayIU: goalIU,
-    nextMilestone: 3,
-    daysToNextMilestone: 3,
-    recentDays: buildRecentEmptyDays(today, goalIU),
-    lastQualifyingDate: null,
-  };
-}
-
 function getDateKeys(startDay: Date, endDay: Date): string[] {
   const dateKeys: string[] = [];
   for (
@@ -134,20 +110,44 @@ export const streaksRepository = {
     dailyGoal?: number,
   ): Promise<DailyGoalProgress[]> {
     if (!Capacitor.isNativePlatform()) {
+      // Web preview: aggregate seeded sessions + supplements so the streak,
+      // calendar, and trend visuals populate during local development.
       const goalIU = resolveGoalIU(dailyGoal);
       const startDay = startOfLocalDay(start);
       const endDay = startOfLocalDay(end);
-      const results: DailyGoalProgress[] = [];
+      const progressByDate = new Map<string, DailyGoalProgress>();
 
       for (
         let cursor = new Date(startDay);
         cursor <= endDay;
         cursor = addDays(cursor, 1)
       ) {
-        results.push(createEmptyProgress(cursor, goalIU));
+        const progress = createEmptyProgress(cursor, goalIU);
+        progressByDate.set(progress.dateKey, progress);
       }
 
-      return results;
+      const seed = getSeed();
+      seed.sessions.forEach((session) => {
+        const progress = progressByDate.get(
+          getLocalDateKey(new Date(session.started_at)),
+        );
+        if (!progress) return;
+        progress.sunIU += session.iu_gained;
+        progress.totalIU += session.iu_gained;
+      });
+      seed.supplements.forEach((supplement) => {
+        const progress = progressByDate.get(
+          getLocalDateKey(new Date(supplement.logged_at)),
+        );
+        if (!progress) return;
+        progress.supplementIU += supplement.dosage_iu;
+        progress.totalIU += supplement.dosage_iu;
+      });
+
+      return Array.from(progressByDate.values()).map((progress) => ({
+        ...progress,
+        goalMet: progress.totalIU >= progress.goalIU,
+      }));
     }
 
     const goalIU = await resolveDailyGoal(dailyGoal);
@@ -214,7 +214,58 @@ export const streaksRepository = {
     existingState?: StreakState,
   ): Promise<GoalStreakSummary> {
     if (!Capacitor.isNativePlatform()) {
-      return createEmptyStreakSummary(resolveGoalIU(dailyGoal));
+      // Web preview: derive a real summary from the seeded daily progress.
+      const goalIU = resolveGoalIU(dailyGoal);
+      const today = startOfLocalDay(new Date());
+      const start = addDays(today, -(STREAK_LOOKBACK_DAYS - 1));
+      const days = await this.getDailyGoalProgress(start, today, goalIU);
+      const metDates = new Set(
+        days.filter((day) => day.goalMet).map((day) => day.dateKey),
+      );
+      const todayKey = getLocalDateKey(today);
+      const yesterdayKey = getLocalDateKey(addDays(today, -1));
+      const hitToday = metDates.has(todayKey);
+      const hasGraceFromYesterday = !hitToday && metDates.has(yesterdayKey);
+      const streakAnchor = hitToday ? today : addDays(today, -1);
+
+      let currentStreak = 0;
+      if (hitToday || hasGraceFromYesterday) {
+        for (let i = 0; i < STREAK_LOOKBACK_DAYS; i++) {
+          if (!metDates.has(getLocalDateKey(addDays(streakAnchor, -i)))) break;
+          currentStreak++;
+        }
+      }
+
+      let longestStreak = 0;
+      let runningStreak = 0;
+      days.forEach((day) => {
+        if (day.goalMet) {
+          runningStreak++;
+          longestStreak = Math.max(longestStreak, runningStreak);
+        } else {
+          runningStreak = 0;
+        }
+      });
+
+      const todayProgress =
+        days.find((day) => day.dateKey === todayKey) ??
+        createEmptyProgress(today, goalIU);
+      const nextMilestone = getNextMilestone(currentStreak);
+
+      return {
+        currentStreak,
+        longestStreak: Math.max(longestStreak, currentStreak),
+        hitToday,
+        streakAtRisk:
+          currentStreak > 0 && !hitToday && isStreakAtRiskDisplayTime(),
+        todayTotalIU: todayProgress.totalIU,
+        todayGoalIU: goalIU,
+        remainingTodayIU: Math.max(0, goalIU - todayProgress.totalIU),
+        nextMilestone,
+        daysToNextMilestone: Math.max(0, nextMilestone - currentStreak),
+        recentDays: days.slice(-7),
+        lastQualifyingDate: getLatestQualifyingDate(days),
+      };
     }
 
     const goalIU = await resolveDailyGoal(dailyGoal);

@@ -1,6 +1,7 @@
 'use client';
 
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import Mascot from '../ui/Mascot';
 
 interface EmotionalHookScreenProps {
   onContinue: () => void;
@@ -22,13 +23,9 @@ export default function EmotionalHookScreen({ onContinue }: EmotionalHookScreenP
         }}
       />
 
-      {/* Logo */}
+      {/* Mascot */}
       <div className="mb-8 z-10">
-        <img
-          src="/assets/bask-logo.png"
-          alt="Bask"
-          className="w-[140px] h-[140px] object-contain"
-        />
+        <Mascot size={140} mood="happy" />
       </div>
 
       {/* Content */}

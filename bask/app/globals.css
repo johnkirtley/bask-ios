@@ -15,7 +15,7 @@ ion-app {
 
 /* Accessibility: Focus-visible styles for keyboard navigation */
 :focus-visible {
-  outline: 2px solid #FF9F1C;
+  outline: 2px solid #F4A536;
   outline-offset: 2px;
   border-radius: 8px;
 }
@@ -34,6 +34,15 @@ ion-app {
   bottom: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Push top-positioned toasts below the iOS status bar */
+.toast-safe-top {
+  --start: 12px;
+  --end: 12px;
+}
+.toast-safe-top::part(container) {
+  margin-top: max(48px, env(safe-area-inset-top));
 }
 
 /* Safe area insets for iOS */
@@ -66,9 +75,9 @@ ion-app {
   transition: stroke-dashoffset 1s linear;
 }
 
-/* Modal backdrop - light warm overlay */
+/* Modal backdrop - warm cream overlay */
 .modal-backdrop {
-  background: rgba(240, 237, 233, 0.75);
+  background: rgba(251, 246, 235, 0.75);
 }
 
 /* Custom scrollbar - warm theme */
@@ -76,11 +85,11 @@ ion-app {
   width: 4px;
 }
 .scrollable-div::-webkit-scrollbar-track {
-  background: #F2F0EB;
+  background: #F5F0E4;
   border-radius: 2px;
 }
 .scrollable-div::-webkit-scrollbar-thumb {
-  background: #D5D0C8;
+  background: #DDD6C4;
   border-radius: 2px;
 }
 
@@ -94,7 +103,7 @@ ion-app {
 
 /* Tab bar styling - border instead of shadow */
 .tab-bar-custom {
-  border-top: 1px solid #D5D0C8;
+  border-top: 1px solid #DDD6C4;
 }
 
 /* Loading pulse animation enhancement */
@@ -124,9 +133,9 @@ ion-app {
   right: 0;
   z-index: 60;
   background: #FFFFFF;
-  border-top-left-radius: 1rem;
-  border-top-right-radius: 1rem;
-  border-top: 1px solid #D5D0C8;
+  border-top-left-radius: 32px;
+  border-top-right-radius: 32px;
+  border-top: 1px solid #E5E0D4;
   transform: translateY(100%);
   transition: transform 0.3s ease-out;
   max-height: 95vh;
@@ -143,10 +152,10 @@ ion-app {
 
 /* Drag handle - warm theme */
 .drag-handle {
-  width: 36px;
-  height: 5px;
-  background: #D5D0C8;
-  border-radius: 2.5px;
+  width: 40px;
+  height: 4px;
+  background: #DDD6C4;
+  border-radius: 2px;
   margin: 0 auto;
 }
 
@@ -158,11 +167,11 @@ ion-app {
   max-height: calc(95vh - 40px);
 }
 
-/* Sheet backdrop - light warm overlay */
+/* Sheet backdrop - warm cream overlay */
 .sheet-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(240, 237, 233, 0.7);
+  background: rgba(0, 0, 0, 0.35);
   z-index: 55;
   opacity: 0;
   transition: opacity 0.3s ease-out;
@@ -174,21 +183,13 @@ ion-app {
   pointer-events: auto;
 }
 
-/* New York serif font for iOS Large Title style */
-.font-title {
-  font-family: 'New York', 'New York Large', ui-serif, Georgia, 'Times New Roman', serif;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-/* Floating pill tab bar - light frosted glass */
+/* Floating pill tab bar - frosted glass with warm shadow */
 .tab-bar-pill {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: 100px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border-radius: 32px;
+  box-shadow: 0 8px 30px rgba(40, 30, 10, 0.12), 0 1px 0 rgba(255, 255, 255, 0.6) inset;
 }
 
 /* ========================================
@@ -198,12 +199,11 @@ ion-app {
 /* Bask Ring - Smooth progress ring animations with glow */
 .bask-ring-progress {
   transition: stroke-dashoffset 1s ease-in-out;
-  filter: drop-shadow(0 0 8px currentColor) drop-shadow(0 0 16px currentColor);
 }
 
 /* Glowing ring effect */
 .ring-glow {
-  filter: drop-shadow(0 0 12px #FFB347) drop-shadow(0 0 24px rgba(255, 179, 71, 0.5));
+  filter: drop-shadow(0 0 12px #FFC93C) drop-shadow(0 0 24px rgba(255, 201, 60, 0.5));
 }
 
 /* Pulsing dot for current time indicator on chart */
@@ -211,12 +211,12 @@ ion-app {
   0%, 100% {
     opacity: 1;
     transform: scale(1);
-    filter: drop-shadow(0 0 4px #FFB347);
+    filter: drop-shadow(0 0 4px #FFC93C);
   }
   50% {
     opacity: 0.8;
     transform: scale(1.2);
-    filter: drop-shadow(0 0 8px #FFB347);
+    filter: drop-shadow(0 0 8px #FFC93C);
   }
 }
 
@@ -317,11 +317,11 @@ ion-app {
 }
 
 .uv-moderate {
-  color: #FFB347;
+  color: #FFC93C;
 }
 
 .uv-high {
-  color: #E86F1B;
+  color: #E97B4F;
 }
 
 .uv-very-high {
@@ -344,9 +344,9 @@ ion-app {
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(255, 179, 71, 0.5) 0%,
-    rgba(255, 159, 28, 0.3) 40%,
-    rgba(232, 111, 27, 0.1) 70%,
+    rgba(255, 201, 60, 0.5) 0%,
+    rgba(244, 165, 54, 0.3) 40%,
+    rgba(233, 123, 79, 0.1) 70%,
     transparent 100%
   );
   filter: blur(20px);
@@ -388,7 +388,7 @@ ion-app {
   height: 2px;
   background: linear-gradient(
     90deg,
-    rgba(255, 179, 71, 0.4) 0%,
+    rgba(255, 201, 60, 0.4) 0%,
     transparent 100%
   );
   transform-origin: left center;
@@ -416,7 +416,7 @@ ion-app {
   position: absolute;
   width: 4px;
   height: 4px;
-  background: rgba(255, 179, 71, 0.6);
+  background: rgba(255, 201, 60, 0.6);
   border-radius: 50%;
   animation: particle-float 3s ease-in-out infinite;
 }
@@ -427,7 +427,7 @@ ion-app {
   inset: 0;
   background: radial-gradient(
     ellipse at center,
-    rgba(255, 179, 71, 0.12) 0%,
+    rgba(255, 201, 60, 0.12) 0%,
     transparent 60%
   );
   pointer-events: none;
@@ -440,9 +440,9 @@ ion-app {
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(255, 179, 71, 0.6) 0%,
-    rgba(255, 159, 28, 0.4) 40%,
-    rgba(232, 111, 27, 0.15) 70%,
+    rgba(255, 201, 60, 0.6) 0%,
+    rgba(244, 165, 54, 0.4) 40%,
+    rgba(233, 123, 79, 0.15) 70%,
     transparent 100%
   );
   filter: blur(10px);
@@ -467,7 +467,7 @@ ion-app {
   position: absolute;
   width: 6px;
   height: 6px;
-  background: rgba(255, 179, 71, 0.7);
+  background: rgba(255, 201, 60, 0.7);
   border-radius: 50%;
   animation: orbit 3s linear infinite;
 }
@@ -516,9 +516,9 @@ ion-app {
 .onboarding-progress-fill {
   background: linear-gradient(
     90deg,
-    #FFB347 0%,
-    #FF9F1C 50%,
-    #E86F1B 100%
+    #FFC93C 0%,
+    #F4A536 50%,
+    #E97B4F 100%
   );
 }
 
@@ -552,15 +552,15 @@ ion-app {
 /* Glass card selection glow (light mode) */
 .glass-card-selected {
   box-shadow:
-    0 0 20px rgba(255, 179, 71, 0.3),
-    inset 0 0 20px rgba(255, 179, 71, 0.1);
+    0 0 20px rgba(255, 201, 60, 0.3),
+    inset 0 0 20px rgba(255, 201, 60, 0.1);
 }
 
 /* Color swatch selection ring (light mode) */
 .swatch-selected {
   box-shadow:
-    0 0 0 3px #F0EDE9,
-    0 0 0 5px #FFB347;
+    0 0 0 3px #FBF6EB,
+    0 0 0 5px #FFC93C;
 }
 
 /* ========================================
@@ -645,10 +645,10 @@ ion-app {
 /* Timeline dot pulse animation */
 @keyframes timeline-dot-pulse {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(255, 179, 71, 0.7);
+    box-shadow: 0 0 0 0 rgba(255, 201, 60, 0.7);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(255, 179, 71, 0);
+    box-shadow: 0 0 0 8px rgba(255, 201, 60, 0);
   }
 }
 
@@ -722,10 +722,10 @@ ion-app {
 /* Today ring pulse animation */
 @keyframes today-ring-pulse {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(255, 179, 71, 0.5);
+    box-shadow: 0 0 0 0 rgba(255, 201, 60, 0.5);
   }
   50% {
-    box-shadow: 0 0 0 6px rgba(255, 179, 71, 0);
+    box-shadow: 0 0 0 6px rgba(255, 201, 60, 0);
   }
 }
 
@@ -750,10 +750,10 @@ ion-app {
 /* Streak stat glow pulse */
 @keyframes streak-glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(255, 179, 71, 0.15);
+    box-shadow: 0 0 20px rgba(255, 201, 60, 0.15);
   }
   50% {
-    box-shadow: 0 0 30px rgba(255, 179, 71, 0.25);
+    box-shadow: 0 0 30px rgba(255, 201, 60, 0.25);
   }
 }
 
@@ -872,6 +872,37 @@ ion-app {
   animation: tab-content-fade 0.3s ease-out forwards;
 }
 
+/* ========================================
+   MASCOT ANIMATIONS
+   ======================================== */
+
+/* Mascot gentle floating idle */
+@keyframes mascot-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.mascot-float {
+  animation: mascot-float 4.5s ease-in-out infinite;
+}
+
+/* Mascot halo pulse (behind mascot) */
+@keyframes mascot-halo-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.04); opacity: 1; }
+}
+.mascot-halo-pulse {
+  animation: mascot-halo-pulse 5s ease-in-out infinite;
+}
+
+/* Session mascot glow (larger, faster for active session) */
+@keyframes mascot-session-glow {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+.mascot-session-glow {
+  animation: mascot-session-glow 3s ease-in-out infinite;
+}
+
 /* Respect reduced motion for all animations */
 @media (prefers-reduced-motion: reduce) {
   .insight-card-enter,
@@ -892,6 +923,13 @@ ion-app {
   .animate-pulse-denied,
   .animate-pulse-dwindow,
   .bask-ring-progress {
+    animation: none !important;
+  }
+
+  /* Mascot animations */
+  .mascot-float,
+  .mascot-halo-pulse,
+  .mascot-session-glow {
     animation: none !important;
   }
 

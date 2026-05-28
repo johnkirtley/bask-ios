@@ -23,6 +23,7 @@ import {
 } from '../../lib/services/notificationService';
 import { requestAppReview } from '../../lib/services/inAppReviewService';
 import AtmosphericBackground from '../../components/home/AtmosphericBackground';
+import Mascot from '../../components/ui/Mascot';
 // import ExportPhysicianReport from '../../components/settings/ExportPhysicianReport';
 import { resetRepository } from '../../lib/database/repositories/resetRepository';
 import ProBadge from '../../components/ui/ProBadge';
@@ -453,21 +454,22 @@ export default function SettingsPage() {
     <AtmosphericBackground>
       <div className='min-h-screen pb-20'>
         {/* Header */}
-        <div className='px-6 py-6 pt-safe'>
-          <h1 className='text-3xl font-semibold text-text-primary'>Settings</h1>
+        <div className='px-6 py-6 pt-safe flex items-center justify-between'>
+          <h1 className='text-[32px] font-extrabold tracking-[-0.02em] text-text-primary'>Settings</h1>
+          <Mascot size={64} mood="happy" floating={false} />
         </div>
 
         {/* Content */}
         <div className='px-6'>
           {/* Subscription Section */}
           <section className='mb-6'>
-            <h2 className='text-xs font-medium text-text-secondary uppercase tracking-wide mb-3 px-1'>
+            <h2 className='text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em] mb-3 px-1'>
               Subscription
             </h2>
 
             {/* Premium Status */}
             {isPremium ? (
-              <div className='rounded-2xl p-4 bg-gradient-to-br from-solar-flare/15 to-solar-warm/10 border border-solar-flare/30 backdrop-blur-xl shadow-sm mb-3'>
+              <div className='rounded-card p-4 bg-gradient-to-br from-solar-flare/15 to-solar-warm/10 border border-solar-flare/30 backdrop-blur-xl shadow-sm mb-3'>
                 <div className='flex items-center gap-3'>
                   <span className='text-solar-flare text-2xl'>★</span>
                   <div>
@@ -522,7 +524,7 @@ export default function SettingsPage() {
 
           {/* Permissions Section */}
           <section className='mb-6'>
-            <h2 className='text-xs font-medium text-text-secondary uppercase tracking-wide mb-3 px-1'>
+            <h2 className='text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em] mb-3 px-1'>
               Permissions
             </h2>
             <div className='backdrop-blur-xl bg-white/70 border border-black/5 shadow-sm rounded-xl overflow-hidden'>
@@ -574,7 +576,7 @@ export default function SettingsPage() {
 
           {/* Biomarkers Section */}
           <section className='mb-6'>
-            <h2 className='text-xs font-medium text-text-secondary uppercase tracking-wide mb-3 px-1'>
+            <h2 className='text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em] mb-3 px-1'>
               Biomarkers
             </h2>
             <div className='backdrop-blur-xl bg-white/70 border border-black/5 shadow-sm rounded-xl overflow-hidden'>
@@ -609,7 +611,7 @@ export default function SettingsPage() {
 
           {/* Notifications Section */}
           <section className='mb-6'>
-            <h2 className='text-xs font-medium text-text-secondary uppercase tracking-wide mb-3 px-1'>
+            <h2 className='text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em] mb-3 px-1'>
               Notifications
             </h2>
             <div className='backdrop-blur-xl bg-white/70 border border-black/5 shadow-sm rounded-xl overflow-hidden'>
@@ -651,7 +653,7 @@ export default function SettingsPage() {
                       <button
                         key={minutes}
                         onClick={() => handleLeadTimeChange(minutes)}
-                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+                        className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all ${
                           notificationSettings.leadTimeMinutes === minutes
                             ? 'bg-solar-flare text-white'
                             : 'bg-black/5 text-text-secondary'
@@ -667,7 +669,7 @@ export default function SettingsPage() {
 
           {/* Community Section */}
           <section className='mb-6'>
-            <h2 className='text-xs font-medium text-text-secondary uppercase tracking-wide mb-3 px-1'>
+            <h2 className='text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em] mb-3 px-1'>
               Community
             </h2>
             <LeaderboardSettings />
@@ -675,7 +677,7 @@ export default function SettingsPage() {
 
           {/* Your Data Section */}
           {/* <section className='mb-6'>
-            <h2 className='text-xs font-medium text-text-secondary uppercase tracking-wide mb-3 px-1'>
+            <h2 className='text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em] mb-3 px-1'>
               Your Data
             </h2>
             <div className='backdrop-blur-xl bg-white/70 border border-black/5 shadow-sm rounded-xl overflow-hidden'>
@@ -685,7 +687,7 @@ export default function SettingsPage() {
 
           {/* Support Section */}
           <section className='mb-6'>
-            <h2 className='text-xs font-medium text-text-secondary uppercase tracking-wide mb-3 px-1'>
+            <h2 className='text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em] mb-3 px-1'>
               Support
             </h2>
             <div className='backdrop-blur-xl bg-white/70 border border-black/5 shadow-sm rounded-xl overflow-hidden'>
@@ -731,7 +733,7 @@ export default function SettingsPage() {
 
           {/* Science Section */}
           <section className='mb-6'>
-            <h2 className='text-xs font-medium text-text-secondary uppercase tracking-wide mb-3 px-1'>
+            <h2 className='text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em] mb-3 px-1'>
               Science
             </h2>
             <div className='backdrop-blur-xl bg-white/70 border border-black/5 shadow-sm rounded-xl overflow-hidden'>
@@ -769,7 +771,7 @@ export default function SettingsPage() {
 
           {/* Legal Section */}
           <section className='mb-6'>
-            <h2 className='text-xs font-medium text-text-secondary uppercase tracking-wide mb-3 px-1'>
+            <h2 className='text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em] mb-3 px-1'>
               Legal
             </h2>
             <div className='backdrop-blur-xl bg-white/70 border border-black/5 shadow-sm rounded-xl overflow-hidden'>
@@ -817,7 +819,7 @@ export default function SettingsPage() {
 
           {/* Danger Zone Section */}
           <section className='mb-6'>
-            <h2 className='text-xs font-medium text-text-secondary uppercase tracking-wide mb-3 px-1'>
+            <h2 className='text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em] mb-3 px-1'>
               Danger Zone
             </h2>
             <div className='backdrop-blur-xl bg-white/70 border border-black/5 shadow-sm rounded-xl overflow-hidden'>
@@ -919,7 +921,7 @@ export default function SettingsPage() {
           <div className="px-6 py-8 h-full flex flex-col">
             {/* Disclaimer Content */}
             <div className="flex-1 overflow-y-auto">
-              <div className="backdrop-blur-xl bg-white/70 border-2 border-black/5 shadow-sm rounded-2xl p-6">
+              <div className="backdrop-blur-xl bg-white/70 border border-black/5 shadow-sm rounded-card p-6">
                 <div className="flex items-center gap-3 mb-6">
                   {/* Info Icon */}
                   <div className="flex-shrink-0 w-10 h-10 rounded-full bg-solar-flare/15 border border-solar-flare/30 flex items-center justify-center">
@@ -977,6 +979,7 @@ export default function SettingsPage() {
           duration={5000}
           color='danger'
           position='top'
+          cssClass='toast-safe-top'
         />
 
         {/* Restore Success Alert */}

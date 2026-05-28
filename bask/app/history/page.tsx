@@ -14,6 +14,7 @@ import SwipeableCard from '../../components/history/SwipeableCard';
 import EditEntryModal from '../../components/history/EditEntryModal';
 import { useSubscription } from '../../hooks/useSubscription';
 import ProBadge from '../../components/ui/ProBadge';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import StreakSummaryRow from '../../components/history/StreakSummaryRow';
 import StreakDetailSheet from '../../components/streaks/StreakDetailSheet';
 import { useStreakState } from '../../hooks/useStreakState';
@@ -344,10 +345,10 @@ export default function History() {
     if (entry.type === 'session') {
       const session = entry.data as BaskSession;
       cardContent = (
-        <div className='history-entry-card relative backdrop-blur-xl rounded-2xl p-5 border border-white/40 shadow-lg overflow-hidden'
+        <div className='history-entry-card relative backdrop-blur-xl rounded-card p-5 overflow-hidden'
              style={{
                animationDelay: `${index * 0.05}s`,
-               background: 'linear-gradient(135deg, rgba(255, 179, 71, 0.15) 0%, rgba(255, 159, 28, 0.08) 100%), rgba(255, 255, 255, 0.75)'
+               background: 'linear-gradient(135deg, rgba(255, 201, 60, 0.15) 0%, rgba(244, 165, 54, 0.08) 100%), rgba(255, 255, 255, 0.75)'
              }}>
           {/* Subtle radial glow */}
           <div className='absolute top-0 right-0 w-32 h-32 bg-solar-flare/10 rounded-full blur-2xl -z-10' />
@@ -412,7 +413,7 @@ export default function History() {
     } else if (entry.type === 'supplement') {
       const supplement = entry.data as Supplement;
       cardContent = (
-        <div className='history-entry-card relative backdrop-blur-xl rounded-2xl p-5 border border-white/40 shadow-lg overflow-hidden'
+        <div className='history-entry-card relative backdrop-blur-xl rounded-card p-5 overflow-hidden'
              style={{
                animationDelay: `${index * 0.05}s`,
                background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.12) 0%, rgba(245, 158, 11, 0.06) 100%), rgba(255, 255, 255, 0.75)'
@@ -452,7 +453,7 @@ export default function History() {
       const cofactor = entry.data as Cofactor;
       const isMagnesium = cofactor.cofactor_type === 'magnesium';
       cardContent = (
-        <div className='history-entry-card relative backdrop-blur-xl rounded-2xl p-5 border border-white/40 shadow-lg overflow-hidden'
+        <div className='history-entry-card relative backdrop-blur-xl rounded-card p-5 overflow-hidden'
              style={{
                animationDelay: `${index * 0.05}s`,
                background: isMagnesium
@@ -506,18 +507,18 @@ export default function History() {
       <div className='min-h-screen pb-20 overflow-x-hidden overflow-hidden overscroll-contain'>
         {/* Header */}
         <div className='px-6 py-6 pt-safe'>
-          <h1 className='text-3xl font-semibold text-text-primary'>History</h1>
+          <h1 className='text-[32px] font-extrabold tracking-[-0.02em] text-text-primary'>History</h1>
           <p className='text-text-secondary mt-1'>Your vitamin D journey</p>
         </div>
 
         {/* Tab Navigation */}
         <div className='px-6 mb-4'>
-          <div className='flex gap-2 backdrop-blur-xl bg-white/60 p-1.5 rounded-2xl border border-white/40 shadow-md'>
+          <div className='flex gap-2 backdrop-blur-xl bg-white/60 p-1.5 rounded-card border border-white/40 shadow-md'>
             <button
               onClick={() => setActiveTab('timeline')}
               className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
                 activeTab === 'timeline'
-                  ? 'bg-gradient-to-br from-solar-flare to-solar-warm text-white shadow-lg transform scale-105'
+                  ? 'bg-bask-teal text-white shadow-lg'
                   : 'text-text-secondary hover:text-text-primary hover:bg-white/50'
               }`}>
               Timeline
@@ -526,7 +527,7 @@ export default function History() {
               onClick={() => setActiveTab('calendar')}
               className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
                 activeTab === 'calendar'
-                  ? 'bg-gradient-to-br from-solar-flare to-solar-warm text-white shadow-lg transform scale-105'
+                  ? 'bg-bask-teal text-white shadow-lg'
                   : 'text-text-secondary hover:text-text-primary hover:bg-white/50'
               }`}>
               Calendar
@@ -542,7 +543,7 @@ export default function History() {
                 onClick={() => setDateRange('7days')}
                 className={`flex-1 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${
                   dateRange === '7days'
-                    ? 'bg-gradient-to-r from-solar-flare to-solar-warm text-white shadow-lg transform scale-105'
+                    ? 'bg-[#572A19] text-white shadow-lg'
                     : 'backdrop-blur-xl bg-white/50 text-text-secondary hover:bg-white/70 hover:text-text-primary border border-white/40'
                 }`}>
                 7 Days
@@ -557,7 +558,7 @@ export default function History() {
                 }}
                 className={`flex-1 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-1.5 relative ${
                   dateRange === '30days'
-                    ? 'bg-gradient-to-r from-solar-flare to-solar-warm text-white shadow-lg transform scale-105'
+                    ? 'bg-[#572A19] text-white shadow-lg'
                     : 'backdrop-blur-xl bg-white/50 text-text-secondary hover:bg-white/70 hover:text-text-primary border border-white/40'
                 }`}>
                 30 Days
@@ -585,7 +586,7 @@ export default function History() {
                 }}
                 className={`flex-1 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-1.5 relative ${
                   dateRange === 'all'
-                    ? 'bg-gradient-to-r from-solar-flare to-solar-warm text-white shadow-lg transform scale-105'
+                    ? 'bg-[#572A19] text-white shadow-lg'
                     : 'backdrop-blur-xl bg-white/50 text-text-secondary hover:bg-white/70 hover:text-text-primary border border-white/40'
                 }`}>
                 All Time
@@ -612,16 +613,16 @@ export default function History() {
           {activeTab === 'calendar' ? (
             <CalendarStreak />
           ) : loading ? (
-            <div className='backdrop-blur-xl bg-white/70 rounded-2xl p-8 border border-black/5 shadow-sm'>
+            <div className='backdrop-blur-xl bg-white/70 rounded-card p-8 border border-black/5 shadow-sm'>
               <div className='text-center py-8'>
-                <div className='w-12 h-12 border-4 border-solar-flare/30 border-t-solar-flare rounded-full animate-spin mx-auto'></div>
+                <LoadingSpinner size='md' />
                 <p className='text-text-secondary mt-4'>Loading your history...</p>
               </div>
             </div>
           ) : entries.length === 0 ? (
-            <div className='relative backdrop-blur-xl rounded-2xl p-12 border border-white/40 shadow-lg overflow-hidden'
+            <div className='relative backdrop-blur-xl rounded-card p-12 border border-white/40 shadow-lg overflow-hidden'
                  style={{
-                   background: 'linear-gradient(135deg, rgba(255, 179, 71, 0.1) 0%, rgba(255, 159, 28, 0.05) 100%), rgba(255, 255, 255, 0.75)'
+                   background: 'linear-gradient(135deg, rgba(255, 201, 60, 0.1) 0%, rgba(244, 165, 54, 0.05) 100%), rgba(255, 255, 255, 0.75)'
                  }}>
               <div className='absolute inset-0 flex items-center justify-center opacity-5'>
                 <svg className='w-64 h-64 text-solar-flare' xmlns='http://www.w3.org/2000/svg' fill='currentColor' viewBox='0 0 24 24'>
@@ -653,16 +654,16 @@ export default function History() {
           ) : (
             <>
               {/* Summary Stats Banner */}
-              <div className='summary-stats-banner mb-6 relative backdrop-blur-xl rounded-3xl p-8 border border-white/40 shadow-lg overflow-hidden'
+              <div className='summary-stats-banner mb-6 relative backdrop-blur-xl rounded-card p-8 border border-white/40 shadow-lg overflow-hidden'
                    style={{
-                     background: 'radial-gradient(ellipse at top, rgba(255, 179, 71, 0.15) 0%, rgba(255, 159, 28, 0.08) 40%, rgba(255, 255, 255, 0.85) 100%)'
+                     background: 'radial-gradient(ellipse at top, rgba(255, 201, 60, 0.15) 0%, rgba(244, 165, 54, 0.08) 40%, rgba(255, 255, 255, 0.85) 100%)'
                    }}>
                 {/* Decorative solar rays */}
                 <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full opacity-[0.03] pointer-events-none'>
                   <div className='absolute inset-0' style={{
                     background: `repeating-conic-gradient(from 0deg at 50% 50%,
                       transparent 0deg,
-                      rgba(255, 179, 71, 1) 2deg,
+                      rgba(255, 201, 60, 1) 2deg,
                       transparent 4deg,
                       transparent 8deg)`
                   }} />
@@ -672,7 +673,7 @@ export default function History() {
 
                 {/* Header */}
                 <div className='relative mb-6'>
-                  <h3 className='text-text-secondary text-xs font-semibold uppercase tracking-[0.15em] opacity-60'>
+                  <h3 className='text-text-secondary text-[11px] font-extrabold uppercase tracking-[0.12em] opacity-60'>
                     {dateRange === '7days' ? 'Past 7 Days' : dateRange === '30days' ? 'Past 30 Days' : 'All Time'}
                   </h3>
                 </div>
@@ -680,8 +681,8 @@ export default function History() {
                 {/* Hero IU Number */}
                 <div className='relative mb-8 text-center'>
                   <div className='inline-flex flex-col items-center gap-2'>
-                    <div className='flex items-baseline gap-3'>
-                      <span className='text-7xl font-extrabold tracking-tight bg-gradient-to-br from-solar-flare via-solar-warm to-amber-500 bg-clip-text text-transparent drop-shadow-sm'
+                    <div className='flex items-baseline justify-center gap-2 max-w-full px-2'>
+                      <span className='text-[clamp(2.5rem,14vw,4.5rem)] leading-none font-extrabold tracking-tight whitespace-nowrap bg-gradient-to-br from-solar-flare via-solar-warm to-amber-500 bg-clip-text text-transparent drop-shadow-sm'
                             style={{
                               fontFeatureSettings: '"tnum"',
                               letterSpacing: '-0.02em'
@@ -738,13 +739,13 @@ export default function History() {
               {/* Timeline with date groups */}
               <div className='relative'>
                 {/* Timeline spine */}
-                <div className='timeline-spine absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-solar-flare via-solar-warm to-transparent'></div>
+                <div className='timeline-spine absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-bask-teal via-bask-teal/50 to-transparent'></div>
 
                 {groupedEntries.map((group, groupIndex) => (
                   <div key={group.date} className='mb-8 last:mb-0'>
                     {/* Date header */}
                     <div className='flex items-center gap-4 mb-4'>
-                      <div className='timeline-dot relative z-10 w-4 h-4 rounded-full bg-gradient-to-br from-solar-flare to-solar-warm shadow-lg flex-shrink-0'></div>
+                      <div className='timeline-dot relative z-10 w-4 h-4 rounded-full bg-bask-teal shadow-lg flex-shrink-0'></div>
                       <div className='flex-1'>
                         <h3 className='text-lg font-bold text-text-primary'>{group.label}</h3>
                       </div>

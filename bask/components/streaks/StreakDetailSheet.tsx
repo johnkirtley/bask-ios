@@ -30,8 +30,6 @@ export default function StreakDetailSheet({
     100,
     ((currentStreak - previousMilestone) / milestoneRange) * 100,
   );
-  const achieved = new Set(state?.milestonesAchieved ?? []);
-
   return (
     <SlideSheet isOpen={isOpen} onClose={onClose}>
       <div className='px-6 pb-8'>
@@ -62,7 +60,7 @@ export default function StreakDetailSheet({
           <button
             type='button'
             onClick={onClose}
-            className='rounded-full bg-black/5 px-4 py-2 text-sm font-semibold text-text-secondary active:scale-95'>
+            className='rounded-full bg-black/5 px-4 py-2 text-sm font-semibold text-text-secondary active:scale-[0.98]'>
             Close
           </button>
         </div>
@@ -118,33 +116,6 @@ export default function StreakDetailSheet({
               className='h-full rounded-full bg-gradient-to-r from-solar-flare to-solar-warm'
               style={{ width: `${milestoneProgress}%` }}
             />
-          </div>
-        </section>
-
-        <section className='mt-8'>
-          <h3 className='text-xs font-semibold uppercase tracking-[0.08em] text-text-secondary'>
-            Badges
-          </h3>
-          <div className='mt-3 grid grid-cols-4 gap-2'>
-            {STREAK_MILESTONES.map((milestone) => {
-              const unlocked = achieved.has(milestone) || currentStreak >= milestone;
-              return (
-                <div
-                  key={milestone}
-                  className={`rounded-2xl border p-3 text-center ${
-                    unlocked
-                      ? 'border-solar-flare/30 bg-solar-flare/15 text-solar-warm'
-                      : 'border-black/5 bg-black/5 text-text-muted'
-                  }`}>
-                  <div className='text-xl' aria-hidden='true'>
-                    {unlocked ? '🔥' : '○'}
-                  </div>
-                  <div className='mt-1 text-xs font-bold tabular-nums'>
-                    {milestone}
-                  </div>
-                </div>
-              );
-            })}
           </div>
         </section>
       </div>

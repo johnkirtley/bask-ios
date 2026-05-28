@@ -8,6 +8,7 @@ import { OnboardingProvider, useOnboardingContext } from '../contexts/Onboarding
 import { useSubscription } from '../hooks/useSubscription';
 import OnboardingFlow from './onboarding/OnboardingFlow';
 import NotificationBootstrap from './NotificationBootstrap';
+import BrandSpinner from './ui/LoadingSpinner';
 
 // Initialize Ionic React with iOS mode
 setupIonicReact({
@@ -21,7 +22,7 @@ interface IonicProviderProps {
 function LoadingSpinner() {
   return (
     <div className="fixed inset-0 bg-light-bg flex items-center justify-center">
-      <div className="w-8 h-8 border-3 border-black/10 border-t-solar-flare rounded-full animate-spin" />
+      <BrandSpinner size="sm" />
     </div>
   );
 }

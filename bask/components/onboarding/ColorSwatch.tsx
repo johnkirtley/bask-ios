@@ -31,7 +31,7 @@ export default function ColorSwatch({
   return (
     <button
       onClick={handlePress}
-      className="flex flex-col items-center gap-2 transition-transform duration-200 active:scale-95"
+      className="flex flex-col items-center gap-2 transition-transform duration-200 active:scale-[0.98]"
     >
       <div
         className={`

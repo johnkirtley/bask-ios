@@ -34,33 +34,33 @@ function RecommendationCard({ rec }: { rec: Recommendation }) {
   const { headline, details, items } = rec.content;
   const styles = {
     window: {
-      bg: 'bg-amber-500/15',
-      border: 'border-amber-500/25',
-      icon: 'text-amber-600',
-      iconBg: 'bg-amber-500/20',
+      bg: 'bg-solar-flare/15',
+      border: 'border-solar-warm/25',
+      icon: 'text-solar-warm',
+      iconBg: 'bg-solar-flare/20',
       badge: 'WINDOW',
-      badgeBg: 'bg-amber-500/30 text-amber-700',
+      badgeBg: 'bg-solar-flare/30 text-[#8A5A00]',
       borderClass: '',
       special: false,
     },
     tip: {
-      bg: 'bg-blue-500/15',
-      border: 'border-blue-500/25',
-      icon: 'text-blue-600',
-      iconBg: 'bg-blue-500/20',
+      bg: 'bg-bask-teal/15',
+      border: 'border-bask-teal/25',
+      icon: 'text-bask-teal',
+      iconBg: 'bg-bask-teal/20',
       badge: 'TIP',
-      badgeBg: 'bg-blue-500/30 text-blue-700',
+      badgeBg: 'bg-bask-teal/20 text-bask-teal',
       borderClass: '',
       special: false,
     },
     action: {
-      bg: 'bg-gradient-to-br from-cyan-500/20 to-teal-500/10',
-      border: 'border-2 border-cyan-500/30',
-      icon: 'text-cyan-600',
-      iconBg: 'bg-cyan-500/30',
+      bg: 'bg-gradient-to-br from-bask-teal/20 to-bask-teal/5',
+      border: 'border-2 border-bask-teal/30',
+      icon: 'text-bask-teal',
+      iconBg: 'bg-bask-teal/30',
       badge: 'ACTION',
-      badgeBg: 'bg-cyan-500/30 text-cyan-700',
-      borderClass: 'shadow-[0_4px_20px_rgba(6,182,212,0.15)]',
+      badgeBg: 'bg-bask-teal/25 text-bask-teal',
+      borderClass: 'shadow-[0_4px_20px_rgba(26,161,162,0.15)]',
       special: true,
     },
     alert: {
@@ -248,7 +248,7 @@ export default function DWindowForecastCard({
         <div className='mb-4'>
           <div className='flex items-center justify-between mb-2'>
             <div className='flex items-center gap-1.5'>
-              <h3 className='text-xs font-semibold uppercase tracking-[0.08em] text-text-secondary'>
+              <h3 className='text-[11px] font-extrabold uppercase tracking-[0.12em] text-text-secondary'>
                 D-Window Forecast
               </h3>
             </div>
@@ -266,7 +266,7 @@ export default function DWindowForecastCard({
                 <button
                   onClick={onRefresh}
                   disabled={isRefreshing}
-                  className={`text-text-secondary hover:text-text-primary active:scale-95 transition-all p-3 min-w-[44px] min-h-[44px] flex items-center justify-center ${
+                  className={`text-text-secondary hover:text-text-primary active:scale-[0.98] transition-all p-3 min-w-[44px] min-h-[44px] flex items-center justify-center ${
                     isRefreshing ? 'opacity-50 pointer-events-none' : ''
                   }`}
                   aria-label='Refresh forecast'>
@@ -453,7 +453,7 @@ function SynthesisRow({ message }: { message: string }) {
         viewBox='0 0 24 24'
         strokeWidth={2}
         stroke='currentColor'
-        className='w-3.5 h-3.5 text-[#C47600] flex-shrink-0'
+        className='w-3.5 h-3.5 text-[#F4A536] flex-shrink-0'
         aria-hidden='true'>
         <path
           strokeLinecap='round'
@@ -547,11 +547,11 @@ function WindowDisplay({
             Best window
           </p>
           <div className='flex items-baseline gap-2.5'>
-            <span className='text-[#C47600] text-2xl font-bold tracking-tight whitespace-nowrap bg-gradient-to-br from-[#C47600] to-[#A86300] bg-clip-text text-transparent'>
+            <span className='text-[#F4A536] text-2xl font-bold tracking-tight whitespace-nowrap bg-gradient-to-br from-[#F4A536] to-[#E8941F] bg-clip-text text-transparent'>
               {window.windowStartTime}
             </span>
-            <span className='text-[#C47600]/40 text-xl font-light'>—</span>
-            <span className='text-[#C47600] text-2xl font-bold tracking-tight whitespace-nowrap bg-gradient-to-br from-[#C47600] to-[#A86300] bg-clip-text text-transparent'>
+            <span className='text-[#F4A536]/40 text-xl font-light'>—</span>
+            <span className='text-[#F4A536] text-2xl font-bold tracking-tight whitespace-nowrap bg-gradient-to-br from-[#F4A536] to-[#E8941F] bg-clip-text text-transparent'>
               {window.windowEndTime}
             </span>
           </div>
@@ -588,7 +588,7 @@ function WindowDisplay({
               viewBox='0 0 24 24'
               strokeWidth={2}
               stroke='currentColor'
-              className='w-3.5 h-3.5 text-[#C47600]'
+              className='w-3.5 h-3.5 text-[#F4A536]'
               aria-hidden='true'>
               <path
                 strokeLinecap='round'

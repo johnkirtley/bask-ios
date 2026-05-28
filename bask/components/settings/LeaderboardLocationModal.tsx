@@ -79,7 +79,7 @@ export default function LeaderboardLocationModal({
       onDidDismiss={onClose}
       initialBreakpoint={0.9}
       breakpoints={[0, 0.9, 1]}>
-      <div className='bg-light-bg min-h-full p-6 pb-safe flex flex-col'>
+      <div className='bg-light-bg h-full p-6 pb-safe flex flex-col'>
         <div className='mb-6'>
           <h2 className='text-[17px] font-semibold text-text-primary'>Public Location</h2>
           <p className='text-sm text-text-secondary mt-1'>

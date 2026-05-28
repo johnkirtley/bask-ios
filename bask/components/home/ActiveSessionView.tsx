@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import AtmosphericBackground from './AtmosphericBackground';
 import WhyZeroIUTooltip from './WhyZeroIUTooltip';
+import Mascot from '../ui/Mascot';
 import type { SunData } from '../../lib/sunDataUtils';
 
 interface ActiveSessionViewProps {
@@ -81,147 +82,83 @@ export default function ActiveSessionView({
   }, [currentIU, isPaused]);
   return (
     <AtmosphericBackground>
-      <div className='pb-24 pt-safe'>
-        {/* Header */}
-        <div className='px-6 py-6'>
-          <h1 className='text-3xl font-semibold text-text-primary text-center'>
-            {isPaused ? 'Paused' : 'Basking...'}
-          </h1>
+      <div className='min-h-screen pb-24 pt-safe overflow-x-hidden overflow-hidden overscroll-contain'>
+        {/* LIVE SESSION pill */}
+        <div className='flex justify-center px-6 pt-6 pb-2'>
+          <div className='bg-white/78 backdrop-blur-xl rounded-full px-4 py-2 shadow-sm flex items-center gap-2'>
+            <div className={`w-2 h-2 rounded-full bg-coral-accent ${isPaused ? '' : 'animate-pulse'}`} />
+            <span className='text-[11px] font-extrabold uppercase tracking-[0.12em] text-text-primary'>
+              {isPaused ? 'Paused' : 'Live Session'}
+            </span>
+          </div>
         </div>
 
-        {/* Timer Ring */}
-        <div className='flex flex-col items-center py-12'>
-          <div className='relative' style={{ width: 300, height: 300 }}>
-            {/* Ambient glow effect behind ring */}
+        {/* Mascot + IU Hero */}
+        <div className='flex flex-col items-center py-8'>
+          {/* Mascot with pulsing halo */}
+          <div className='relative mb-6'>
             <div
-              className='absolute inset-0 rounded-full'
+              className='absolute inset-0 mascot-halo-pulse rounded-full'
               style={{
-                background:
-                  'radial-gradient(circle, rgba(255, 179, 71, 0.25) 0%, rgba(255, 179, 71, 0.12) 40%, transparent 70%)',
+                width: 280,
+                height: 280,
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                background: 'radial-gradient(circle, rgba(255,201,60,0.3) 0%, transparent 70%)',
               }}
             />
+            <Mascot size={200} mood={isPaused ? 'sleepy' : 'excited'} floating={false} />
+          </div>
 
-            {/* Animated ring */}
-            <svg
-              width={300}
-              height={300}
-              className='transform -rotate-90 relative z-10'
-              role='img'
-              aria-label='Session timer progress'>
-              {/* Background track */}
-              <circle
-                cx={150}
-                cy={150}
-                r={130}
-                fill='none'
-                stroke='rgba(255, 179, 71, 0.12)'
-                strokeWidth={16}
-              />
+          {/* Hero IU counter */}
+          <div
+            className='text-[88px] font-black text-text-primary tracking-[-0.04em] tabular-nums leading-none'
+            aria-live='polite'
+            aria-atomic='true'>
+            +{currentIU}
+          </div>
+          <div className='text-[11px] font-extrabold uppercase tracking-[0.12em] text-text-secondary mt-2'>
+            IU Gained This Session
+          </div>
 
-              {/* Animated progress ring */}
-              <defs>
-                <linearGradient
-                  id='sessionGradient'
-                  x1='0%'
-                  y1='0%'
-                  x2='100%'
-                  y2='100%'>
-                  <stop offset='0%' stopColor='#FFB347' />
-                  <stop offset='50%' stopColor='#FF9F1C' />
-                  <stop offset='100%' stopColor='#E86F1B' />
-                </linearGradient>
-                <filter
-                  id='sessionGlowFilter'
-                  x='-50%'
-                  y='-50%'
-                  width='200%'
-                  height='200%'>
-                  <feGaussianBlur stdDeviation='8' result='blur' />
-                  <feColorMatrix
-                    in='blur'
-                    type='matrix'
-                    values='1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1.5 0'
-                    result='intensifiedBlur'
-                  />
-                  <feMerge>
-                    <feMergeNode in='intensifiedBlur' />
-                    <feMergeNode in='SourceGraphic' />
-                  </feMerge>
-                </filter>
-              </defs>
-
-              <circle
-                cx={150}
-                cy={150}
-                r={130}
-                fill='none'
-                stroke='url(#sessionGradient)'
-                strokeWidth={16}
-                strokeLinecap='round'
-                filter='url(#sessionGlowFilter)'
-                className={`bask-ring-progress ${isPaused ? 'opacity-50' : ''}`}
-              />
-            </svg>
-
-            {/* Center content */}
-            <div className='absolute inset-0 flex flex-col items-center justify-center text-center'>
-              <div
-                className='text-6xl font-bold text-text-primary tracking-tight tabular-nums'
-                aria-live='polite'
-                aria-atomic='true'>
-                {formattedTime}
-              </div>
-              <div
-                className='text-lg font-semibold text-solar-warm mt-3'
-                aria-live='polite'
-                aria-atomic='true'>
-                +{currentIU} IU
-              </div>
-              {isPaused && (
-                <div className='text-xs text-text-muted mt-2'>
-                  Session paused
-                </div>
-              )}
-            </div>
+          {/* Timer */}
+          <div
+            className='text-2xl font-black text-text-primary tabular-nums mt-4'
+            aria-live='polite'
+            aria-atomic='true'>
+            {formattedTime}
           </div>
         </div>
 
         {/* Session Stats */}
         <div className='px-6'>
-          <div className='relative backdrop-blur-xl bg-white/70 rounded-2xl px-5 py-4 border border-black/[0.04] shadow-[0_2px_12px_rgba(0,0,0,0.04)]'>
-            {/* Luminous gradient overlay */}
-            <div className='absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-white/10 rounded-2xl pointer-events-none' />
-
-            {/* Subtle inner glow for depth */}
-            <div className='absolute inset-0 rounded-2xl pointer-events-none shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)]' />
-
-            <div className='relative z-10 flex items-center justify-between gap-3'>
-              {/* Session IU */}
-              <div className='flex flex-col flex-shrink-0'>
-                <span className='text-[11px] font-semibold text-text-secondary uppercase tracking-[0.08em] whitespace-nowrap'>
-                  Session IU
-                </span>
-                <span className='text-2xl font-bold text-text-primary tabular-nums mt-1'>
-                  +{currentIU}
-                </span>
+          {/* Three-up stat row */}
+          <div className='grid grid-cols-3 gap-3'>
+            <div className='bg-white rounded-card p-4 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_6px_24px_rgba(40,30,10,0.06)] border-l-4 border-[#1AA1A2]'>
+              <span className='text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em]'>
+                Elapsed
+              </span>
+              <div className='text-[24px] font-black text-text-primary tabular-nums tracking-[-0.02em] mt-1'>
+                {formattedTime}
               </div>
-
-              {/* Divider */}
-              <div className='w-px h-12 bg-black/10 flex-shrink-0' />
-
-              {/* Sunburn Risk */}
-              <div className='flex flex-col items-end min-w-0'>
-                <span className='text-[11px] font-semibold text-text-secondary uppercase tracking-[0.08em] text-right leading-tight'>
-                  Sunburn Risk In
-                </span>
-                <span
-                  className={`text-2xl font-bold tabular-nums mt-1 ${
-                    remainingSunburnSeconds <= 120
-                      ? 'text-ember-alert'
-                      : 'text-text-primary'
-                  }`}>
-                  {sunburnCountdown}
-                </span>
+            </div>
+            <div className='bg-white rounded-card p-4 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_6px_24px_rgba(40,30,10,0.06)] border-l-4 border-[#FFC93C]'>
+              <span className='text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em]'>
+                UV Now
+              </span>
+              <div className='text-[24px] font-black text-text-primary tabular-nums tracking-[-0.02em] mt-1'>
+                {uvIndex.toFixed(1)}
+              </div>
+            </div>
+            <div className='bg-white rounded-card p-4 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_6px_24px_rgba(40,30,10,0.06)] border-l-4 border-[#F8A3A1]'>
+              <span className='text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em]'>
+                Burn In
+              </span>
+              <div className={`text-[24px] font-black tabular-nums tracking-[-0.02em] mt-1 ${
+                remainingSunburnSeconds <= 120 ? 'text-ember-alert' : 'text-text-primary'
+              }`}>
+                {sunburnCountdown}
               </div>
             </div>
           </div>
@@ -230,7 +167,7 @@ export default function ActiveSessionView({
           {showZeroIUHint && (
             <button
               onClick={() => setIsWhyZeroTooltipOpen(true)}
-              className='mt-3 w-full backdrop-blur-xl bg-amber-500/10 rounded-xl p-3 border border-amber-500/20 hover:bg-amber-500/15 active:scale-[0.99] transition-all flex items-center gap-3 group animate-fade-in'>
+              className='mt-3 w-full backdrop-blur-xl bg-amber-500/10 rounded-xl p-3 border border-amber-500/20 hover:bg-amber-500/15 active:scale-[0.98] transition-all flex items-center gap-3 group animate-fade-in'>
               <div className='w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0 group-hover:bg-amber-500/30 transition-colors'>
                 <svg
                   className='w-4 h-4 text-amber-600'
@@ -270,25 +207,39 @@ export default function ActiveSessionView({
         </div>
 
         {/* Control Buttons */}
-        <div className='px-6 mt-8 flex gap-4'>
+        <div className='px-6 mt-8 flex flex-col items-center gap-3'>
           {isPaused ? (
-            <button
-              onClick={onResume}
-              className='flex-1 py-4 bg-solar-flare hover:bg-solar-warm rounded-full text-lg font-bold text-[#4A2800] transition-colors active:scale-98'>
-              Resume
-            </button>
+            <div className='flex gap-3 w-full'>
+              <button
+                onClick={onResume}
+                className='flex-1 py-4 bg-gradient-to-r from-[#FFC93C] to-[#F4A536] rounded-full text-lg font-black text-[#2A2419] shadow-[0_12px_30px_rgba(244,165,54,0.33)] active:scale-[0.98] transition-transform'>
+                Resume
+              </button>
+              <button
+                onClick={onEnd}
+                className='flex-1 py-4 bg-white rounded-full text-lg font-black text-[#2A2419] shadow-[0_4px_14px_rgba(40,30,10,0.07)] active:scale-[0.98] transition-transform flex items-center justify-center gap-2'>
+                <span className='w-3 h-3 rounded-sm bg-ember-alert' />
+                Stop
+              </button>
+            </div>
           ) : (
-            <button
-              onClick={onPause}
-              className='flex-1 py-4 bg-black/10 hover:bg-black/15 rounded-full text-lg font-bold text-text-primary transition-colors active:scale-98'>
-              Pause
-            </button>
+            <>
+              <button
+                onClick={onEnd}
+                className='w-full py-4 bg-white rounded-full text-lg font-black text-[#2A2419] shadow-[0_4px_14px_rgba(40,30,10,0.07)] active:scale-[0.98] transition-transform flex items-center justify-center gap-2'>
+                <span className='w-3 h-3 rounded-sm bg-ember-alert' />
+                Stop Session
+              </button>
+              <button
+                onClick={onPause}
+                className='py-2 text-sm font-semibold text-text-secondary active:opacity-60 transition-opacity'>
+                Pause
+              </button>
+            </>
           )}
-          <button
-            onClick={onEnd}
-            className='flex-1 py-4 bg-solar-flare hover:bg-solar-warm rounded-full text-lg font-bold text-[#4A2800] transition-colors active:scale-98'>
-            End Session
-          </button>
+          <p className='text-sm text-text-secondary mt-1'>
+            Pocket your phone — I&apos;ll keep counting for you
+          </p>
         </div>
       </div>
 

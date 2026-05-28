@@ -233,7 +233,7 @@ export default function SupplementCard({
       <GlassCardWrapper>
         {/* Header with status */}
         <div className='mb-4'>
-          <h3 className='text-xs font-semibold uppercase tracking-[0.08em] text-text-secondary mb-2'>
+          <h3 className='text-[11px] font-extrabold uppercase tracking-[0.12em] text-text-secondary mb-2'>
             Vitamin D Supplement
           </h3>
           <div className='flex items-center justify-between'>
@@ -292,7 +292,7 @@ export default function SupplementCard({
                 className={`py-3 px-4 rounded-xl font-medium text-sm transition-all ${
                   isLoading
                     ? 'bg-black/5 text-text-muted cursor-not-allowed'
-                    : 'bg-black/5 text-text-primary hover:bg-black/10 active:scale-95'
+                    : 'bg-black/5 text-text-primary hover:bg-black/10 active:scale-[0.98]'
                 } ${isAnimating ? 'scale-95' : ''}`}>
                 {dosage.toLocaleString()} IU
               </button>
@@ -302,7 +302,7 @@ export default function SupplementCard({
 
         {/* Fat Solubility Prompt (Interactive Coaching) */}
         {showFatPrompt && !fatPromptResponse && (
-          <div className='mt-3 p-3 rounded-xl bg-amber-500/20 border border-amber-500/30'>
+          <div className='mt-3 p-3 rounded-xl bg-solar-flare/15 border border-solar-warm/30'>
             <p className='text-sm text-text-primary font-medium mb-3'>
               Did you take this with a meal containing fat?
             </p>
@@ -315,7 +315,7 @@ export default function SupplementCard({
                     setShowPresets(false);
                   }, 3000);
                 }}
-                className='py-2 px-4 rounded-lg bg-grove-green/30 border border-grove-green/50 text-grove-green-dark text-sm font-medium hover:bg-grove-green/40 active:scale-95 transition-all'>
+                className='py-2 px-4 rounded-lg bg-grove-green/30 border border-grove-green/50 text-grove-green-dark text-sm font-medium hover:bg-grove-green/40 active:scale-[0.98] transition-all'>
                 Yes
               </button>
               <button
@@ -326,7 +326,7 @@ export default function SupplementCard({
                     setShowPresets(false);
                   }, 3000);
                 }}
-                className='py-2 px-4 rounded-lg bg-red-500/30 border border-red-500/50 text-red-900 text-sm font-medium hover:bg-red-500/40 active:scale-95 transition-all'>
+                className='py-2 px-4 rounded-lg bg-black/5 border border-black/10 text-text-secondary text-sm font-medium hover:bg-black/10 active:scale-[0.98] transition-all'>
                 No
               </button>
             </div>
@@ -343,12 +343,12 @@ export default function SupplementCard({
           </div>
         )}
         {showFatPrompt && fatPromptResponse === 'no' && (
-          <div className='mt-3 p-3 rounded-xl bg-amber-500/20 border border-amber-500/30'>
-            <p className='text-xs text-amber-900 font-medium'>
+          <div className='mt-3 p-3 rounded-xl bg-solar-flare/15 border border-solar-warm/30'>
+            <p className='text-xs text-[#8A5A00] font-medium'>
               💡 Taking vitamin D with food that contains fat may aid
               absorption.
             </p>
-            <p className='text-xs text-amber-800 mt-1'>
+            <p className='text-xs text-[#8A5A00]/90 mt-1'>
               Next time, you might consider pairing it with nuts, eggs, avocado,
               or a meal with fat.
             </p>
@@ -363,7 +363,7 @@ export default function SupplementCard({
                 ? 'bg-grove-green/20 border border-grove-green/30'
                 : recommendation.type === 'warning'
                 ? 'bg-amber-500/20 border border-amber-500/30'
-                : 'bg-blue-500/20 border border-blue-500/30'
+                : 'bg-bask-teal/15 border border-bask-teal/25'
             }`}>
             <div className='flex gap-2 items-start'>
               <svg
@@ -377,7 +377,7 @@ export default function SupplementCard({
                     ? 'text-grove-green-dark'
                     : recommendation.type === 'warning'
                     ? 'text-amber-600'
-                    : 'text-blue-600'
+                    : 'text-bask-teal'
                 }`}>
                 <path
                   strokeLinecap='round'
@@ -394,7 +394,7 @@ export default function SupplementCard({
 
         {/* Intelligent Cofactor Warning (MOAT FEATURE) */}
         {showPresets && shouldShowCofactorWarning && (
-          <div className='mt-3 p-3 rounded-xl bg-purple-500/20 border border-purple-500/30'>
+          <div className='mt-3 p-3 rounded-xl bg-bask-teal/15 border border-bask-teal/25'>
             <div className='flex gap-2 items-start'>
               <svg
                 xmlns='http://www.w3.org/2000/svg'
@@ -402,7 +402,7 @@ export default function SupplementCard({
                 viewBox='0 0 24 24'
                 strokeWidth={2}
                 stroke='currentColor'
-                className='w-4 h-4 mt-0.5 flex-shrink-0 text-purple-600'>
+                className='w-4 h-4 mt-0.5 flex-shrink-0 text-bask-teal'>
                 <path
                   strokeLinecap='round'
                   strokeLinejoin='round'
@@ -410,11 +410,11 @@ export default function SupplementCard({
                 />
               </svg>
               <div className='flex-1'>
-                <p className='text-xs text-purple-900 leading-relaxed font-medium'>
+                <p className='text-xs text-text-primary leading-relaxed font-medium'>
                   High vitamin D intake ({totalToday.toLocaleString()} IU) may
                   work best with cofactors.
                 </p>
-                <p className='text-xs text-purple-800 leading-relaxed mt-1'>
+                <p className='text-xs text-text-secondary leading-relaxed mt-1'>
                   Some research suggests these cofactors may support vitamin D
                   utilization: <strong>Magnesium</strong> and{' '}
                   <strong>Vitamin K2</strong>.

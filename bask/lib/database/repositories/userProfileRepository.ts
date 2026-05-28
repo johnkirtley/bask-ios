@@ -1,7 +1,9 @@
 'use client';
 
+import { Capacitor } from '@capacitor/core';
 import { getLocalDateKey } from '../../streakUtils';
 import { databaseService } from '../connection';
+import { getSeed } from '../devSeed';
 import { streakStateRepository } from './streakStateRepository';
 
 export interface UserProfile {
@@ -24,6 +26,7 @@ export interface UserProfile {
 
 export const userProfileRepository = {
   async get(): Promise<UserProfile | null> {
+    if (!Capacitor.isNativePlatform()) return getSeed().profile as UserProfile;
     const db = await databaseService.getConnection();
     const result = await db.query(
       'SELECT * FROM bask_user_profile WHERE id = 1'
