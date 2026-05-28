@@ -1,6 +1,12 @@
 'use client';
 
+import { Capacitor } from '@capacitor/core';
 import { databaseService } from '../connection';
+import {
+  seedSessionsByRange,
+  seedSessionsToday,
+  seedSessionsTodayTotalIU,
+} from '../devSeed';
 
 export interface BaskSession {
   id: number;
@@ -93,6 +99,7 @@ export const sessionsRepository = {
   },
 
   async getToday(): Promise<BaskSession[]> {
+    if (!Capacitor.isNativePlatform()) return seedSessionsToday();
     const db = await databaseService.getConnection();
     const result = await db.query(
       `SELECT * FROM bask_sessions
@@ -103,6 +110,7 @@ export const sessionsRepository = {
   },
 
   async getByDateRange(start: string, end: string): Promise<BaskSession[]> {
+    if (!Capacitor.isNativePlatform()) return seedSessionsByRange(start, end);
     const db = await databaseService.getConnection();
     const result = await db.query(
       `SELECT * FROM bask_sessions
@@ -114,6 +122,7 @@ export const sessionsRepository = {
   },
 
   async getTodayTotalIU(): Promise<number> {
+    if (!Capacitor.isNativePlatform()) return seedSessionsTodayTotalIU();
     const db = await databaseService.getConnection();
     const result = await db.query(
       `SELECT COALESCE(SUM(iu_gained), 0) as total

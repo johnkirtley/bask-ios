@@ -37,7 +37,7 @@ export default function StatMetrics({
       <div className='space-y-3'>
         {/* Time to Goal */}
         <div>
-          <div className='text-xs font-semibold text-text-secondary uppercase tracking-[0.08em] mb-1'>
+          <div className='text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em] mb-1'>
             Time to Goal
           </div>
           {isLoading ? (
@@ -49,7 +49,7 @@ export default function StatMetrics({
             </div>
           ) : (
             <>
-              <div className='text-2xl font-bold text-text-primary tabular-nums'>
+              <div className='text-[24px] font-black text-text-primary tabular-nums tracking-[-0.02em]'>
                 {timeToGoal}
               </div>
               {timeToGoalSubtext && (
@@ -62,14 +62,14 @@ export default function StatMetrics({
         </div>
 
         {/* Divider */}
-        <div className='border-t border-black/[0.06]' />
+        <div className='border-t border-black/[0.12]' />
 
         {/* Sunburn Risk */}
         <div>
-          <div className='text-xs font-semibold text-text-secondary uppercase tracking-[0.08em] mb-1'>
+          <div className='text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em] mb-1'>
             Sunburn Risk
           </div>
-          <div className='text-2xl font-bold text-text-primary tabular-nums'>
+          <div className='text-[24px] font-black text-text-primary tabular-nums tracking-[-0.02em]'>
             {burnRisk}
           </div>
           {burnRiskSubtext && (
@@ -80,17 +80,17 @@ export default function StatMetrics({
         </div>
 
         {/* Divider */}
-        <div className='border-t border-black/[0.06]' />
+        <div className='border-t border-black/[0.12]' />
 
         {/* Daily Decay */}
         <div>
           <div className='flex items-center gap-2 mb-1'>
-            <div className='text-xs font-semibold text-text-secondary uppercase tracking-[0.08em]'>
+            <div className='text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em]'>
               Daily Decay
             </div>
             <button
               onClick={() => setShowInfo(!showInfo)}
-              className='flex-shrink-0 min-w-[44px] min-h-[44px] rounded-full bg-black/[0.04] hover:bg-black/[0.08] active:scale-95 transition-all duration-200 flex items-center justify-center'
+              className='flex-shrink-0 min-w-[44px] min-h-[44px] rounded-full bg-black/[0.04] hover:bg-black/[0.08] active:scale-[0.98] transition-all duration-200 flex items-center justify-center'
               aria-label='More information'
               aria-expanded={showInfo}>
               <svg
@@ -124,7 +124,7 @@ export default function StatMetrics({
                 />
               </svg>
             )}
-            <div className='text-2xl font-bold text-text-primary tabular-nums'>
+            <div className='text-[24px] font-black text-text-primary tabular-nums tracking-[-0.02em]'>
               {dailyDecay === 0 ? '~0 IU' : `-${dailyDecay} IU`}
             </div>
           </div>
@@ -137,7 +137,7 @@ export default function StatMetrics({
             {decaySubtext}
           </div>
           {showInfo && (
-            <div className='text-[11px] text-text-secondary leading-relaxed pt-2 mt-2 border-t border-black/[0.06] animate-in fade-in slide-in-from-top-1 duration-200'>
+            <div className='text-[11px] text-text-secondary leading-relaxed pt-2 mt-2 border-t border-black/[0.12] animate-in fade-in slide-in-from-top-1 duration-200'>
               {decayInfoText}
             </div>
           )}

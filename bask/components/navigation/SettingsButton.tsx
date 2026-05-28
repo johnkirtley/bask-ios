@@ -30,7 +30,7 @@ export default function SettingsButton() {
   return (
     <button
       onClick={() => router.push('/settings')}
-      className="p-2 -mr-2 text-text-secondary hover:text-text-primary transition-colors active:scale-95"
+      className="p-2 -mr-2 text-text-secondary hover:text-text-primary transition-colors active:scale-[0.98]"
       aria-label="Settings"
     >
       <SettingsIcon />

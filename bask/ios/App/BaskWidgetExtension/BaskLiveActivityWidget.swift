@@ -24,7 +24,7 @@ struct BaskLiveActivityView: View {
     let context: ActivityViewContext<BaskSessionAttributes>
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             // Sun icon with glow effect
             ZStack {
                 Circle()
@@ -35,58 +35,54 @@ struct BaskLiveActivityView: View {
                                 [Color.orange.opacity(0.5), Color.orange.opacity(0.1)],
                             center: .center,
                             startRadius: 0,
-                            endRadius: 20
+                            endRadius: 16
                         )
                     )
-                    .frame(width: 40, height: 40)
+                    .frame(width: 32, height: 32)
 
                 Image(systemName: "sun.max.fill")
-                    .font(.system(size: 24))
+                    .font(.system(size: 20))
                     .foregroundColor(context.state.isPaused ? .orange.opacity(0.6) : .orange)
             }
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 1) {
                 // Status label
                 Text(context.state.isPaused ? "Paused" : "Basking")
-                    .font(.caption)
+                    .font(.caption2)
                     .fontWeight(.medium)
                     .foregroundColor(.secondary)
 
                 // Timer - auto-updates natively
                 if context.state.isPaused {
                     Text(formatElapsedTime(context.state.elapsedSecondsAtPause))
-                        .font(.title2)
+                        .font(.title3)
                         .fontWeight(.bold)
                         .monospacedDigit()
                 } else {
                     Text(context.state.effectiveStartDate, style: .timer)
-                        .font(.title2)
+                        .font(.title3)
                         .fontWeight(.bold)
                         .monospacedDigit()
                 }
             }
 
-            Spacer()
+            Spacer(minLength: 8)
 
-            VStack(alignment: .trailing, spacing: 4) {
+            VStack(alignment: .trailing, spacing: 1) {
                 // IU accumulated
                 Text("\(context.state.currentIU) IU")
                     .font(.headline)
                     .foregroundColor(.orange)
 
                 // UV index and burn time
-                HStack(spacing: 4) {
-                    Text("UV \(String(format: "%.1f", context.attributes.uvIndex))")
-                        .font(.caption2)
-                    Text("•")
-                        .font(.caption2)
-                    Text("\(formatBurnTime(context.attributes.timeToBurnMinutes)) before sunburn")
-                        .font(.caption2)
-                }
-                .foregroundColor(.secondary)
+                Text("UV \(String(format: "%.1f", context.attributes.uvIndex)) · \(formatBurnTime(context.attributes.timeToBurnMinutes)) to burn")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
             }
         }
-        .padding()
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
         .activityBackgroundTint(Color.black.opacity(0.1))
     }
 
@@ -105,61 +101,73 @@ struct BaskLiveActivity: Widget {
             BaskLiveActivityView(context: context)
         } dynamicIsland: { context in
             DynamicIsland {
-                DynamicIslandExpandedRegion(.center) {
-                    HStack {
+                DynamicIslandExpandedRegion(.leading) {
+                    HStack(spacing: 8) {
                         Image(systemName: "sun.max.fill")
-                            .font(.system(size: 20))
+                            .font(.system(size: 22))
                             .foregroundColor(context.state.isPaused ? .orange.opacity(0.6) : .orange)
 
-                        if context.state.isPaused {
-                            Text(formatElapsedTime(context.state.elapsedSecondsAtPause))
-                                .font(.title2)
-                                .fontWeight(.bold)
-                                .monospacedDigit()
-                        } else {
-                            Text(context.state.effectiveStartDate, style: .timer)
-                                .font(.title2)
-                                .fontWeight(.bold)
-                                .monospacedDigit()
-                        }
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(context.state.isPaused ? "Paused" : "Basking")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
 
+                            if context.state.isPaused {
+                                Text(formatElapsedTime(context.state.elapsedSecondsAtPause))
+                                    .font(.title3)
+                                    .fontWeight(.bold)
+                                    .monospacedDigit()
+                            } else {
+                                Text(context.state.effectiveStartDate, style: .timer)
+                                    .font(.title3)
+                                    .fontWeight(.bold)
+                                    .monospacedDigit()
+                            }
+                        }
+                    }
+                }
+
+                DynamicIslandExpandedRegion(.trailing) {
+                    VStack(alignment: .trailing, spacing: 1) {
                         Text("\(context.state.currentIU) IU")
-                            .font(.caption)
+                            .font(.title3)
                             .fontWeight(.semibold)
                             .foregroundColor(.orange)
+
+                        Text("UV \(String(format: "%.1f", context.attributes.uvIndex))")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
                     }
                 }
 
                 DynamicIslandExpandedRegion(.bottom) {
-                    HStack(spacing: 12) {
-                        Text("UV \(String(format: "%.1f", context.attributes.uvIndex))")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                        Text("•")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                        Text("\(formatBurnTime(context.attributes.timeToBurnMinutes)) before sunburn")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
+                    Text("\(formatBurnTime(context.attributes.timeToBurnMinutes)) before sunburn")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
                 }
             } compactLeading: {
                 // Compact leading (small icon on left)
                 Image(systemName: "sun.max.fill")
                     .foregroundColor(context.state.isPaused ? .orange.opacity(0.6) : .orange)
             } compactTrailing: {
-                // Compact trailing (timer only)
-                if context.state.isPaused {
-                    Text(formatElapsedTime(context.state.elapsedSecondsAtPause))
-                        .font(.caption2)
-                        .fontWeight(.semibold)
-                        .monospacedDigit()
-                } else {
-                    Text(context.state.effectiveStartDate, style: .timer)
-                        .font(.caption2)
-                        .fontWeight(.semibold)
-                        .monospacedDigit()
+                // Compact trailing (timer only) — fixed width so the
+                // `.timer` style doesn't reserve space for hours and
+                // stretch the whole pill.
+                Group {
+                    if context.state.isPaused {
+                        Text(formatElapsedTime(context.state.elapsedSecondsAtPause))
+                    } else {
+                        Text(context.state.effectiveStartDate, style: .timer)
+                    }
                 }
+                .font(.caption2)
+                .fontWeight(.semibold)
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .multilineTextAlignment(.trailing)
+                .frame(width: 44)
             } minimal: {
                 // Minimal (when multiple activities are active)
                 Image(systemName: "sun.max.fill")

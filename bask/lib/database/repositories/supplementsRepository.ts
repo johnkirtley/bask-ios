@@ -1,6 +1,12 @@
 'use client';
 
+import { Capacitor } from '@capacitor/core';
 import { databaseService } from '../connection';
+import {
+  seedSupplementsByRange,
+  seedSupplementsToday,
+  seedSupplementsTodayTotalIU,
+} from '../devSeed';
 
 export interface Supplement {
   id: number;
@@ -23,6 +29,7 @@ export const supplementsRepository = {
   },
 
   async getToday(): Promise<Supplement[]> {
+    if (!Capacitor.isNativePlatform()) return seedSupplementsToday();
     const db = await databaseService.getConnection();
     const result = await db.query(
       `SELECT * FROM bask_supplements
@@ -33,6 +40,7 @@ export const supplementsRepository = {
   },
 
   async getTodayTotalIU(): Promise<number> {
+    if (!Capacitor.isNativePlatform()) return seedSupplementsTodayTotalIU();
     const db = await databaseService.getConnection();
     const result = await db.query(
       `SELECT COALESCE(SUM(dosage_iu), 0) as total
@@ -43,6 +51,7 @@ export const supplementsRepository = {
   },
 
   async getByDateRange(start: string, end: string): Promise<Supplement[]> {
+    if (!Capacitor.isNativePlatform()) return seedSupplementsByRange(start, end);
     const db = await databaseService.getConnection();
     const result = await db.query(
       `SELECT * FROM bask_supplements

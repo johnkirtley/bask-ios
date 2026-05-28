@@ -12,12 +12,12 @@ import '@ionic/react/css/text-transformation.css';
 import '@ionic/react/css/flex-utils.css';
 import '@ionic/react/css/display.css';
 import type { Metadata } from 'next';
-import { DM_Sans } from 'next/font/google';
+import { Nunito } from 'next/font/google';
 import TabBar from '../components/navigation/TabBar';
 import IonicProvider from '../components/IonicProvider';
 import ErrorBoundary from '../components/ErrorBoundary';
 
-const dmSans = DM_Sans({ subsets: ['latin'] });
+const nunito = Nunito({ subsets: ['latin'], weight: ['500', '600', '700', '800', '900'], display: 'swap' });
 
 export const metadata: Metadata = {
   title: 'Bask',
@@ -37,7 +37,7 @@ export default function RootLayout({
           content="width=device-width, initial-scale=1.0, viewport-fit=cover"
         />
       </head>
-      <body className={`${dmSans.className} bg-light-bg text-text-primary`}>
+      <body className={`${nunito.className} bg-light-bg text-text-primary`}>
         <ErrorBoundary>
           <IonicProvider>
             <main className="scroll-container">{children}</main>

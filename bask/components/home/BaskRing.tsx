@@ -3,6 +3,8 @@
 import { useMemo, useState, useEffect } from 'react';
 import { IonAlert } from '@ionic/react';
 import { userProfileRepository } from '@/lib/database/repositories/userProfileRepository';
+import Mascot from '../ui/Mascot';
+import { getMascotMood } from '@/lib/mascotUtils';
 
 interface BaskRingProps {
   vitaminDProgress: number; // 0-100
@@ -42,10 +44,24 @@ export default function BaskRing({
     }
   }, [vitaminDGoal]);
 
+  // Derive mascot mood from progress
+  const goalProgress = vitaminDGoal > 0 ? vitaminDCurrent / vitaminDGoal : 0;
+  const mascotMood = getMascotMood({ goalProgress });
+
+  // Responsive IU number sizing so large values (e.g. "50,000") don't crowd
+  // the "IU" label. tabular-nums keeps the width stable as the count ticks up.
+  const currentLabel = vitaminDCurrent.toLocaleString();
+  const numberSizeClass =
+    currentLabel.length >= 6
+      ? 'text-[44px]'
+      : currentLabel.length >= 5
+        ? 'text-[50px]'
+        : 'text-[56px]';
+
   // Ring dimensions
-  const size = 300;
-  const strokeWidth = 16;
-  const radius = 130;
+  const size = 260;
+  const strokeWidth = 10;
+  const radius = 120;
 
   // Calculate circumference
   const circumference = 2 * Math.PI * radius;
@@ -67,23 +83,19 @@ export default function BaskRing({
   };
 
   return (
-    <div className="flex flex-col items-center py-6">
+    <div className="flex flex-col items-center py-4">
+      {/* Ring + Mascot container */}
       <div className="relative" style={{ width: size, height: size }}>
-        {/* D-Pulse: Breathing ambient glow - like captured sunlight */}
+        {/* Pulsing halo behind mascot */}
         <div
-          className="absolute inset-0 rounded-full animate-pulse-soft"
+          className="absolute mascot-halo-pulse rounded-full"
           style={{
-            background: 'radial-gradient(circle, rgba(255, 179, 71, 0.25) 0%, rgba(255, 179, 71, 0.12) 40%, rgba(255, 159, 28, 0.05) 60%, transparent 80%)',
-            animation: 'd-pulse 4s ease-in-out infinite',
-          }}
-        />
-
-        {/* Secondary glow layer for depth */}
-        <div
-          className="absolute inset-0 rounded-full opacity-60"
-          style={{
-            background: 'radial-gradient(circle, rgba(255, 179, 71, 0.15) 20%, transparent 70%)',
-            animation: 'd-pulse-secondary 4s ease-in-out infinite 0.5s',
+            width: size * 0.8,
+            height: size * 0.8,
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            background: 'radial-gradient(circle, rgba(26, 161, 162, 0.12) 0%, transparent 70%)',
           }}
         />
 
@@ -93,37 +105,22 @@ export default function BaskRing({
           className="transform -rotate-90 relative z-10"
           role="img"
           aria-label={`Vitamin D: ${vitaminDCurrent} of ${vitaminDGoal} IU`}>
-          {/* Background track - warm, subtle */}
+          {/* Background track */}
           <circle
             cx={size / 2}
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke="rgba(255, 179, 71, 0.12)"
+            stroke="rgba(26, 161, 162, 0.25)"
             strokeWidth={strokeWidth}
           />
 
-          {/* Progress ring with Solar Flare gradient and living glow */}
+          {/* Progress ring with sun gradient */}
           <defs>
             <linearGradient id="solarFlareGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#FFB347" />
-              <stop offset="50%" stopColor="#FF9F1C" />
-              <stop offset="100%" stopColor="#E86F1B" />
+              <stop offset="0%" stopColor="#FFC93C" />
+              <stop offset="100%" stopColor="#F4A536" />
             </linearGradient>
-            {/* Enhanced glow for light mode visibility */}
-            <filter id="solarGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="8" result="blur" />
-              <feColorMatrix
-                in="blur"
-                type="matrix"
-                values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1.5 0"
-                result="intensifiedBlur"
-              />
-              <feMerge>
-                <feMergeNode in="intensifiedBlur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
           </defs>
 
           <circle
@@ -136,11 +133,7 @@ export default function BaskRing({
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={offset}
-            filter="url(#solarGlowFilter)"
             className="bask-ring-progress"
-            style={{
-              animation: 'ring-pulse 4s ease-in-out infinite',
-            }}
             role="progressbar"
             aria-valuenow={vitaminDProgress}
             aria-valuemin={0}
@@ -148,31 +141,27 @@ export default function BaskRing({
           />
         </svg>
 
-        {/* Center content - refined typography with serif emphasis */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center z-20">
-          <div className="font-title text-5xl text-text-primary tracking-tight tabular-nums" aria-live="polite" aria-atomic="true">
-            {vitaminDCurrent}<span className="text-sm font-semibold text-text-secondary ml-1">IU</span>
-          </div>
-          <button
-            onClick={() => setShowGoalAlert(true)}
-            className="text-xs font-medium text-text-secondary mt-1.5 flex items-center gap-1 hover:text-text-primary transition-colors active:scale-95"
-            aria-label="Edit daily goal">
-            Daily Goal: {displayedGoal ?? vitaminDGoal} IU
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-3 h-3">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
-              />
-            </svg>
-          </button>
+        {/* Mascot centered in ring */}
+        <div className="absolute inset-0 flex items-center justify-center z-20">
+          <Mascot size={160} mood={mascotMood} />
         </div>
+      </div>
+
+      {/* IU readout below ring */}
+      <div className="flex flex-col items-center mt-2 text-center">
+        <div className="flex items-baseline gap-1" aria-live="polite" aria-atomic="true">
+          <span className={`font-black ${numberSizeClass} text-text-primary tracking-tight tabular-nums leading-none`}>
+            {currentLabel}
+          </span>
+          <span className="font-extrabold text-lg text-text-secondary">IU</span>
+        </div>
+        <button
+          onClick={() => setShowGoalAlert(true)}
+          className="text-sm font-semibold text-text-secondary mt-1 flex items-center gap-1 hover:text-text-primary transition-colors active:scale-[0.98]"
+          aria-label="Edit daily goal">
+          of {(displayedGoal ?? vitaminDGoal).toLocaleString()} today
+          <span className="text-text-muted">· edit</span>
+        </button>
       </div>
 
       {/* Goal edit alert */}
@@ -209,40 +198,6 @@ export default function BaskRing({
           },
         ]}
       />
-
-      {/* Inline CSS for D-Pulse animations */}
-      <style jsx>{`
-        @keyframes d-pulse {
-          0%, 100% {
-            transform: scale(1);
-            opacity: 1;
-          }
-          50% {
-            transform: scale(1.05);
-            opacity: 0.8;
-          }
-        }
-
-        @keyframes d-pulse-secondary {
-          0%, 100% {
-            transform: scale(1);
-            opacity: 0.6;
-          }
-          50% {
-            transform: scale(1.08);
-            opacity: 0.4;
-          }
-        }
-
-        @keyframes ring-pulse {
-          0%, 100% {
-            filter: url(#solarGlowFilter) drop-shadow(0 0 4px rgba(255, 179, 71, 0.3));
-          }
-          50% {
-            filter: url(#solarGlowFilter) drop-shadow(0 0 8px rgba(255, 179, 71, 0.5));
-          }
-        }
-      `}</style>
     </div>
   );
 }

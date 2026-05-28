@@ -35,9 +35,9 @@ export default function Insights() {
       title: 'Vitamin D Basics',
       subtitle: 'Why the "sunshine vitamin" matters',
       icon: 'sun',
-      accentColor: '#FFB347',
-      gradientFrom: 'rgba(255, 179, 71, 0.15)',
-      gradientTo: 'rgba(255, 159, 28, 0.10)',
+      accentColor: '#FFC93C',
+      gradientFrom: 'rgba(255, 201, 60, 0.15)',
+      gradientTo: 'rgba(244, 165, 54, 0.10)',
       pullQuote: 'Your body produces vitamin D when UVB rays from sunlight interact with cholesterol in your skin.',
       content: [
         'Vitamin D is essential for calcium absorption, bone health, immune function, and mood regulation.',
@@ -55,7 +55,7 @@ export default function Insights() {
       title: 'Vitamin K2 Synergy',
       subtitle: 'D3\'s critical partner',
       icon: 'shield',
-      accentColor: '#6B9E6B',
+      accentColor: '#5BB47A',
       gradientFrom: 'rgba(16, 185, 129, 0.15)',
       gradientTo: 'rgba(5, 150, 105, 0.10)',
       pullQuote: 'Vitamin K2 works with vitamin D to support healthy calcium utilization.',
@@ -276,7 +276,7 @@ export default function Insights() {
           <div className='px-6 py-6 pt-safe'>
             <button
               onClick={() => setSelectedCard(null)}
-              className='flex items-center gap-2 text-solar-flare mb-4 active:scale-95 transition-transform'>
+              className='flex items-center gap-2 text-solar-flare mb-4 active:scale-[0.98] transition-transform'>
               <svg
                 xmlns='http://www.w3.org/2000/svg'
                 fill='none'
@@ -292,7 +292,7 @@ export default function Insights() {
 
           {/* Hero Header with Icon and Gradient */}
           <div className='px-6 mb-6'>
-            <div className='relative overflow-hidden rounded-3xl detail-hero-enter'
+            <div className='relative overflow-hidden rounded-card detail-hero-enter'
               style={{
                 background: `linear-gradient(135deg, ${selectedInsight.gradientFrom}, ${selectedInsight.gradientTo})`,
               }}>
@@ -304,7 +304,7 @@ export default function Insights() {
 
               <div className='relative px-6 py-8 text-center'>
                 {/* Large decorative icon */}
-                <div className='inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-4'
+                <div className='inline-flex items-center justify-center w-20 h-20 rounded-card mb-4'
                   style={{
                     background: `linear-gradient(135deg, ${selectedInsight.accentColor}30, ${selectedInsight.accentColor}20)`,
                   }}>
@@ -319,7 +319,7 @@ export default function Insights() {
                   </svg>
                 </div>
 
-                <h1 className='text-3xl font-bold text-text-primary mb-2'>
+                <h1 className='text-[32px] font-extrabold tracking-[-0.02em] text-text-primary mb-2'>
                   {selectedInsight.title}
                 </h1>
                 <p className='text-text-secondary text-sm'>
@@ -348,7 +348,7 @@ export default function Insights() {
                     </div>
 
                     {/* Paragraph content */}
-                    <div className='flex-1 backdrop-blur-xl bg-white/70 rounded-2xl p-5 border border-black/5 shadow-sm'>
+                    <div className='flex-1 backdrop-blur-xl bg-white/70 rounded-card p-5 border border-black/5 shadow-sm'>
                       <p className='text-text-primary leading-relaxed'>{paragraph}</p>
                     </div>
                   </div>
@@ -357,7 +357,7 @@ export default function Insights() {
                 {/* Pull quote after 2nd paragraph */}
                 {index === 1 && selectedInsight.pullQuote && (
                   <div className='pull-quote-enter mt-5 ml-14'>
-                    <div className='backdrop-blur-xl bg-white/70 rounded-2xl p-5 border-l-4 shadow-sm'
+                    <div className='backdrop-blur-xl bg-white/70 rounded-card p-5 border-l-4 shadow-sm'
                       style={{ borderLeftColor: selectedInsight.accentColor }}>
                       <p className='text-text-primary text-lg font-medium leading-relaxed italic'>
                         &ldquo;{selectedInsight.pullQuote}&rdquo;
@@ -370,7 +370,7 @@ export default function Insights() {
 
             {/* Key Takeaways - Enhanced Design */}
             {selectedInsight.tips && selectedInsight.tips.length > 0 && (
-              <div className='mt-8 backdrop-blur-xl rounded-2xl p-6 border shadow-lg'
+              <div className='mt-8 backdrop-blur-xl rounded-card p-6 border shadow-lg'
                 style={{
                   background: `linear-gradient(135deg, ${selectedInsight.gradientFrom}, ${selectedInsight.gradientTo})`,
                   borderColor: `${selectedInsight.accentColor}40`,
@@ -427,7 +427,7 @@ export default function Insights() {
       <div className='min-h-screen pb-20'>
         {/* Header */}
         <div className='px-6 py-6 pt-safe'>
-          <h1 className='text-3xl font-semibold text-text-primary'>Insights</h1>
+          <h1 className='text-[32px] font-extrabold tracking-[-0.02em] text-text-primary'>Insights</h1>
           <p className='text-text-secondary mt-1'>
             {activeTab === 'trends' ? 'Track your vitamin D progress' : 'Learn how to optimize your vitamin D'}
           </p>
@@ -435,12 +435,12 @@ export default function Insights() {
 
         {/* Tab Navigation */}
         <div className='px-6 mb-6'>
-          <div className='flex gap-2 backdrop-blur-xl bg-white/60 p-1.5 rounded-2xl border border-white/40 shadow-md'>
+          <div className='flex gap-2 backdrop-blur-xl bg-white/60 p-1.5 rounded-card border border-white/40 shadow-md'>
             <button
               onClick={() => setActiveTab('trends')}
               className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
                 activeTab === 'trends'
-                  ? 'bg-gradient-to-br from-solar-flare to-solar-warm text-white shadow-lg transform scale-105'
+                  ? 'bg-bask-teal text-white shadow-lg'
                   : 'text-text-secondary hover:text-text-primary hover:bg-white/50'
               }`}>
               Trends
@@ -449,7 +449,7 @@ export default function Insights() {
               onClick={() => setActiveTab('learn')}
               className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
                 activeTab === 'learn'
-                  ? 'bg-gradient-to-br from-solar-flare to-solar-warm text-white shadow-lg transform scale-105'
+                  ? 'bg-bask-teal text-white shadow-lg'
                   : 'text-text-secondary hover:text-text-primary hover:bg-white/50'
               }`}>
               Learn
@@ -464,17 +464,17 @@ export default function Insights() {
               <VitaminDTrendChart />
 
               {/* Contextual Insight Callout */}
-              <div className='backdrop-blur-xl bg-gradient-to-br from-solar-flare/10 to-solar-warm/5 rounded-2xl p-5 border border-solar-flare/20 shadow-sm'>
+              <div className='backdrop-blur-xl bg-gradient-to-br from-bask-teal/10 to-bask-teal/5 rounded-card p-5 border border-bask-teal/20 shadow-sm'>
                 <div className='flex items-start gap-4'>
                   {/* Icon */}
-                  <div className='flex-shrink-0 w-10 h-10 rounded-xl bg-solar-flare/20 flex items-center justify-center'>
+                  <div className='flex-shrink-0 w-10 h-10 rounded-xl bg-bask-teal/20 flex items-center justify-center'>
                     <svg
                       xmlns='http://www.w3.org/2000/svg'
                       fill='none'
                       viewBox='0 0 24 24'
                       strokeWidth={2}
                       stroke='currentColor'
-                      className='w-6 h-6 text-solar-flare'>
+                      className='w-6 h-6 text-bask-teal'>
                       <path
                         strokeLinecap='round'
                         strokeLinejoin='round'
@@ -494,7 +494,7 @@ export default function Insights() {
                 </div>
 
                 {/* Tips row */}
-                <div className='mt-4 pt-4 border-t border-solar-flare/10 flex flex-wrap gap-2'>
+                <div className='mt-4 pt-4 border-t border-bask-teal/10 flex flex-wrap gap-2'>
                   <div className='flex items-center gap-2 text-xs text-text-secondary'>
                     <svg
                       xmlns='http://www.w3.org/2000/svg'
@@ -502,7 +502,7 @@ export default function Insights() {
                       viewBox='0 0 24 24'
                       strokeWidth={2.5}
                       stroke='currentColor'
-                      className='w-4 h-4 text-solar-flare'>
+                      className='w-4 h-4 text-bask-teal'>
                       <path strokeLinecap='round' strokeLinejoin='round' d='M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z' />
                     </svg>
                     <span>Best time: 10am-2pm</span>
@@ -514,7 +514,7 @@ export default function Insights() {
                       viewBox='0 0 24 24'
                       strokeWidth={2.5}
                       stroke='currentColor'
-                      className='w-4 h-4 text-solar-flare'>
+                      className='w-4 h-4 text-bask-teal'>
                       <path strokeLinecap='round' strokeLinejoin='round' d='M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z' />
                     </svg>
                     <span>Goal: Your personal target</span>
@@ -526,7 +526,7 @@ export default function Insights() {
                       viewBox='0 0 24 24'
                       strokeWidth={2.5}
                       stroke='currentColor'
-                      className='w-4 h-4 text-solar-flare'>
+                      className='w-4 h-4 text-bask-teal'>
                       <path strokeLinecap='round' strokeLinejoin='round' d='M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z' />
                     </svg>
                     <span>Blood tests can help track levels</span>
@@ -544,8 +544,8 @@ export default function Insights() {
                   <button
                     key={insight.id}
                     onClick={() => setSelectedCard(insight.id)}
-                    className={`insight-card-enter backdrop-blur-xl bg-white/70 rounded-2xl p-5 border border-black/5 shadow-sm text-left active:scale-[0.98] transition-all hover:shadow-md relative overflow-hidden ${
-                      isHero ? 'col-span-2' : ''
+                    className={`insight-card-enter backdrop-blur-xl bg-white/70 rounded-card p-5 border border-black/5 shadow-sm active:scale-[0.98] transition-all hover:shadow-md relative overflow-hidden ${
+                      isHero ? 'col-span-2 text-center' : 'text-left'
                     }`}
                     style={{
                       animationDelay: `${index * 50}ms`,
@@ -563,7 +563,7 @@ export default function Insights() {
 
                     <div className={`flex ${isHero ? 'flex-col items-center text-center gap-4' : 'items-center gap-4'}`}>
                       {/* Icon with gradient background - iOS app icon style */}
-                      <div className={`flex-shrink-0 ${isHero ? 'w-16 h-16' : 'w-12 h-12'} rounded-2xl flex items-center justify-center shadow-sm`}
+                      <div className={`flex-shrink-0 ${isHero ? 'w-16 h-16' : 'w-12 h-12'} rounded-card flex items-center justify-center shadow-sm`}
                         style={{
                           background: `linear-gradient(135deg, ${insight.accentColor}40, ${insight.accentColor}20)`,
                         }}>
@@ -621,7 +621,7 @@ export default function Insights() {
 
           {/* Disclaimer */}
           <div className='px-6 mt-8 mb-4'>
-            <div className='backdrop-blur-xl bg-white/50 rounded-2xl p-4 border border-black/5 shadow-sm'>
+            <div className='backdrop-blur-xl bg-white/50 rounded-card p-4 border border-black/5 shadow-sm'>
               <p className='text-xs text-text-secondary text-center leading-relaxed'>
                 This content is for informational purposes only and is not medical advice. Consult your healthcare provider before making changes to your supplement regimen.
               </p>

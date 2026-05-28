@@ -11,30 +11,23 @@ interface GlassCardProps {
 }
 
 /**
- * Light frosted glass card - "Wellness Sanctuary" aesthetic
- * Captures and diffuses light like morning sun through spa glass
+ * Solid white card with warm shadow and eyebrow label.
  */
 export default function GlassCard({ label, value, subtext, infoText, isLoading }: GlassCardProps) {
   const [showInfo, setShowInfo] = useState(false);
 
   return (
-    <div className="group relative backdrop-blur-xl bg-white/70 rounded-2xl px-4 py-3.5 border border-black/[0.04] shadow-[0_2px_12px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-shadow duration-300">
-      {/* Luminous gradient overlay - catches light like frosted glass */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-white/10 rounded-2xl pointer-events-none" />
-
-      {/* Subtle inner glow for depth */}
-      <div className="absolute inset-0 rounded-2xl pointer-events-none shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)]" />
-
-      <div className="relative z-10 space-y-2">
+    <div className="group bg-white rounded-card px-5 py-4 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_6px_24px_rgba(40,30,10,0.06)] transition-shadow duration-300">
+      <div className="space-y-2">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="text-[11px] font-semibold text-text-secondary uppercase tracking-[0.08em] truncate">
+            <div className="text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em] truncate">
               {label}
             </div>
             {infoText && (
               <button
                 onClick={() => setShowInfo(!showInfo)}
-                className="flex-shrink-0 w-[18px] h-[18px] rounded-full bg-black/[0.04] hover:bg-black/[0.08] active:scale-95 transition-all duration-200 flex items-center justify-center"
+                className="flex-shrink-0 w-[18px] h-[18px] rounded-full bg-black/[0.04] hover:bg-black/[0.08] active:scale-[0.98] transition-all duration-200 flex items-center justify-center"
                 aria-label="More information">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -64,7 +57,7 @@ export default function GlassCard({ label, value, subtext, infoText, isLoading }
               </>
             ) : (
               <>
-                <div className="text-lg font-bold text-text-primary whitespace-nowrap tabular-nums">{value}</div>
+                <div className="text-lg font-black text-text-primary whitespace-nowrap tabular-nums">{value}</div>
                 {subtext && <div className="text-[10px] font-medium text-text-muted whitespace-nowrap">{subtext}</div>}
               </>
             )}

@@ -19,7 +19,10 @@ import {
   supplementsRepository,
   StreakTransitionReason,
 } from '../lib/database';
-import { userProfileRepository, UserProfile } from '../lib/database/repositories/userProfileRepository';
+import {
+  userProfileRepository,
+  UserProfile,
+} from '../lib/database/repositories/userProfileRepository';
 import {
   calculateTimeToGoal,
   calculateTimeToBurn,
@@ -40,6 +43,7 @@ import {
   getSynthesisStatSubtext,
 } from '../lib/dWindowForecast';
 import { BaskWeather } from '../lib/plugins';
+import type { HourlyForecastItem } from '../lib/plugins/baskWeather';
 import { handleLocationPermissionAction } from '../lib/locationPermissionUtils';
 import AtmosphericBackground from '../components/home/AtmosphericBackground';
 import BaskRing from '../components/home/BaskRing';
@@ -52,7 +56,6 @@ import SupplementCard from '../components/home/SupplementCard';
 import CofactorCard from '../components/home/CofactorCard';
 import DWindowForecastCard from '../components/home/DWindowForecastCard';
 import StreakCard from '../components/home/StreakCard';
-import StreakBadge from '../components/home/StreakBadge';
 import StreakDetailSheet from '../components/streaks/StreakDetailSheet';
 import StreakMilestoneOverlay from '../components/streaks/StreakMilestoneOverlay';
 
@@ -62,6 +65,38 @@ import StreakMilestoneOverlay from '../components/streaks/StreakMilestoneOverlay
 function formatTimeToGoal(minutes: number): string {
   if (!isFinite(minutes)) return '--';
   return formatDurationMinutes(minutes);
+}
+
+/**
+ * Web-preview only: synthesize a realistic 48-hour hourly forecast so the
+ * D-Window card (and other sun-driven UI) is visible during local development.
+ * Native builds use real WeatherKit data via BaskWeather.getHourlyForecast().
+ */
+function buildMockHourlyForecast(): HourlyForecastItem[] {
+  const items: HourlyForecastItem[] = [];
+  const start = new Date();
+  start.setMinutes(0, 0, 0);
+
+  for (let i = 0; i < 48; i++) {
+    const d = new Date(start.getTime() + i * 60 * 60 * 1000);
+    const hour = d.getHours();
+    // Bell-curve UV peaking ~9 around solar noon (13:00), zero outside daylight.
+    const daylight = hour >= 6 && hour <= 19;
+    const uvIndex = daylight
+      ? Math.max(0, Math.round(9 * Math.exp(-Math.pow(hour - 13, 2) / 12) * 10) / 10)
+      : 0;
+    items.push({
+      date: d.toISOString(),
+      hour,
+      temperature: 18 + (uvIndex > 0 ? uvIndex : 0),
+      uvIndex,
+      cloudCover: 0.1,
+      humidity: 0.5,
+      symbolName: uvIndex > 3 ? 'sun.max' : 'cloud.sun',
+      condition: uvIndex > 3 ? 'Clear' : 'Partly Cloudy',
+    });
+  }
+  return items;
 }
 
 export default function Home() {
@@ -124,10 +159,14 @@ export default function Home() {
   const session = useBaskSession(fitzpatrickType, answers.age, sessionSunData);
 
   // HealthKit sync (passive daylight tracking) - premium only
-  const healthKitSync = useHealthKitSync(isPremium ? {
-    fitzpatrickType,
-    age: answers.age ?? null,
-  } : undefined);
+  const healthKitSync = useHealthKitSync(
+    isPremium
+      ? {
+          fitzpatrickType,
+          age: answers.age ?? null,
+        }
+      : undefined,
+  );
   const previousHealthKitSyncCountRef = useRef(healthKitSync.syncCount);
 
   // Update session active state for UI hiding (TabBar, etc.)
@@ -159,21 +198,22 @@ export default function Home() {
   // Reconcile notifications when forecast, premium eligibility, or streak state changes
   useDWindowNotifications(dWindowForecast, isPremium, goalStreakSummary);
 
-  const loadTodayTotal = useCallback(async (
-    reason: StreakTransitionReason = 'manual',
-  ) => {
-    try {
-      const [sessionsIU, supplementsIU] = await Promise.all([
-        sessionsRepository.getTodayTotalIU(),
-        supplementsRepository.getTodayTotalIU(),
-      ]);
-      setTodaySunIU(sessionsIU);
-      setTodayTotal(sessionsIU + supplementsIU);
-      await refreshStreak(reason);
-    } catch (error) {
-      console.error('Failed to load today total:', error);
-    }
-  }, [refreshStreak]);
+  const loadTodayTotal = useCallback(
+    async (reason: StreakTransitionReason = 'manual') => {
+      try {
+        const [sessionsIU, supplementsIU] = await Promise.all([
+          sessionsRepository.getTodayTotalIU(),
+          supplementsRepository.getTodayTotalIU(),
+        ]);
+        setTodaySunIU(sessionsIU);
+        setTodayTotal(sessionsIU + supplementsIU);
+        await refreshStreak(reason);
+      } catch (error) {
+        console.error('Failed to load today total:', error);
+      }
+    },
+    [refreshStreak],
+  );
 
   useEffect(() => {
     const healthKitSynced =
@@ -190,7 +230,22 @@ export default function Home() {
   // Load D-Window Forecast
   const loadForecast = useCallback(async () => {
     if (!Capacitor.isNativePlatform()) {
-      // Web fallback - use mock data
+      // Web preview: synthesize a forecast so the D-Window card is visible
+      // during local development (native uses real WeatherKit data below).
+      try {
+        const exposurePercent = 100 - selectedPreset.coveragePercent;
+        setDWindowForecast(
+          calculateOptimalWindows(
+            buildMockHourlyForecast(),
+            fitzpatrickType,
+            exposurePercent,
+            sunData.vitaminDGoal,
+            answers.age,
+          ),
+        );
+      } catch (error) {
+        console.warn('Failed to build mock D-Window forecast:', error);
+      }
       return;
     }
 
@@ -219,7 +274,12 @@ export default function Home() {
     } finally {
       setIsRefreshingForecast(false);
     }
-  }, [fitzpatrickType, selectedPreset.coveragePercent, answers.age, sunData.vitaminDGoal]);
+  }, [
+    fitzpatrickType,
+    selectedPreset.coveragePercent,
+    answers.age,
+    sunData.vitaminDGoal,
+  ]);
 
   useEffect(() => {
     loadForecast();
@@ -259,9 +319,7 @@ export default function Home() {
       ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [dWindowForecast]);
 
-  const handleProgressChanged = (
-    reason: StreakTransitionReason = 'manual',
-  ) => {
+  const handleProgressChanged = (reason: StreakTransitionReason = 'manual') => {
     refreshReasonRef.current = reason;
     setRefreshKey((prev) => prev + 1);
   };
@@ -301,10 +359,8 @@ export default function Home() {
     isLoading || effectiveUV <= 0
       ? '—'
       : effectiveUV < 3
-        ? 'Low'
-        : formatTimeToBurn(
-            calculateTimeToBurn(sunData.uvIndex, fitzpatrickType),
-          );
+      ? 'Low'
+      : formatTimeToBurn(calculateTimeToBurn(sunData.uvIndex, fitzpatrickType));
 
   const canStartSession = !isLoading && effectiveUV > 0;
 
@@ -333,7 +389,10 @@ export default function Home() {
       return `Goal may take ~${goalLabel} today. Limit each sun session to ${burnLabel} before taking a break.`;
     }
 
-    if (labGuidanceHint && (effectiveUV <= 0 || !isFinite(timeToGoal) || timeToGoal > 120)) {
+    if (
+      labGuidanceHint &&
+      (effectiveUV <= 0 || !isFinite(timeToGoal) || timeToGoal > 120)
+    ) {
       return labGuidanceHint;
     }
 
@@ -351,19 +410,19 @@ export default function Home() {
     return undefined;
   })();
 
-  // Generate greeting based on time of day
+  // Generate warm greeting based on time of day
   const greeting = useMemo(() => {
     switch (timeOfDay) {
       case 'morning':
-        return 'Good Morning';
+        return 'Good morning';
       case 'midday':
-        return 'Good Afternoon';
+        return 'Good afternoon';
       case 'evening':
-        return 'Good Evening';
+        return 'Good evening';
       case 'night':
-        return 'Good Evening';
+        return 'Good night';
       default:
-        return 'Welcome';
+        return 'Hey there';
     }
   }, [timeOfDay]);
 
@@ -404,23 +463,23 @@ export default function Home() {
   return (
     <>
       <AtmosphericBackground>
-        <div className='pb-24 pt-safe'>
+        <div className='min-h-screen pb-24 pt-safe overflow-x-hidden overflow-hidden overscroll-contain'>
           {/* Header */}
           <div className='px-6 py-6'>
             <div className='flex justify-between items-center'>
               <div>
-                <div className='flex items-center gap-3'>
-                  <h1 className='text-3xl font-semibold text-text-primary'>
-                    {greeting}
-                  </h1>
-                  <StreakBadge
-                    currentStreak={goalStreakSummary?.currentStreak ?? 0}
-                    onPress={() => setIsStreakSheetOpen(true)}
-                  />
-                </div>
+                <h1 className='text-[32px] font-extrabold text-text-primary tracking-[-0.02em]'>
+                  {greeting}
+                </h1>
                 {isLive && (
-                  <div className='flex items-center gap-1.5 mt-1' role='status' aria-label='Live weather monitoring active'>
-                    <div className='w-2 h-2 rounded-full bg-green-400 animate-pulse-live' aria-hidden='true' />
+                  <div
+                    className='flex items-center gap-1.5 mt-1'
+                    role='status'
+                    aria-label='Live weather monitoring active'>
+                    <div
+                      className='w-2 h-2 rounded-full bg-green-400 animate-pulse-live'
+                      aria-hidden='true'
+                    />
                     <span className='text-xs text-text-secondary'>
                       {locationCity && locationState
                         ? `Monitoring Weather in ${locationCity}, ${locationState}`
@@ -433,7 +492,10 @@ export default function Home() {
                     onClick={handleLocationWarningPress}
                     className='flex items-center gap-1.5 mt-1 group'
                     aria-label='Location access denied. Tap to open Settings.'>
-                    <div className='w-2 h-2 rounded-full bg-red-400 animate-pulse-denied' aria-hidden='true' />
+                    <div
+                      className='w-2 h-2 rounded-full bg-red-400 animate-pulse-denied'
+                      aria-hidden='true'
+                    />
                     <span className='text-xs text-ember-alert group-hover:text-red-600'>
                       Enable Location for Accurate Data
                     </span>
@@ -482,7 +544,9 @@ export default function Home() {
           <div className='px-6 mt-6'>
             <StatMetrics
               timeToGoal={
-                isLoading || effectiveUV <= 0 ? '—' : formatTimeToGoal(timeToGoal)
+                isLoading || effectiveUV <= 0
+                  ? '—'
+                  : formatTimeToGoal(timeToGoal)
               }
               timeToGoalSubtext={
                 isLoading || effectiveUV <= 0
@@ -506,7 +570,6 @@ export default function Home() {
               decayCovered={todayTotal >= dailyDecay}
               decayInfoText='Your body breaks down vitamin D over time. With a 15-day half-life, you lose about 4.5% of your stored vitamin D each day. Regular sun exposure or supplementation helps maintain healthy levels.'
             />
-
           </div>
 
           {/* D-Window Forecast (MOAT Feature) */}
@@ -599,8 +662,8 @@ export default function Home() {
         message='Streak started 🔥 Log again tomorrow to keep it going.'
         duration={4000}
         position='top'
+        cssClass='toast-safe-top'
       />
-
     </>
   );
 }

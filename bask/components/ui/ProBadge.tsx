@@ -15,7 +15,7 @@ export default function ProBadge({ onClick, variant = 'default' }: ProBadgeProps
       onClick={onClick}
       className={`inline-flex items-center gap-1 ${
         variant === 'compact' ? 'px-2 py-1' : 'px-2.5 py-1'
-      } rounded-full bg-gradient-to-r from-solar-flare to-solar-warm text-white font-bold uppercase tracking-wider text-[10px] shadow-sm active:scale-95 transition-transform duration-150`}
+      } rounded-full bg-gradient-to-r from-solar-flare to-solar-warm text-white font-bold uppercase tracking-wider text-[10px] shadow-sm active:scale-[0.98] transition-transform duration-150`}
       aria-label="Unlock with Pro">
       <svg
         xmlns="http://www.w3.org/2000/svg"

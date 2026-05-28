@@ -1,6 +1,12 @@
 'use client';
 
+import { Capacitor } from '@capacitor/core';
 import { databaseService } from '../connection';
+import {
+  seedCofactorLastLogged,
+  seedCofactorsByRange,
+  seedCofactorsTodayByType,
+} from '../devSeed';
 
 export type CofactorType = 'magnesium' | 'vitamin_k2';
 
@@ -35,6 +41,8 @@ export const cofactorsRepository = {
   },
 
   async getTodayByType(cofactorType: CofactorType): Promise<Cofactor[]> {
+    if (!Capacitor.isNativePlatform())
+      return seedCofactorsTodayByType(cofactorType) as Cofactor[];
     const db = await databaseService.getConnection();
     const result = await db.query(
       `SELECT * FROM bask_cofactors
@@ -52,6 +60,8 @@ export const cofactorsRepository = {
   },
 
   async getLastLoggedDate(cofactorType: CofactorType): Promise<string | null> {
+    if (!Capacitor.isNativePlatform())
+      return seedCofactorLastLogged(cofactorType);
     const db = await databaseService.getConnection();
     const result = await db.query(
       `SELECT MAX(logged_at) as last_logged
@@ -74,6 +84,7 @@ export const cofactorsRepository = {
   },
 
   async getByDateRange(start: string, end: string): Promise<Cofactor[]> {
+    if (!Capacitor.isNativePlatform()) return seedCofactorsByRange(start, end);
     const db = await databaseService.getConnection();
     const result = await db.query(
       `SELECT * FROM bask_cofactors

@@ -330,7 +330,7 @@ export default function OnboardingFlow() {
         <div className="px-4 py-2 relative z-20">
           <button
             onClick={handleBack}
-            className="p-3 rounded-full bg-white/80 backdrop-blur-sm text-gray-900 active:scale-95 transition-transform duration-200 shadow-sm"
+            className="p-3 rounded-full bg-white/80 backdrop-blur-sm text-gray-900 active:scale-[0.98] transition-transform duration-200 shadow-sm"
             aria-label="Go back"
           >
             <svg

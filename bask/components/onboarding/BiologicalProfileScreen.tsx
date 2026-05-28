@@ -102,7 +102,7 @@ export default function BiologicalProfileScreen({
             {/* Unit Toggle */}
             <button
               onClick={handleWeightUnitToggle}
-              className="flex items-center gap-2 backdrop-blur-xl bg-black/5 border border-black/10 rounded-full px-3 py-1.5 active:scale-95 transition-transform"
+              className="flex items-center gap-2 backdrop-blur-xl bg-black/5 border border-black/10 rounded-full px-3 py-1.5 active:scale-[0.98] transition-transform"
             >
               <span
                 className={`text-[13px] font-medium transition-colors ${

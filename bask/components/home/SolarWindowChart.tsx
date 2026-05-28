@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { UVDataPoint } from '../../lib/sunDataUtils';
+import GlassCardWrapper from './GlassCardWrapper';
 
 interface SolarWindowChartProps {
   uvCurve: UVDataPoint[];
@@ -225,9 +226,9 @@ export default function SolarWindowChart({
   const yLabels = [0, 3, 6, 9, 12];
 
   return (
-    <div className="w-full py-6">
+    <GlassCardWrapper>
       <div className="mb-4">
-        <h3 className="text-xs font-semibold uppercase tracking-[0.08em] text-text-secondary mb-1">
+        <h3 className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-text-secondary mb-1">
           Solar Window
         </h3>
         <p className="text-xs text-text-secondary">
@@ -259,7 +260,7 @@ export default function SolarWindowChart({
                   x2={x}
                   y2={chartHeight}
                   stroke={
-                    isNoon ? 'rgba(255, 179, 71, 0.35)' : 'rgba(0, 0, 0, 0.18)'
+                    isNoon ? 'rgba(244, 165, 54, 0.35)' : 'rgba(0, 0, 0, 0.18)'
                   }
                   strokeWidth={isNoon ? 1 : 1}
                   strokeDasharray={isNoon ? undefined : '2,3'}
@@ -272,12 +273,12 @@ export default function SolarWindowChart({
                         y1={10}
                         x2={x}
                         y2={noonUvY}
-                        stroke="rgba(255, 179, 71, 0.25)"
+                        stroke="rgba(244, 165, 54, 0.25)"
                         strokeWidth={1}
                       />
                     )}
-                    <circle cx={x} cy={8} r={9} fill="rgba(255, 179, 71, 0.15)" />
-                    <circle cx={x} cy={8} r={5} fill="#FFB347" />
+                    <circle cx={x} cy={8} r={9} fill="rgba(244, 165, 54, 0.15)" />
+                    <circle cx={x} cy={8} r={5} fill="#F4A536" />
                     <circle
                       cx={x}
                       cy={8}
@@ -336,7 +337,7 @@ export default function SolarWindowChart({
                 y={0}
                 width={scaleX(sweetSpotEnd) - scaleX(sweetSpotStart)}
                 height={chartHeight}
-                fill="#FFB347"
+                fill="#FFC93C"
                 fillOpacity={0.12}
                 rx={4}
               />
@@ -346,7 +347,7 @@ export default function SolarWindowChart({
                 y1={0}
                 x2={scaleX(sweetSpotStart)}
                 y2={chartHeight}
-                stroke="#FFB347"
+                stroke="#FFC93C"
                 strokeWidth={1}
                 strokeDasharray="4,4"
                 strokeOpacity={0.35}
@@ -356,7 +357,7 @@ export default function SolarWindowChart({
                 y1={0}
                 x2={scaleX(sweetSpotEnd)}
                 y2={chartHeight}
-                stroke="#FFB347"
+                stroke="#FFC93C"
                 strokeWidth={1}
                 strokeDasharray="4,4"
                 strokeOpacity={0.35}
@@ -368,7 +369,7 @@ export default function SolarWindowChart({
           {hasOptimalWindow && sweetSpotPath && (
             <path
               d={sweetSpotPath}
-              fill="#FFB347"
+              fill="#FFC93C"
               fillOpacity={0.25}
             />
           )}
@@ -389,7 +390,7 @@ export default function SolarWindowChart({
           <path
             d={linePath}
             fill="none"
-            stroke="#FFB347"
+            stroke="#F4A536"
             strokeWidth={2.5}
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -402,13 +403,13 @@ export default function SolarWindowChart({
                 cx={currentPosition.x}
                 cy={currentPosition.y}
                 r={7}
-                fill="#F0EDE9"
+                fill="#FBF6EB"
               />
               <circle
                 cx={currentPosition.x}
                 cy={currentPosition.y}
                 r={5}
-                fill="#FFB347"
+                fill="#F4A536"
                 className="pulsing-dot"
               />
             </>
@@ -452,11 +453,13 @@ export default function SolarWindowChart({
       {hasOptimalWindow && (
         <div className="mt-2 text-center">
           <span className="text-xs text-text-secondary">
+            <span className="inline-block w-3 h-3 rounded-full mr-1" style={{ backgroundColor: '#F4A536' }}></span>
+            <span className="mr-3">UV intensity</span>
             <span className="inline-block w-3 h-3 bg-solar-flare/20 border border-solar-flare/50 rounded-sm mr-1"></span>
-            Optimal vitamin D synthesis window
+            Optimal window
           </span>
         </div>
       )}
-    </div>
+    </GlassCardWrapper>
   );
 }

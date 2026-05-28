@@ -5,14 +5,16 @@ interface AtmosphericBackgroundProps {
 }
 
 /**
- * Light gradient background for "Wellness Sanctuary" aesthetic
- * Warm off-white with airy, breathable tones
+ * Warm cream background with subtle sun-tint radial glow from top.
  */
 export default function AtmosphericBackground({
   children,
 }: AtmosphericBackgroundProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-light-bg via-[#F7F5F2] to-[#FFF8F0] atmospheric-transition">
+    <div
+      className="min-h-screen atmospheric-transition"
+      style={{ background: '#FBF6EB' }}
+    >
       {children}
     </div>
   );

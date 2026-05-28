@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { streaksRepository, userProfileRepository } from '../../lib/database';
 import { DEFAULT_DAILY_GOAL_IU } from '../../lib/constants';
+import LoadingSpinner from '../ui/LoadingSpinner';
 
 interface CalendarStreakProps {
   className?: string;
@@ -54,7 +55,7 @@ function getHeatGlow(intensity: 'none' | 'light' | 'warm' | 'hot' | 'blazing'): 
     <div
       className="absolute inset-0 rounded-lg blur-sm -z-10"
       style={{
-        background: `radial-gradient(circle at center, rgba(255, 179, 71, ${glowOpacity}) 0%, transparent 70%)`,
+        background: `radial-gradient(circle at center, rgba(255, 201, 60, ${glowOpacity}) 0%, transparent 70%)`,
       }}
     />
   );
@@ -174,7 +175,7 @@ export default function CalendarStreak({ className = '' }: CalendarStreakProps) 
                           'Keep it going!';
 
   return (
-    <div className={`relative overflow-hidden backdrop-blur-xl bg-white/70 rounded-2xl p-6 border border-black/5 shadow-sm ${className}`}>
+    <div className={`relative overflow-hidden backdrop-blur-xl bg-white/70 rounded-card p-6 border border-black/5 shadow-sm ${className}`}>
       {/* Decorative radial glow behind card */}
       <div className="absolute -inset-8 bg-solar-flare/5 rounded-full blur-3xl -z-10 pointer-events-none" />
 
@@ -277,7 +278,7 @@ export default function CalendarStreak({ className = '' }: CalendarStreakProps) 
       {/* Calendar Grid */}
       {loading ? (
         <div className="py-12 text-center">
-          <div className="w-8 h-8 border-4 border-solar-flare/30 border-t-solar-flare rounded-full animate-spin mx-auto"></div>
+          <LoadingSpinner size='sm' />
           <p className="text-text-secondary text-sm mt-3">Loading calendar...</p>
         </div>
       ) : (

@@ -53,7 +53,7 @@ export default function HealthKitPermissionScreen({
       <div
         className="fixed inset-0 pointer-events-none"
         style={{
-          background: 'linear-gradient(180deg, #F0F9FF 0%, #E0F2FE 35%, #BAE6FD 70%, #7DD3FC 100%)',
+          background: 'linear-gradient(180deg, #FBF6EB 0%, #FFF1D6 35%, #FFE3A8 70%, #FFCE5C 100%)',
         }}
       />
 
@@ -93,7 +93,7 @@ export default function HealthKitPermissionScreen({
               </div>
             </div>
             <div className="flex items-start">
-              <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-5 h-5 text-bask-teal mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
               </svg>
               <div>

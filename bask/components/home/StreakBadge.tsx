@@ -15,7 +15,7 @@ export default function StreakBadge({
     <button
       type='button'
       onClick={onPress}
-      className='flame-pulse inline-flex items-center gap-1.5 rounded-full bg-solar-flare/15 px-3 py-1.5 text-sm font-bold text-solar-warm shadow-sm active:scale-95'
+      className='flame-pulse inline-flex items-center gap-1.5 rounded-full bg-solar-flare/15 px-3 py-1.5 text-sm font-bold text-solar-warm shadow-sm active:scale-[0.98]'
       aria-label={`Open ${currentStreak} day streak details`}>
       <span aria-hidden='true'>🔥</span>
       <span className='tabular-nums'>{currentStreak}</span>
