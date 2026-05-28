@@ -3,8 +3,14 @@
 import { getSupabaseClient, isSupabaseConfigured } from './client';
 import { settingsRepository } from '../database/repositories/settingsRepository';
 import { generateAnonymousName } from '../leaderboard/anonymousNames';
+import {
+  LeaderboardNameTakenError,
+  isAnonymousNameTakenError,
+} from '../leaderboard/nameErrors';
 import { LEADERBOARD_SETTINGS } from '../constants';
 import type { LocationPrecision } from '../leaderboard/countries';
+
+const MAX_NAME_ATTEMPTS = 8;
 
 function generatePublicUserId(): string {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -59,6 +65,130 @@ function getWeekBounds(): { start: string; end: string } {
   return { start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) };
 }
 
+async function getCredentialsFromStorage(): Promise<{
+  publicUserId: string;
+  writeToken: string;
+} | null> {
+  const publicUserId = await settingsRepository.get(LEADERBOARD_SETTINGS.publicUserId);
+  const writeToken = await settingsRepository.get(LEADERBOARD_SETTINGS.writeToken);
+  if (!publicUserId || !writeToken) return null;
+  return { publicUserId, writeToken };
+}
+
+async function getLocationFromStorage(): Promise<LeaderboardLocation> {
+  const [countryCode, regionLabel, cityLabel, precision] = await Promise.all([
+    settingsRepository.get(LEADERBOARD_SETTINGS.countryCode),
+    settingsRepository.get(LEADERBOARD_SETTINGS.regionLabel),
+    settingsRepository.get(LEADERBOARD_SETTINGS.cityLabel),
+    settingsRepository.get(LEADERBOARD_SETTINGS.locationPrecision),
+  ]);
+  return {
+    countryCode: countryCode ?? '',
+    regionLabel: regionLabel ?? '',
+    cityLabel: cityLabel ?? '',
+    locationPrecision: (precision as LocationPrecision) ?? 'none',
+  };
+}
+
+function throwIfRpcError(error: { message: string } | null, throwOnNameTaken: boolean): void {
+  if (!error) return;
+  if (throwOnNameTaken && isAnonymousNameTakenError(error)) {
+    throw new LeaderboardNameTakenError();
+  }
+  throw error;
+}
+
+async function clearCredentials(): Promise<void> {
+  await Promise.all([
+    settingsRepository.delete(LEADERBOARD_SETTINGS.publicUserId),
+    settingsRepository.delete(LEADERBOARD_SETTINGS.writeToken),
+  ]);
+}
+
+type SetActiveResult = 'ok' | 'invalid_credentials' | 'error';
+
+async function setLeaderboardActive(
+  credentials: { publicUserId: string; writeToken: string },
+  isActive: boolean,
+): Promise<SetActiveResult> {
+  if (!isSupabaseConfigured()) return 'ok';
+
+  const supabase = getSupabaseClient();
+  const { error } = await supabase.rpc('set_leaderboard_active', {
+    p_public_user_id: credentials.publicUserId,
+    p_write_token: credentials.writeToken,
+    p_is_active: isActive,
+  });
+
+  if (!error) return 'ok';
+
+  if (error.message.includes('Invalid credentials')) {
+    await clearCredentials();
+    return 'invalid_credentials';
+  }
+
+  return 'error';
+}
+
+async function pushProfileToServer(
+  anonymousName: string,
+  location: LeaderboardLocation,
+  options: { throwOnNameTaken?: boolean } = {},
+): Promise<void> {
+  if (!isSupabaseConfigured()) return;
+
+  const credentials = await getCredentialsFromStorage();
+  if (!credentials) return;
+
+  const supabase = getSupabaseClient();
+  const { error } = await supabase.rpc('update_leaderboard_profile', {
+    p_public_user_id: credentials.publicUserId,
+    p_write_token: credentials.writeToken,
+    p_anonymous_name: anonymousName,
+    p_country_code: location.countryCode || null,
+    p_region_label: location.regionLabel || null,
+    p_city_label: location.cityLabel || null,
+    p_location_precision: location.locationPrecision,
+  });
+
+  if (error) {
+    if (options.throwOnNameTaken) {
+      throwIfRpcError(error, true);
+    }
+    console.warn('Failed to sync leaderboard profile:', error.message);
+  }
+}
+
+async function pushNameToServer(name: string): Promise<void> {
+  const location = await getLocationFromStorage();
+  await pushProfileToServer(name, location, { throwOnNameTaken: true });
+}
+
+async function registerOnServer(
+  name: string,
+  loc: LeaderboardLocation,
+): Promise<{ publicUserId: string; writeToken: string }> {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase.rpc('register_leaderboard_user', {
+    p_anonymous_name: name,
+    p_country_code: loc.countryCode || null,
+    p_region_label: loc.regionLabel || null,
+    p_city_label: loc.cityLabel || null,
+    p_location_precision: loc.locationPrecision,
+  });
+
+  if (error) {
+    throwIfRpcError(error, true);
+  }
+
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row?.public_user_id || !row?.write_token) {
+    throw new Error('register_leaderboard_user did not return credentials');
+  }
+
+  return { publicUserId: row.public_user_id, writeToken: row.write_token };
+}
+
 export const leaderboardService = {
   async isOptedIn(): Promise<boolean> {
     const value = await settingsRepository.get(LEADERBOARD_SETTINGS.optedIn);
@@ -66,10 +196,7 @@ export const leaderboardService = {
   },
 
   async getCredentials(): Promise<{ publicUserId: string; writeToken: string } | null> {
-    const publicUserId = await settingsRepository.get(LEADERBOARD_SETTINGS.publicUserId);
-    const writeToken = await settingsRepository.get(LEADERBOARD_SETTINGS.writeToken);
-    if (!publicUserId || !writeToken) return null;
-    return { publicUserId, writeToken };
+    return getCredentialsFromStorage();
   },
 
   async getOrCreateAnonymousName(): Promise<string> {
@@ -82,18 +209,7 @@ export const leaderboardService = {
   },
 
   async getLocation(): Promise<LeaderboardLocation> {
-    const [countryCode, regionLabel, cityLabel, precision] = await Promise.all([
-      settingsRepository.get(LEADERBOARD_SETTINGS.countryCode),
-      settingsRepository.get(LEADERBOARD_SETTINGS.regionLabel),
-      settingsRepository.get(LEADERBOARD_SETTINGS.cityLabel),
-      settingsRepository.get(LEADERBOARD_SETTINGS.locationPrecision),
-    ]);
-    return {
-      countryCode: countryCode ?? '',
-      regionLabel: regionLabel ?? '',
-      cityLabel: cityLabel ?? '',
-      locationPrecision: (precision as LocationPrecision) ?? 'none',
-    };
+    return getLocationFromStorage();
   },
 
   async setLocation(location: Partial<LeaderboardLocation>): Promise<void> {
@@ -123,25 +239,16 @@ export const leaderboardService = {
   async syncProfileToServer(): Promise<void> {
     if (!isSupabaseConfigured()) return;
 
-    const credentials = await this.getCredentials();
+    const credentials = await getCredentialsFromStorage();
     if (!credentials) return;
 
     const [anonymousName, location] = await Promise.all([
       this.getOrCreateAnonymousName(),
-      this.getLocation(),
+      getLocationFromStorage(),
     ]);
 
     try {
-      const supabase = getSupabaseClient();
-      await supabase.rpc('update_leaderboard_profile', {
-        p_public_user_id: credentials.publicUserId,
-        p_write_token: credentials.writeToken,
-        p_anonymous_name: anonymousName,
-        p_country_code: location.countryCode || null,
-        p_region_label: location.regionLabel || null,
-        p_city_label: location.cityLabel || null,
-        p_location_precision: location.locationPrecision,
-      });
+      await pushProfileToServer(anonymousName, location, { throwOnNameTaken: false });
     } catch (error) {
       console.warn('Failed to sync leaderboard profile:', error);
     }
@@ -150,57 +257,96 @@ export const leaderboardService = {
   async optIn(location?: Partial<LeaderboardLocation>): Promise<{
     anonymousName: string;
   }> {
-    const anonymousName = await this.getOrCreateAnonymousName();
+    await this.getOrCreateAnonymousName();
 
     if (location) {
       await this.setLocation(location);
     }
 
-    let credentials = await this.getCredentials();
+    let credentials = await getCredentialsFromStorage();
 
     if (!credentials && isSupabaseConfigured()) {
-      const loc = await this.getLocation();
-      try {
-        const supabase = getSupabaseClient();
-        const { data, error } = await supabase.rpc('register_leaderboard_user', {
-          p_anonymous_name: anonymousName,
-          p_country_code: loc.countryCode || null,
-          p_region_label: loc.regionLabel || null,
-          p_city_label: loc.cityLabel || null,
-          p_location_precision: loc.locationPrecision,
-        });
+      const loc = await getLocationFromStorage();
+      let lastFailed: string | undefined;
 
-        if (error) throw error;
+      for (let attempt = 0; attempt < MAX_NAME_ATTEMPTS; attempt++) {
+        const current = await settingsRepository.get(LEADERBOARD_SETTINGS.anonymousName);
+        const candidate =
+          attempt === 0 && current
+            ? current
+            : generateAnonymousName(lastFailed ?? current ?? undefined);
 
-        const row = Array.isArray(data) ? data[0] : data;
-        if (row?.public_user_id && row?.write_token) {
+        await settingsRepository.set(LEADERBOARD_SETTINGS.anonymousName, candidate);
+
+        try {
+          credentials = await registerOnServer(candidate, loc);
           await settingsRepository.setMultiple({
-            [LEADERBOARD_SETTINGS.publicUserId]: row.public_user_id,
-            [LEADERBOARD_SETTINGS.writeToken]: row.write_token,
+            [LEADERBOARD_SETTINGS.publicUserId]: credentials.publicUserId,
+            [LEADERBOARD_SETTINGS.writeToken]: credentials.writeToken,
           });
-          credentials = {
-            publicUserId: row.public_user_id,
-            writeToken: row.write_token,
-          };
+          break;
+        } catch (e) {
+          if (isAnonymousNameTakenError(e) && attempt < MAX_NAME_ATTEMPTS - 1) {
+            lastFailed = candidate;
+            continue;
+          }
+          throw new Error('Could not join leaderboard. Try again.');
         }
-      } catch (error) {
-        console.warn('Failed to register on leaderboard server:', error);
+      }
+
+      if (!credentials) {
+        throw new Error('Could not join leaderboard. Try again.');
       }
     } else if (credentials && isSupabaseConfigured()) {
+      const activeResult = await setLeaderboardActive(credentials, true);
+      if (activeResult === 'invalid_credentials') {
+        return this.optIn(location);
+      }
+      if (activeResult === 'error') {
+        throw new Error('Could not join leaderboard. Try again.');
+      }
       await this.syncProfileToServer();
     }
 
-    await settingsRepository.set(LEADERBOARD_SETTINGS.optedIn, 'true');
+    if (!isSupabaseConfigured() || credentials) {
+      await settingsRepository.set(LEADERBOARD_SETTINGS.optedIn, 'true');
+    } else {
+      throw new Error('Could not join leaderboard. Try again.');
+    }
+
     const finalName = await this.getOrCreateAnonymousName();
     return { anonymousName: finalName };
   },
 
   async optOut(): Promise<void> {
     await settingsRepository.set(LEADERBOARD_SETTINGS.optedIn, 'false');
+
+    if (!isSupabaseConfigured()) return;
+
+    const credentials = await getCredentialsFromStorage();
+    if (!credentials) return;
+
+    const result = await setLeaderboardActive(credentials, false);
+    if (result === 'error') {
+      console.warn('Failed to pause leaderboard participation on server');
+    }
+  },
+
+  async syncParticipationState(): Promise<void> {
+    if (!isSupabaseConfigured()) return;
+
+    const credentials = await getCredentialsFromStorage();
+    if (!credentials) return;
+
+    const optedIn = await this.isOptedIn();
+    const result = await setLeaderboardActive(credentials, optedIn);
+    if (result === 'error') {
+      console.warn('Failed to sync leaderboard participation state');
+    }
   },
 
   async deleteLeaderboardData(): Promise<void> {
-    const credentials = await this.getCredentials();
+    const credentials = await getCredentialsFromStorage();
 
     if (credentials && isSupabaseConfigured()) {
       try {
@@ -232,15 +378,44 @@ export const leaderboardService = {
       throw new Error('Name must be 3-30 characters');
     }
 
+    const credentials = await getCredentialsFromStorage();
+    if (credentials && isSupabaseConfigured()) {
+      await pushNameToServer(trimmed);
+    }
+
     await settingsRepository.set(LEADERBOARD_SETTINGS.anonymousName, trimmed);
-    await this.syncProfileToServer();
   },
 
   async randomizeName(): Promise<string> {
-    const current = await settingsRepository.get(LEADERBOARD_SETTINGS.anonymousName);
-    const newName = generateAnonymousName(current ?? undefined);
-    await this.updateAnonymousName(newName);
-    return newName;
+    const optedIn = await this.isOptedIn();
+    let credentials = await getCredentialsFromStorage();
+
+    if (optedIn && !credentials && isSupabaseConfigured()) {
+      await this.optIn();
+      credentials = await getCredentialsFromStorage();
+    }
+
+    let lastFailed: string | undefined;
+
+    for (let attempt = 0; attempt < MAX_NAME_ATTEMPTS; attempt++) {
+      const current = await settingsRepository.get(LEADERBOARD_SETTINGS.anonymousName);
+      const candidate = generateAnonymousName(lastFailed ?? current ?? undefined);
+
+      try {
+        if (credentials && isSupabaseConfigured()) {
+          await pushNameToServer(candidate);
+        }
+        await settingsRepository.set(LEADERBOARD_SETTINGS.anonymousName, candidate);
+        return candidate;
+      } catch (e) {
+        if (!isAnonymousNameTakenError(e) || attempt === MAX_NAME_ATTEMPTS - 1) {
+          throw e;
+        }
+        lastFailed = candidate;
+      }
+    }
+
+    throw new Error("Couldn't find a unique name. Try again.");
   },
 
   async submitSession(params: {
@@ -256,14 +431,14 @@ export const leaderboardService = {
 
     if (!isSupabaseConfigured()) return;
 
-    let credentials = await this.getCredentials();
+    let credentials = await getCredentialsFromStorage();
     if (!credentials) {
       await this.optIn();
-      credentials = await this.getCredentials();
+      credentials = await getCredentialsFromStorage();
       if (!credentials) return;
     }
 
-    const location = await this.getLocation();
+    const location = await getLocationFromStorage();
 
     try {
       const supabase = getSupabaseClient();
@@ -282,10 +457,11 @@ export const leaderboardService = {
       });
 
       if (error) {
-        // Re-register if credentials invalid
+        if (error.message.includes('Leaderboard participation paused')) {
+          return;
+        }
         if (error.message.includes('Invalid credentials')) {
-          await settingsRepository.delete(LEADERBOARD_SETTINGS.publicUserId);
-          await settingsRepository.delete(LEADERBOARD_SETTINGS.writeToken);
+          await clearCredentials();
           await this.optIn();
           return this.submitSession(params);
         }
@@ -326,7 +502,7 @@ export const leaderboardService = {
   },
 
   async getMyRank(period: 'today' | 'week' = 'week'): Promise<number | null> {
-    const credentials = await this.getCredentials();
+    const credentials = await getCredentialsFromStorage();
     if (!credentials) return null;
 
     const entries = await this.getLeaderboard(period);

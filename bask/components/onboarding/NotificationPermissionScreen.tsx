@@ -77,7 +77,7 @@ export default function NotificationPermissionScreen({
             Never miss your vitamin D timing
           </h2>
           <p className="text-base text-gray-700">
-            Get alerts for optimal windows, when D synthesis starts, and before it ends for the day. You can turn these on anytime in Settings.
+            Get alerts for optimal windows, when D synthesis starts, and before it ends for the day. D-Window alerts are available with Bask Premium. You can adjust these anytime in Settings.
           </p>
         </div>
 

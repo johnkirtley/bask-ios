@@ -28,6 +28,7 @@ import {
   calculateDailyDecayAmount,
 } from '../lib/dEngine';
 import { resolveFitzpatrickType } from '../lib/profileUtils';
+import { leaderboardService } from '../lib/supabase/leaderboardService';
 import {
   getBloodTestCalibration,
   getBloodTestGuidanceHint,
@@ -236,6 +237,7 @@ export default function Home() {
       if (isActive) {
         void loadForecast();
         void loadTodayTotal('app_open');
+        void leaderboardService.syncParticipationState();
       }
     }).then((handle) => {
       listenerHandle = handle;

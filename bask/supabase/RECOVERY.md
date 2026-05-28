@@ -17,6 +17,7 @@ Use this guide when setup partially succeeded or re-running the full schema fail
 | **Fresh project** (no leaderboard tables yet) | [`schema.sql`](schema.sql) |
 | **Tables already exist** + register RPC fails | [`fix-pgcrypto-search-path.sql`](fix-pgcrypto-search-path.sql) |
 | **Enforce unique anonymous names** (existing project) | [`unique-anonymous-name.sql`](unique-anonymous-name.sql) |
+| **Add pause/opt-out support** (existing project) | [`leaderboard-pause.sql`](leaderboard-pause.sql) |
 | **Tables exist** + functions already patched | Nothing — run smoke test only |
 
 ## Recovery steps (your current situation)
@@ -42,6 +43,7 @@ Use this guide when setup partially succeeded or re-running the full schema fail
 ✅ submit_leaderboard_session works
 ✅ Leaderboard shows test user at rank #1
 ✅ Idempotency works
+✅ set_leaderboard_active works (pause / reactivate)
 ✅ delete_leaderboard_user works
 ```
 
@@ -85,6 +87,7 @@ DROP FUNCTION IF EXISTS submit_leaderboard_session(uuid, text, text, integer, in
 DROP FUNCTION IF EXISTS register_leaderboard_user(text, text, text, text, text);
 DROP FUNCTION IF EXISTS update_leaderboard_profile(uuid, text, text, text, text, text, text);
 DROP FUNCTION IF EXISTS delete_leaderboard_user(uuid, text);
+DROP FUNCTION IF EXISTS set_leaderboard_active(uuid, text, boolean);
 DROP FUNCTION IF EXISTS verify_write_token(uuid, text);
 DROP FUNCTION IF EXISTS hash_write_token(text);
 DROP FUNCTION IF EXISTS validate_anonymous_name(text);

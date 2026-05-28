@@ -10,6 +10,7 @@ import type { LocationPrecision } from '../lib/leaderboard/countries';
 
 interface UseLeaderboardResult {
   isOptedIn: boolean;
+  hasCredentials: boolean;
   anonymousName: string | null;
   location: LeaderboardLocation;
   isLoading: boolean;
@@ -37,6 +38,7 @@ const DEFAULT_LOCATION: LeaderboardLocation = {
 
 export function useLeaderboard(): UseLeaderboardResult {
   const [isOptedIn, setIsOptedIn] = useState(false);
+  const [hasCredentials, setHasCredentials] = useState(false);
   const [anonymousName, setAnonymousName] = useState<string | null>(null);
   const [location, setLocationState] = useState<LeaderboardLocation>(DEFAULT_LOCATION);
   const [isLoading, setIsLoading] = useState(true);
@@ -47,14 +49,19 @@ export function useLeaderboard(): UseLeaderboardResult {
   const [myRankWeek, setMyRankWeek] = useState<number | null>(null);
 
   const loadState = useCallback(async () => {
-    const [opted, dismissed, loc] = await Promise.all([
+    const [opted, dismissed, loc, credentials] = await Promise.all([
       leaderboardService.isOptedIn(),
       leaderboardService.isNudgeDismissed(),
       leaderboardService.getLocation(),
+      leaderboardService.getCredentials(),
     ]);
+    const hasCreds = credentials !== null;
+
     setIsOptedIn(opted);
+    setHasCredentials(hasCreds);
     setNudgeDismissed(dismissed);
     setLocationState(loc);
+
     if (opted) {
       const name = await leaderboardService.getOrCreateAnonymousName();
       setAnonymousName(name);
@@ -64,11 +71,18 @@ export function useLeaderboard(): UseLeaderboardResult {
       ]);
       setMyRankToday(rankToday);
       setMyRankWeek(rankWeek);
+    } else if (hasCreds) {
+      const name = await leaderboardService.getOrCreateAnonymousName();
+      setAnonymousName(name);
+      setMyRankToday(null);
+      setMyRankWeek(null);
     } else {
       setAnonymousName(null);
       setMyRankToday(null);
       setMyRankWeek(null);
     }
+
+    void leaderboardService.syncParticipationState();
     setIsLoading(false);
   }, []);
 
@@ -79,6 +93,7 @@ export function useLeaderboard(): UseLeaderboardResult {
   const optIn = useCallback(async (loc?: Partial<LeaderboardLocation>) => {
     const { anonymousName: name } = await leaderboardService.optIn(loc);
     setIsOptedIn(true);
+    setHasCredentials(true);
     setAnonymousName(name);
     const updatedLoc = await leaderboardService.getLocation();
     setLocationState(updatedLoc);
@@ -92,6 +107,7 @@ export function useLeaderboard(): UseLeaderboardResult {
   const deleteLeaderboardData = useCallback(async () => {
     await leaderboardService.deleteLeaderboardData();
     setIsOptedIn(false);
+    setHasCredentials(false);
     setAnonymousName(null);
     setLocationState(DEFAULT_LOCATION);
     setMyRankToday(null);
@@ -141,6 +157,7 @@ export function useLeaderboard(): UseLeaderboardResult {
 
   return {
     isOptedIn,
+    hasCredentials,
     anonymousName,
     location,
     isLoading,

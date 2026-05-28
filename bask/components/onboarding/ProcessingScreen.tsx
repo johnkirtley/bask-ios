@@ -15,7 +15,7 @@ type ProcessingRow = {
   icon: string;
   pendingLabel: string;
   processingMs: number;
-  getDoneLabel: (ctx: { fitzpatrickType: FitzpatrickType }) => string;
+  getDoneLabel: (ctx: { fitzpatrickType: FitzpatrickType; usedFallback: boolean }) => string;
   isDone: (ctx: { isReady: boolean }) => boolean;
 };
 
@@ -32,7 +32,8 @@ const PROCESSING_ROWS: ProcessingRow[] = [
     icon: '☀️',
     pendingLabel: 'Checking local UV conditions...',
     processingMs: 1500,
-    getDoneLabel: () => 'Local UV conditions synced',
+    getDoneLabel: ({ usedFallback }) =>
+      usedFallback ? 'Estimated UV conditions loaded' : 'Local UV conditions synced',
     isDone: ({ isReady }) => isReady,
   },
   {
@@ -84,6 +85,7 @@ export default function ProcessingScreen({
   const [showResults, setShowResults] = useState(false);
   const [reviewRequested, setReviewRequested] = useState(false);
   const reviewTriggeredRef = useRef(false);
+  const usedFallbackRef = useRef(false);
   const isReadyRef = useRef(isReady);
 
   isReadyRef.current = isReady;
@@ -96,6 +98,7 @@ export default function ProcessingScreen({
 
       if (!isNative) {
         generateMockSunData();
+        usedFallbackRef.current = true;
         if (!cancelled) setIsReady(true);
         return;
       }
@@ -105,6 +108,7 @@ export default function ProcessingScreen({
         if (!cancelled) setIsReady(true);
       } catch {
         generateMockSunData();
+        usedFallbackRef.current = true;
         if (!cancelled) setIsReady(true);
       }
     }
@@ -201,7 +205,7 @@ export default function ProcessingScreen({
             const isRevealed = currentStep > index;
             const isDone = doneStep > index;
             const label = isDone
-              ? row.getDoneLabel({ fitzpatrickType })
+              ? row.getDoneLabel({ fitzpatrickType, usedFallback: usedFallbackRef.current })
               : row.pendingLabel;
 
             return (

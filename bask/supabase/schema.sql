@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS leaderboard_users (
   location_precision TEXT NOT NULL DEFAULT 'none'
     CHECK (location_precision IN ('none', 'country', 'region', 'city')),
   opted_in_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  is_active BOOLEAN NOT NULL DEFAULT true
 );
 
 CREATE TABLE IF NOT EXISTS leaderboard_user_secrets (
@@ -237,6 +238,10 @@ BEGIN
     RAISE EXCEPTION 'Invalid credentials';
   END IF;
 
+  IF NOT (SELECT is_active FROM leaderboard_users WHERE public_user_id = p_public_user_id) THEN
+    RAISE EXCEPTION 'Leaderboard participation paused';
+  END IF;
+
   IF p_local_session_id IS NULL OR length(trim(p_local_session_id)) = 0 THEN
     RAISE EXCEPTION 'Missing session id';
   END IF;
@@ -335,8 +340,11 @@ AS $$
       SUM(d.session_count) AS session_count,
       MAX(d.updated_at) AS last_updated_at
     FROM leaderboard_daily_stats d
-    WHERE d.session_date >= p_start
+    JOIN leaderboard_users u ON u.public_user_id = d.public_user_id
+    WHERE u.is_active = true
+      AND d.session_date >= p_start
       AND d.session_date < p_end
+      AND (p_country_code IS NULL OR u.country_code = p_country_code)
     GROUP BY d.public_user_id
     HAVING SUM(d.total_iu) > 0
   )
@@ -353,10 +361,33 @@ AS $$
     ROW_NUMBER() OVER (ORDER BY a.total_iu DESC, a.last_updated_at ASC) AS rank
   FROM aggregated a
   JOIN leaderboard_users u ON u.public_user_id = a.public_user_id
-  WHERE p_country_code IS NULL
-    OR u.country_code = p_country_code
   ORDER BY a.total_iu DESC, a.last_updated_at ASC
   LIMIT LEAST(GREATEST(p_limit, 1), 100);
+$$;
+
+-- ==========================================
+-- RPC: Pause / resume participation
+-- ==========================================
+
+CREATE OR REPLACE FUNCTION set_leaderboard_active(
+  p_public_user_id UUID,
+  p_write_token TEXT,
+  p_is_active BOOLEAN
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions
+AS $$
+BEGIN
+  IF NOT verify_write_token(p_public_user_id, p_write_token) THEN
+    RAISE EXCEPTION 'Invalid credentials';
+  END IF;
+
+  UPDATE leaderboard_users
+  SET is_active = p_is_active, updated_at = now()
+  WHERE public_user_id = p_public_user_id;
+END;
 $$;
 
 -- ==========================================
@@ -411,3 +442,4 @@ GRANT EXECUTE ON FUNCTION update_leaderboard_profile TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION submit_leaderboard_session TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION get_leaderboard TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION delete_leaderboard_user TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION set_leaderboard_active TO anon, authenticated;

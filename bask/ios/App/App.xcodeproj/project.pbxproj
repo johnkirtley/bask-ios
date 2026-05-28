@@ -18,8 +18,6 @@
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
 		6fbff39349734e9129429872 /* BaskHealthPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = c7bdf47bc18d78924857dbbc /* BaskHealthPlugin.m */; };
 		A084ECDBA7D38E1E42DFC39D /* Pods_App.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */; };
-		AA1A187A2F2AEEAA00F43A60 /* BaskBackgroundTaskPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1A18792F2AEEAA00F43A60 /* BaskBackgroundTaskPlugin.swift */; };
-		AA1A187B2F2AEEAA00F43A60 /* BaskBackgroundTaskPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = AA1A18782F2AEEAA00F43A60 /* BaskBackgroundTaskPlugin.m */; };
 		AA6EFDE12C9F5A2400CE7093 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA6EFDE02C9F5A2400CE7093 /* StoreKit.framework */; };
 		AAB67D572F29CA5100234FCD /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AAB67D562F29CA5100234FCD /* WidgetKit.framework */; };
 		AAB67D592F29CA5100234FCD /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AAB67D582F29CA5100234FCD /* SwiftUI.framework */; };
@@ -69,8 +67,6 @@
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
 		63dade1fc57226a305c5a29b /* BaskHealthPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaskHealthPlugin.swift; sourceTree = "<group>"; };
 		884e730c07f3a893489c4c4a /* BaskWeatherPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaskWeatherPlugin.swift; sourceTree = "<group>"; };
-		AA1A18782F2AEEAA00F43A60 /* BaskBackgroundTaskPlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BaskBackgroundTaskPlugin.m; sourceTree = "<group>"; };
-		AA1A18792F2AEEAA00F43A60 /* BaskBackgroundTaskPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaskBackgroundTaskPlugin.swift; sourceTree = "<group>"; };
 		AA1F14662F287420003E3D11 /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
 		AA6EFDE02C9F5A2400CE7093 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		AAB67D552F29CA5100234FCD /* BaskWidgetExtensionExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BaskWidgetExtensionExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -156,8 +152,6 @@
 		504EC3061FED79650016851F /* App */ = {
 			isa = PBXGroup;
 			children = (
-				AA1A18782F2AEEAA00F43A60 /* BaskBackgroundTaskPlugin.m */,
-				AA1A18792F2AEEAA00F43A60 /* BaskBackgroundTaskPlugin.swift */,
 				AA1F14662F287420003E3D11 /* App.entitlements */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
@@ -339,8 +333,6 @@
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				d999b869b19ac9fac19b8ed1 /* BaskWeatherPlugin.swift in Sources */,
-				AA1A187A2F2AEEAA00F43A60 /* BaskBackgroundTaskPlugin.swift in Sources */,
-				AA1A187B2F2AEEAA00F43A60 /* BaskBackgroundTaskPlugin.m in Sources */,
 				40606ab891514119861fe1db /* BaskWeatherPlugin.m in Sources */,
 				34a216e771c4a4e665a15860 /* BaskHealthPlugin.swift in Sources */,
 				6fbff39349734e9129429872 /* BaskHealthPlugin.m in Sources */,
@@ -513,7 +505,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0;
+				MARKETING_VERSION = 3.1;
 				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" \"-DDEBUG\"";
 				PRODUCT_BUNDLE_IDENTIFIER = io.bask;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -540,7 +532,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0;
+				MARKETING_VERSION = 3.1;
 				PRODUCT_BUNDLE_IDENTIFIER = io.bask;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";

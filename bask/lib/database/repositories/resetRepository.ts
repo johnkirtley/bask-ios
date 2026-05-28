@@ -5,6 +5,7 @@ import { notificationService } from '../../services/notificationService';
 import { databaseService } from '../connection';
 import { STORAGE_KEYS } from '@/lib/constants';
 import { streakStateRepository } from './streakStateRepository';
+import { leaderboardService } from '../../supabase/leaderboardService';
 
 export const resetRepository = {
   /**
@@ -16,6 +17,12 @@ export const resetRepository = {
     await notificationService.cancelDWindowNotifications();
     await notificationService.cancelStreakRevivalNotifications();
     await streakStateRepository.reset();
+
+    try {
+      await leaderboardService.deleteLeaderboardData();
+    } catch (err) {
+      console.warn('Failed to delete server leaderboard data:', err);
+    }
 
     if (Capacitor.isNativePlatform()) {
       try {

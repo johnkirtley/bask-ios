@@ -38,7 +38,7 @@ export default function EmotionalHookScreen({ onContinue }: EmotionalHookScreenP
             Get your daily vitamin D—naturally
           </h1>
           <p className="text-base text-gray-700">
-            Personalized sun exposure guidance for optimal health, safely
+            Personalized sun exposure guidance for your wellness, safely
           </p>
         </div>
 
