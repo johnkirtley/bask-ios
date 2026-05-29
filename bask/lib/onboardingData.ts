@@ -6,6 +6,7 @@ export interface OnboardingOption {
   label: string;
   description?: string;
   colorHex?: string; // For color swatches
+  icon?: string; // Leading emoji/glyph
 }
 
 // Dual-select section (for skin/eye color screen)
@@ -17,14 +18,12 @@ export interface DualSelectSection {
 
 // Screen 1: Symptoms (multi-select)
 export const symptomOptions: OnboardingOption[] = [
-  { value: 'low-energy', label: 'Low energy / fatigue' },
-  { value: 'poor-sleep', label: 'Poor sleep' },
-  { value: 'mood-dips', label: 'Mood dips' },
-  { value: 'frequent-illness', label: 'Frequent colds or illness' },
-  { value: 'brain-fog', label: 'Brain fog' },
-  { value: 'joint-bone', label: 'Joint or bone discomfort' },
-  { value: 'hormonal', label: 'Hormonal concerns' },
-  { value: 'low-blood-test', label: 'Recent blood test flagged low' },
+  { value: 'low-energy', label: 'Low energy / fatigue', icon: '⚡' },
+  { value: 'poor-sleep', label: 'Poor sleep', icon: '😴' },
+  { value: 'mood-dips', label: 'Mood dips', icon: '🌧️' },
+  { value: 'frequent-illness', label: 'Frequent colds or illness', icon: '🤧' },
+  { value: 'brain-fog', label: 'Brain fog', icon: '🌫️' },
+  { value: 'joint-bone', label: 'Joint or muscle discomfort', icon: '🦴' },
 ];
 
 // Skin & Eye Color (Fitzpatrick Assessment Part 1)
@@ -83,7 +82,7 @@ export const processingSteps: string[] = [
 ];
 
 // Total number of onboarding screens
-export const TOTAL_ONBOARDING_SCREENS = 16;
+export const TOTAL_ONBOARDING_SCREENS = 17;
 
 // Legal links (used by settings page)
 export const legalContent = {

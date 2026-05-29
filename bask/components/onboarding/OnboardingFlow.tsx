@@ -24,7 +24,7 @@ import {
   getSunscreenReflection,
 } from '../../lib/onboarding/scienceFacts';
 import { useOnboardingContext } from '../../contexts/OnboardingContext';
-import ProgressBar from './ProgressBar';
+import { WarmBackground, WarmTopBar } from './warm/atoms';
 import EmotionalHookScreen from './EmotionalHookScreen';
 import SingleSelectScreen from './SingleSelectScreen';
 import MultiSelectScreen from './MultiSelectScreen';
@@ -36,6 +36,7 @@ import MedicalDisclaimerScreen from './MedicalDisclaimerScreen';
 import LocationPermissionScreen from './LocationPermissionScreen';
 import NotificationPermissionScreen from './NotificationPermissionScreen';
 import HealthKitPermissionScreen from './HealthKitPermissionScreen';
+import PlanReadyScreen from './PlanReadyScreen';
 
 const DEFAULT_ANSWERS: OnboardingAnswers = {
   symptoms: [],
@@ -140,7 +141,7 @@ export default function OnboardingFlow() {
         return (
           <MultiSelectScreen
             title="What brought you to Bask?"
-            subtitle="Pick anything that resonates — we'll tailor your plan."
+            subtitle="Pick anything that resonates. We'll tailor your plan."
             options={symptomOptions}
             selectedValues={answers.symptoms}
             onToggle={(value) => handleMultiSelectToggle('symptoms', value)}
@@ -165,6 +166,7 @@ export default function OnboardingFlow() {
         const reflection = getSkinReflection(answers.skinTone);
         return (
           <ReflectionScreen
+            variant="bubble"
             label={reflection?.label}
             body={reflection?.body ?? 'Your skin type helps Bask personalize your vitamin D plan.'}
             onContinue={handleContinue}
@@ -189,10 +191,12 @@ export default function OnboardingFlow() {
         return (
           <SingleSelectScreen
             title="On a typical weekday, how much time do you spend outdoors?"
+            subtitle="Short outdoor time is one of the strongest predictors of low vitamin D."
             options={outdoorTimeOptions}
             selectedValue={answers.outdoorTime}
             onSelect={(value) => handleSingleSelect('outdoorTime', value)}
             onContinue={handleContinue}
+            citationId="deficient"
           />
         );
 
@@ -201,6 +205,7 @@ export default function OnboardingFlow() {
         const reflection = getOutdoorReflection(answers.outdoorTime);
         return (
           <ReflectionScreen
+            variant="insight"
             headline={reflection?.headline}
             body={reflection?.body ?? 'Your outdoor habits help Bask build a plan that fits your lifestyle.'}
             onContinue={handleContinue}
@@ -225,6 +230,7 @@ export default function OnboardingFlow() {
         const reflection = getSunscreenReflection(answers.sunscreenFrequency);
         return (
           <ReflectionScreen
+            variant="spf"
             label={reflection?.label}
             body={reflection?.body ?? 'Your SPF routine helps Bask time your sun exposure correctly.'}
             onContinue={handleContinue}
@@ -321,51 +327,40 @@ export default function OnboardingFlow() {
           />
         );
 
-      // Screen 15: Processing
+      // Screen 15: Generating
       case 15:
         return (
           <ProcessingScreen
             answers={answers}
-            onComplete={handleProcessingComplete}
+            onComplete={handleContinue}
           />
         );
+
+      // Screen 16: Plan ready
+      case 16:
+        return <PlanReadyScreen onComplete={handleProcessingComplete} />;
 
       default:
         return null;
     }
   };
 
-  const showChrome = currentScreen > 0 && currentScreen < TOTAL_ONBOARDING_SCREENS - 1;
+  // Chrome (back + progress) shows only on the 14 question screens (1 to 14).
+  const showChrome = currentScreen >= 1 && currentScreen <= 14;
+  const heroBg = currentScreen === 0 || currentScreen >= TOTAL_ONBOARDING_SCREENS - 2;
+  const frac = currentScreen / 14;
 
   return (
-    <div className={`fixed inset-0 flex flex-col ${showChrome ? 'pt-safe pb-safe' : ''}`}>
+    <div className="fixed inset-0 flex flex-col pt-safe pb-safe">
+      <WarmBackground variant={heroBg ? 'hero' : 'default'} />
+
       {showChrome && (
         <div className="relative z-20">
-          <ProgressBar currentStep={currentScreen - 1} totalSteps={14} />
+          <WarmTopBar frac={frac} onBack={handleBack} show />
         </div>
       )}
 
-      {showChrome && (
-        <div className="px-4 py-2 relative z-20">
-          <button
-            onClick={handleBack}
-            className="p-3 rounded-full bg-white/80 backdrop-blur-sm text-gray-900 active:scale-[0.98] transition-transform duration-200 shadow-sm"
-            aria-label="Go back"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2.5}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-        </div>
-      )}
-
-      <div className="flex-1 overflow-y-auto relative">{renderScreen()}</div>
+      <div className="relative z-10 flex-1 flex flex-col min-h-0">{renderScreen()}</div>
     </div>
   );
 }

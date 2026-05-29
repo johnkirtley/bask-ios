@@ -953,4 +953,37 @@ ion-app {
   .scale-\[1\.02\] {
     transform: none !important;
   }
+
+  /* Warm onboarding animations */
+  .warm-step-in,
+  .warm-bubble-in {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .warm-confetti-bit {
+    display: none !important;
+  }
+}
+
+/* ── Warm onboarding ── */
+@keyframes warm-step-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.warm-step-in {
+  animation: warm-step-in 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.05) both;
+}
+
+@keyframes warm-bubble-in {
+  from { opacity: 0; transform: scale(0.9) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.warm-bubble-in {
+  animation: warm-bubble-in 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+}
+
+@keyframes warm-confetti-fall {
+  from { transform: translateY(-12vh) rotate(0deg); opacity: 1; }
+  to { transform: translateY(112vh) rotate(700deg); opacity: 1; }
 }

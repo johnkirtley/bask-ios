@@ -8,11 +8,19 @@ import { deriveFitzpatrickType, FitzpatrickType } from '../../lib/dEngine';
 import { generateMockSunData } from '../../lib/sunDataUtils';
 import { BaskWeather } from '../../lib/plugins';
 import { requestOnboardingReview } from '../../lib/services/inAppReviewService';
+import Mascot from '../ui/Mascot';
+import {
+  WARM,
+  WarmBody,
+  WarmCTA,
+  WarmHeadline,
+} from './warm/atoms';
+import { CheckIcon } from './warm/icons';
+import { Confetti } from './warm/Confetti';
 
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI'] as const;
 
 type ProcessingRow = {
-  icon: string;
   pendingLabel: string;
   processingMs: number;
   getDoneLabel: (ctx: { fitzpatrickType: FitzpatrickType; usedFallback: boolean }) => string;
@@ -21,33 +29,34 @@ type ProcessingRow = {
 
 const PROCESSING_ROWS: ProcessingRow[] = [
   {
-    icon: '👤',
-    pendingLabel: 'Analyzing your skin type...',
+    pendingLabel: 'Calibrating your skin type…',
     processingMs: 650,
-    getDoneLabel: ({ fitzpatrickType }) =>
-      `${formatSkinTypeLabel(fitzpatrickType)} identified`,
+    getDoneLabel: ({ fitzpatrickType }) => `${formatSkinTypeLabel(fitzpatrickType)} calibrated`,
     isDone: () => true,
   },
   {
-    icon: '☀️',
-    pendingLabel: 'Checking local UV conditions...',
+    pendingLabel: 'Syncing local UV…',
     processingMs: 1500,
     getDoneLabel: ({ usedFallback }) =>
-      usedFallback ? 'Estimated UV conditions loaded' : 'Local UV conditions synced',
+      usedFallback ? 'Estimated UV synced' : 'Local UV synced',
     isDone: ({ isReady }) => isReady,
   },
   {
-    icon: '⏱️',
-    pendingLabel: 'Calculating sunburn threshold...',
+    pendingLabel: 'Calculating your burn limit…',
     processingMs: 900,
-    getDoneLabel: () => 'Sunburn threshold calculated',
+    getDoneLabel: () => 'Burn limit calculated',
     isDone: ({ isReady }) => isReady,
   },
   {
-    icon: '⏰',
-    pendingLabel: 'Estimating daily Vitamin D window...',
+    pendingLabel: 'Mapping your D-Window…',
     processingMs: 1200,
-    getDoneLabel: () => 'Daily Vitamin D plan ready',
+    getDoneLabel: () => 'Your D-Window mapped',
+    isDone: ({ isReady }) => isReady,
+  },
+  {
+    pendingLabel: 'Finalizing your daily plan…',
+    processingMs: 700,
+    getDoneLabel: () => 'Daily plan ready',
     isDone: ({ isReady }) => isReady,
   },
 ];
@@ -75,10 +84,7 @@ interface ProcessingScreenProps {
   onComplete: () => void;
 }
 
-export default function ProcessingScreen({
-  answers,
-  onComplete,
-}: ProcessingScreenProps) {
+export default function ProcessingScreen({ answers, onComplete }: ProcessingScreenProps) {
   const [isReady, setIsReady] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [doneStep, setDoneStep] = useState(0);
@@ -138,10 +144,7 @@ export default function ProcessingScreen({
 
         while (!cancelled) {
           const elapsed = Date.now() - start;
-          if (
-            elapsed >= row.processingMs &&
-            row.isDone({ isReady: isReadyRef.current })
-          ) {
+          if (elapsed >= row.processingMs && row.isDone({ isReady: isReadyRef.current })) {
             setDoneStep(i + 1);
             break;
           }
@@ -164,7 +167,6 @@ export default function ProcessingScreen({
   useEffect(() => {
     if (!showResults || reviewTriggeredRef.current) return;
     reviewTriggeredRef.current = true;
-
     requestOnboardingReview().finally(() => setReviewRequested(true));
   }, [showResults]);
 
@@ -177,30 +179,34 @@ export default function ProcessingScreen({
     onComplete();
   };
 
-  const progressPercent = Math.min(
-    Math.round((currentStep / PROCESSING_ROWS.length) * 100),
-    100,
-  );
+  const allDone = showResults && reviewRequested;
 
   return (
-    <div className='flex flex-col flex-1 items-center justify-center px-6 relative overflow-hidden'>
-      {/* Atmospheric gradient background */}
-      <div
-        className='fixed inset-0 pointer-events-none'
-        style={{
-          background:
-            'linear-gradient(180deg, #F5F5F5 0%, #FAFAFA 50%, #FFFFFF 100%)',
-        }}
-      />
+    <WarmBody
+      footer={
+        <WarmCTA onClick={handleContinue} disabled={!allDone}>
+          {allDone ? 'See my plan' : 'One sec…'}
+        </WarmCTA>
+      }
+    >
+      {showResults && <Confetti />}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <Mascot size={92} mood={allDone ? 'excited' : 'happy'} floating />
+        <div style={{ marginTop: 14, textAlign: 'center' }}>
+          <WarmHeadline size={25}>
+            {allDone ? 'All set! Your plan is ready' : 'Building your sun-safety plan…'}
+          </WarmHeadline>
+        </div>
 
-      <div className='relative z-10 w-full max-w-md'>
-        {/* Title */}
-        <h2 className='text-2xl font-bold text-center text-gray-900 mb-4 mt-[5rem]'>
-          Personalizing your sun safety experience...
-        </h2>
-
-        {/* Results list */}
-        <div className='space-y-4 mb-8'>
+        <div
+          style={{
+            marginTop: 22,
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 10,
+          }}
+        >
           {PROCESSING_ROWS.map((row, index) => {
             const isRevealed = currentStep > index;
             const isDone = doneStep > index;
@@ -211,73 +217,42 @@ export default function ProcessingScreen({
             return (
               <div
                 key={index}
-                className={`
-                  flex items-center gap-4 py-4 px-5 rounded-xl border-b border-gray-200
-                  transition-all duration-500
-                  ${
-                    isRevealed
-                      ? 'opacity-100 translate-y-0'
-                      : 'opacity-0 translate-y-4'
-                  }
-                `}>
-                <span className='text-2xl'>{row.icon}</span>
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 13,
+                  padding: '14px 16px',
+                  borderRadius: 18,
+                  background: WARM.card,
+                  boxShadow: '0 4px 16px rgba(40,30,10,0.06)',
+                  opacity: isRevealed ? 1 : 0.45,
+                  transition: 'opacity .4s',
+                }}
+              >
                 <span
-                  className={`flex-1 text-base font-medium transition-colors duration-300 ${
-                    isDone
-                      ? 'text-gray-900'
-                      : isRevealed
-                        ? 'text-gray-500 animate-pulse'
-                        : 'text-gray-500'
-                  }`}>
+                  className={isDone ? 'check-animation' : undefined}
+                  style={{
+                    width: 26,
+                    height: 26,
+                    borderRadius: 13,
+                    flexShrink: 0,
+                    background: isDone ? WARM.good : 'transparent',
+                    border: isDone ? 'none' : `2px solid ${WARM.ink}22`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {isDone && <CheckIcon color="#fff" size={15} />}
+                </span>
+                <span style={{ flex: 1, fontWeight: 800, fontSize: 15, color: WARM.ink }}>
                   {label}
                 </span>
-                {isDone && (
-                  <div className='w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center animate-in fade-in zoom-in duration-300'>
-                    <svg
-                      className='w-4 h-4 text-white'
-                      fill='none'
-                      viewBox='0 0 24 24'
-                      stroke='currentColor'
-                      strokeWidth={3}>
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        d='M5 13l4 4L19 7'
-                      />
-                    </svg>
-                  </div>
-                )}
               </div>
             );
           })}
         </div>
-
-        {/* Progress indicator */}
-        {!showResults && (
-          <div className='flex items-center justify-center gap-2 mb-8'>
-            <div className='text-sm text-gray-600'>
-              {currentStep === 0 && 'Analyzing your skin type...'}
-              {currentStep === 1 && 'Calculating Vitamin D absorption...'}
-              {currentStep === 2 && 'Checking UV conditions...'}
-              {currentStep === 3 && 'Finalizing your plan...'}
-            </div>
-            <div className='text-sm font-semibold text-gray-900'>
-              {progressPercent}%
-            </div>
-          </div>
-        )}
-
-        {/* Continue button (only show when complete) */}
-        {showResults && reviewRequested && (
-          <div className='mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500'>
-            <button
-              onClick={handleContinue}
-              className='w-full py-4 rounded-full bg-black text-white text-[17px] font-semibold active:scale-[0.98] transition-all duration-200 shadow-lg'>
-              Continue
-            </button>
-          </div>
-        )}
       </div>
-    </div>
+    </WarmBody>
   );
 }
