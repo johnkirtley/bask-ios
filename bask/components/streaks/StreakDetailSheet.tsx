@@ -47,7 +47,7 @@ export default function StreakDetailSheet({
                   {currentStreak}
                 </div>
                 <p className='text-sm font-medium text-text-secondary'>
-                  day{currentStreak === 1 ? '' : 's'} current
+                  day{currentStreak === 1 ? '' : 's'}
                 </p>
               </div>
             </div>

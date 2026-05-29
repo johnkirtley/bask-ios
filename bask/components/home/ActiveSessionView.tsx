@@ -133,16 +133,8 @@ export default function ActiveSessionView({
 
         {/* Session Stats */}
         <div className='px-6'>
-          {/* Three-up stat row */}
-          <div className='grid grid-cols-3 gap-3'>
-            <div className='bg-white rounded-card p-4 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_6px_24px_rgba(40,30,10,0.06)] border-l-4 border-[#1AA1A2]'>
-              <span className='text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em]'>
-                Elapsed
-              </span>
-              <div className='text-[24px] font-black text-text-primary tabular-nums tracking-[-0.02em] mt-1'>
-                {formattedTime}
-              </div>
-            </div>
+          {/* Stat row */}
+          <div className='grid grid-cols-2 gap-3'>
             <div className='bg-white rounded-card p-4 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_6px_24px_rgba(40,30,10,0.06)] border-l-4 border-[#FFC93C]'>
               <span className='text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em]'>
                 UV Now

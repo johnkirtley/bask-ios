@@ -2,20 +2,20 @@
 
 import { useState } from 'react';
 import { IonToggle, IonAlert, IonModal, IonToast } from '@ionic/react';
+import { Browser } from '@capacitor/browser';
+import { Capacitor } from '@capacitor/core';
 import { useLeaderboard } from '../../hooks/useLeaderboard';
 import { LEADERBOARD_COUNTRIES } from '../../lib/leaderboard/countries';
 import { isAnonymousNameTakenError } from '../../lib/leaderboard/nameErrors';
 import LeaderboardLocationModal from './LeaderboardLocationModal';
+
+const LEADERBOARD_URL = 'https://getbask.app/leaderboard';
 
 const DATA_DISCLOSURE = [
   { sent: 'Random public ID + write token (not linked to Apple ID)', never: 'Name, email, Apple ID' },
   { sent: 'Your chosen anonymous name', never: 'Precise GPS coordinates' },
   { sent: 'Sun IU + duration per completed session', never: 'Skin type, age, weight, blood tests' },
   { sent: 'Optional country/region/city (if you choose)', never: 'Supplements, cofactors, HealthKit data' },
-  {
-    sent: 'When off: we stop uploading and hide you from the public board (profile kept for rejoin)',
-    never: 'Delete: permanently removes your server data',
-  },
 ];
 
 export default function LeaderboardSettings() {
@@ -41,6 +41,14 @@ export default function LeaderboardSettings() {
   const [nameError, setNameError] = useState<string | null>(null);
   const [pendingName, setPendingName] = useState<string | null>(null);
   const [shuffling, setShuffling] = useState(false);
+
+  const handleOpenLeaderboard = async () => {
+    if (Capacitor.isNativePlatform()) {
+      await Browser.open({ url: LEADERBOARD_URL });
+    } else {
+      window.open(LEADERBOARD_URL, '_blank');
+    }
+  };
 
   const handleToggle = async () => {
     if (isOptedIn) {
@@ -135,6 +143,24 @@ export default function LeaderboardSettings() {
             What we collect & don&apos;t collect
           </button>
         </div>
+
+        <button
+          type='button'
+          onClick={() => void handleOpenLeaderboard()}
+          className='w-full p-4 flex items-center justify-between border-b border-black/5 text-left active:bg-black/5 transition-all'>
+          <span className='text-text-primary'>View the leaderboard</span>
+          <svg
+            xmlns='http://www.w3.org/2000/svg'
+            viewBox='0 0 24 24'
+            fill='none'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+            className='w-4 h-4 text-text-secondary'>
+            <path d='m9 18 6-6-6-6' />
+          </svg>
+        </button>
 
         {isOptedIn && anonymousName && (
           <>
@@ -246,6 +272,16 @@ export default function LeaderboardSettings() {
                   <div className='bg-white/80 p-2 text-text-secondary'>{row.never}</div>
                 </div>
               ))}
+            </div>
+
+            <div className='mt-4 space-y-2'>
+              <p className='text-xs text-text-secondary'>
+                When off: we stop uploading and hide you from the public board (profile kept for
+                rejoin).
+              </p>
+              <p className='text-xs text-text-secondary'>
+                Delete: permanently removes your server data.
+              </p>
             </div>
           </div>
 
