@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { BaskHealth } from '../lib/plugins/baskHealth';
-import { databaseService } from '../lib/database/connection';
 import { sessionsRepository } from '../lib/database/repositories/sessionsRepository';
+import { isHealthKitSyncEnabled } from '../lib/healthKitSettings';
 import { calculateVitaminD } from '../lib/dEngine';
 import { formatLocalDateKey } from '../lib/dateUtils';
 
@@ -47,30 +47,27 @@ export function useHealthKitSync(userProfile?: {
   // Check if HealthKit sync is enabled
   useEffect(() => {
     async function checkEnabled() {
-      if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'ios') {
-        return;
-      }
-
-      try {
-        const db = await databaseService.getConnection();
-        const result = await db.query(
-          "SELECT value FROM settings WHERE key = 'healthkit_enabled'",
-          []
-        );
-        const enabled = result.values?.[0]?.value === 'true';
-        setState((prev) => ({ ...prev, isEnabled: enabled }));
-      } catch (error) {
-        console.error('Failed to check HealthKit enabled state:', error);
-      }
+      const enabled = await isHealthKitSyncEnabled();
+      setState((prev) => ({ ...prev, isEnabled: enabled }));
     }
 
     checkEnabled();
   }, []);
 
+  const lastUvRef = useRef<number | undefined>(undefined);
+
   // Sync HealthKit data
   const syncHealthKitData = useCallback(
     async (averageUV?: number) => {
       if (!state.isEnabled || !fitzpatrickType) {
+        return;
+      }
+
+      if (averageUV !== undefined) {
+        lastUvRef.current = averageUV;
+      }
+      const uvForCalculation = averageUV ?? lastUvRef.current;
+      if (uvForCalculation === undefined) {
         return;
       }
 
@@ -127,8 +124,8 @@ export function useHealthKitSync(userProfile?: {
         // but this is an acceptable tradeoff for simplicity.
         const passiveDaylightMinutes = Math.max(0, daylightMinutes - manualSessionMinutes);
 
-        // Estimate IU from passive daylight using average UV (or fallback to 5 if not provided)
-        const estimatedUV = averageUV ?? 5;
+        // Estimate IU from passive daylight using representative daily UV (from caller)
+        const estimatedUV = uvForCalculation;
         let estimatedIU = calculateVitaminD(
           estimatedUV,
           passiveDaylightMinutes,
@@ -198,16 +195,13 @@ export function useHealthKitSync(userProfile?: {
     async function setupListener() {
       const listener = await App.addListener('appStateChange', ({ isActive }) => {
         if (isActive) {
-          syncHealthKitData();
+          syncHealthKitData(lastUvRef.current);
         }
       });
       cleanup = () => listener.remove();
     }
 
     setupListener();
-
-    // Initial sync on mount
-    syncHealthKitData();
 
     return () => {
       if (cleanup) cleanup();

@@ -192,10 +192,13 @@ export default function SupplementCard({
       // Log the supplement to database
       await supplementsRepository.create(dosage);
 
-      // Write to HealthKit (iOS only)
+      // Write to HealthKit when user enabled Apple Health sync (iOS only)
       if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
         try {
-          await BaskHealth.writeDietaryVitaminD({ dosageIU: dosage });
+          const { isHealthKitSyncEnabled } = await import('../../lib/healthKitSettings');
+          if (await isHealthKitSyncEnabled()) {
+            await BaskHealth.writeDietaryVitaminD({ dosageIU: dosage });
+          }
         } catch (healthKitError) {
           // Don't block supplement logging if HealthKit write fails
           console.warn('Failed to write to HealthKit:', healthKitError);
