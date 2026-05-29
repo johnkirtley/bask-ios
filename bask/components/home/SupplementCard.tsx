@@ -14,6 +14,11 @@ interface SupplementCardProps {
   onSupplementLogged?: () => void;
   todaySunIU?: number;
   uvIndex?: number;
+  /**
+   * Whether the D-Window forecast says synthesis is possible right now.
+   * Source of truth so this card stays consistent with the forecast card.
+   */
+  synthesisActiveNow?: boolean;
   vitaminDGoal?: number;
   bloodTestCalibration?: BloodTestCalibration | null;
 }
@@ -31,6 +36,7 @@ export default function SupplementCard({
   onSupplementLogged,
   todaySunIU = 0,
   uvIndex,
+  synthesisActiveNow,
   vitaminDGoal = 5000,
   bloodTestCalibration = null,
 }: SupplementCardProps) {
@@ -66,20 +72,22 @@ export default function SupplementCard({
       };
     }
 
-    if (uvIndex < 3) {
+    // Defer to the D-Window forecast for whether synthesis is possible right now.
+    // Only flag "too weak" when the forecast agrees (or hasn't loaded yet).
+    if (uvIndex < 3 && synthesisActiveNow !== true) {
       if (
         bloodTestCalibration?.status === 'deficient' ||
         bloodTestCalibration?.status === 'insufficient'
       ) {
         return {
-          message: `Sun is too weak for vitamin D today (UV ${uvIndex.toFixed(
+          message: `Sun is too weak for vitamin D right now (UV ${uvIndex.toFixed(
             1,
           )}). With your recent lab at ${bloodTestCalibration.ngMl} ng/mL, you might consider logging a supplement.`,
           type: 'warning',
         };
       }
       return {
-        message: `Sun is too weak for vitamin D today (UV ${uvIndex.toFixed(
+        message: `Sun is too weak for vitamin D right now (UV ${uvIndex.toFixed(
           1,
         )}). Log any supplement you take.`,
         type: 'info',

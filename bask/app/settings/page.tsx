@@ -460,6 +460,14 @@ export default function SettingsPage() {
     setBloodTestDate(data.bloodTestDate);
   };
 
+  const handleRemoveBloodTest = async () => {
+    await userProfileRepository.clearBloodTest();
+
+    setBloodTestValue(null);
+    setBloodTestUnit('ng/mL');
+    setBloodTestDate(null);
+  };
+
   return (
     <AtmosphericBackground>
       <div className='min-h-screen pb-20'>
@@ -1031,6 +1039,7 @@ export default function SettingsPage() {
           currentUnit={bloodTestUnit}
           currentDate={bloodTestDate}
           onSave={handleSaveBloodTest}
+          onRemove={handleRemoveBloodTest}
         />
       </div>
     </AtmosphericBackground>

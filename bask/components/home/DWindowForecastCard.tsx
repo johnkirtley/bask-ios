@@ -481,15 +481,17 @@ function SynthesisOnlyDisplay({
 
   return (
     <div className='rounded-xl p-3 bg-black/[0.03] border border-black/5'>
-      <div className='flex items-center gap-1.5 mb-2'>
-        <span className='text-sm font-medium text-text-primary'>Today</span>
-        {isActive && (
+      {isActive && (
+        <div className='flex items-center gap-1.5 mb-2'>
           <span
             className='w-2 h-2 rounded-full bg-green-400 animate-pulse-dwindow'
             title='D synthesis is currently possible'
           />
-        )}
-      </div>
+          <span className='text-xs font-medium text-text-secondary'>
+            Active now
+          </span>
+        </div>
+      )}
       <SynthesisRow message={message} />
       <p className='text-xs text-text-secondary'>
         {noWindowReason === 'low-exposure'
@@ -518,22 +520,17 @@ function WindowDisplay({
   return (
     <div className='backdrop-blur-sm bg-vitality-mint/[0.12] rounded-xl p-3.5 border border-black/5 relative overflow-hidden'>
       <div className='relative'>
-        {/* Header */}
+        {/* Header — day label comes from the section heading above */}
         <div className='flex items-center justify-between mb-3'>
-          <div className='flex items-center gap-1.5'>
-            <span className='text-text-primary font-medium text-sm whitespace-nowrap'>
-              {window.dayLabel}
-            </span>
-            {isActive && (
-              <span
-                className='w-2 h-2 rounded-full bg-green-400 animate-pulse-dwindow'
-                title='Window is currently active'
-              />
-            )}
-          </div>
-          <span className='text-xs text-text-secondary truncate ml-2'>
+          <span className='text-xs text-text-secondary truncate'>
             {window.reason}
           </span>
+          {isActive && (
+            <span
+              className='w-2 h-2 rounded-full bg-green-400 animate-pulse-dwindow ml-2 flex-shrink-0'
+              title='Window is currently active'
+            />
+          )}
         </div>
 
         {/* Best window - Hero Element */}

@@ -41,6 +41,7 @@ import {
   calculateOptimalWindows,
   DWindowForecast,
   getSynthesisStatSubtext,
+  isInSynthesisWindow,
 } from '../lib/dWindowForecast';
 import { BaskWeather } from '../lib/plugins';
 import type { HourlyForecastItem } from '../lib/plugins/baskWeather';
@@ -388,6 +389,13 @@ export default function Home() {
     now,
   );
 
+  // D-Window forecast is the source of truth for whether synthesis is possible
+  // right now, so the supplement card stays consistent with the forecast card.
+  const synthesisActiveNow = isInSynthesisWindow(
+    dWindowForecast?.todaySynthesis ?? null,
+    now,
+  );
+
   const timeToGoalSubtext = (() => {
     if (remainingIU <= 0) return "Today's goal reached";
 
@@ -399,6 +407,14 @@ export default function Home() {
       const goalLabel = formatDurationMinutes(timeToGoal);
       const burnLabel = formatTimeToBurn(timeToBurnMinutes);
       return `Goal may take ~${goalLabel} today. Limit each sun session to ${burnLabel} before taking a break.`;
+    }
+
+    // Shadow rule: no vitamin D synthesis below UV 3, so the estimate is blank.
+    // Explain that the "--" is from weak sun, not the lab value.
+    if (!isFinite(timeToGoal) && effectiveUV < 3) {
+      return labGuidanceHint
+        ? `UV is too low for vitamin D right now — your skin needs UV 3+ (usually midday). ${labGuidanceHint}`
+        : 'UV is too low for vitamin D right now — your skin needs UV 3+, usually around midday.';
     }
 
     if (
@@ -616,6 +632,7 @@ export default function Home() {
               onSupplementLogged={() => handleProgressChanged('log')}
               todaySunIU={todaySunIU}
               uvIndex={isLoading ? undefined : effectiveUV}
+              synthesisActiveNow={synthesisActiveNow}
               vitaminDGoal={sunData.vitaminDGoal}
               bloodTestCalibration={bloodTestCalibration}
             />

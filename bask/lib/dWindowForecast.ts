@@ -725,8 +725,13 @@ function generateRecommendations(
     });
   }
 
-  // Efficiency warning — skip when the low-UV action card already covers it
-  if (efficiency === 'poor' && !isLowUvScenario) {
+  // Efficiency warning — skip when the low-UV action card already covers it,
+  // and skip when exposure (not UV) is the limiter: 'poor' efficiency is then
+  // just an artifact of windows being null, and the exposure action covers it.
+  const isExposureLimited =
+    todayNoWindowReason === 'low-exposure' ||
+    noWindowReason === 'low-exposure';
+  if (efficiency === 'poor' && !isLowUvScenario && !isExposureLimited) {
     recommendations.push({
       type: 'alert',
       priority: 4,

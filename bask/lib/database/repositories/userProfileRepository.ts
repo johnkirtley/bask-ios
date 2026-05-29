@@ -107,6 +107,22 @@ export const userProfileRepository = {
   },
 
   /**
+   * Remove a previously entered vitamin D blood test.
+   */
+  async clearBloodTest(): Promise<void> {
+    const db = await databaseService.getConnection();
+    await db.run(
+      `UPDATE bask_user_profile SET
+        blood_test_value = NULL,
+        blood_test_unit = NULL,
+        blood_test_date = NULL,
+        blood_test_source = NULL,
+        updated_at = datetime('now')
+      WHERE id = 1`,
+    );
+  },
+
+  /**
    * Clear biological fields re-collected during onboarding.
    */
   async resetBiologicalFields(): Promise<void> {

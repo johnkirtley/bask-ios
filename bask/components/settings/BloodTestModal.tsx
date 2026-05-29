@@ -15,6 +15,7 @@ interface BloodTestModalProps {
     bloodTestUnit: 'ng/mL' | 'nmol/L';
     bloodTestDate: string;
   }) => Promise<void>;
+  onRemove?: () => Promise<void>;
 }
 
 export default function BloodTestModal({
@@ -24,6 +25,7 @@ export default function BloodTestModal({
   currentUnit,
   currentDate,
   onSave,
+  onRemove,
 }: BloodTestModalProps) {
   const [value, setValue] = useState<string>(currentValue?.toString() || '');
   const [unit, setUnit] = useState<'ng/mL' | 'nmol/L'>(currentUnit || 'ng/mL');
@@ -31,6 +33,7 @@ export default function BloodTestModal({
     currentDate || new Date().toISOString().split('T')[0],
   );
   const [saving, setSaving] = useState(false);
+  const [removing, setRemoving] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -64,7 +67,25 @@ export default function BloodTestModal({
     }
   };
 
+  const handleRemove = async () => {
+    if (!onRemove) return;
+
+    setRemoving(true);
+    try {
+      await onRemove();
+
+      try {
+        await Haptics.impact({ style: ImpactStyle.Medium });
+      } catch {}
+
+      onClose();
+    } finally {
+      setRemoving(false);
+    }
+  };
+
   const canSave = value && parseFloat(value) > 0;
+  const canRemove = onRemove && currentValue !== null;
 
   return (
     <IonModal
@@ -155,6 +176,15 @@ export default function BloodTestModal({
             <p className="text-xs text-text-secondary">
               💡 Optimal range: 40-60 ng/mL (100-150 nmol/L)
             </p>
+
+            {canRemove && (
+              <button
+                onClick={handleRemove}
+                disabled={removing || saving}
+                className="w-full py-3 px-4 rounded-xl bg-transparent text-red-500 font-medium hover:bg-red-500/10 transition-colors disabled:opacity-50">
+                {removing ? 'Removing...' : 'Remove blood test'}
+              </button>
+            )}
           </div>
         </div>
 
