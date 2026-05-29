@@ -44,6 +44,7 @@ import {
 } from '../lib/dWindowForecast';
 import { BaskWeather } from '../lib/plugins';
 import type { HourlyForecastItem } from '../lib/plugins/baskWeather';
+import { getRepresentativeUvForPassiveSync } from '../lib/healthKitUvUtils';
 import { handleLocationPermissionAction } from '../lib/locationPermissionUtils';
 import AtmosphericBackground from '../components/home/AtmosphericBackground';
 import BaskRing from '../components/home/BaskRing';
@@ -177,6 +178,7 @@ export default function Home() {
   // D-Window Forecast state
   const [dWindowForecast, setDWindowForecast] =
     useState<DWindowForecast | null>(null);
+  const [hourlyForecast, setHourlyForecast] = useState<HourlyForecastItem[]>([]);
   const [isRefreshingForecast, setIsRefreshingForecast] = useState(false);
   const [now, setNow] = useState(() => new Date());
 
@@ -234,9 +236,11 @@ export default function Home() {
       // during local development (native uses real WeatherKit data below).
       try {
         const exposurePercent = 100 - selectedPreset.coveragePercent;
+        const mockHourly = buildMockHourlyForecast();
+        setHourlyForecast(mockHourly);
         setDWindowForecast(
           calculateOptimalWindows(
-            buildMockHourlyForecast(),
+            mockHourly,
             fitzpatrickType,
             exposurePercent,
             sunData.vitaminDGoal,
@@ -260,6 +264,7 @@ export default function Home() {
 
     try {
       const hourlyData = await BaskWeather.getHourlyForecast();
+      setHourlyForecast(hourlyData.forecast);
       const exposurePercent = 100 - selectedPreset.coveragePercent;
       const forecast = calculateOptimalWindows(
         hourlyData.forecast,
@@ -329,11 +334,16 @@ export default function Home() {
 
   const { sync: syncHealthKit, isEnabled: healthKitEnabled } = healthKitSync;
 
-  // Re-sync HealthKit passive IU when live UV is available (replaces fallback UV=5)
+  const passiveSyncUv = useMemo(
+    () => getRepresentativeUvForPassiveSync(effectiveUV, hourlyForecast),
+    [effectiveUV, hourlyForecast],
+  );
+
+  // Re-sync HealthKit when premium + enabled; uses daily forecast UV, not only current moment
   useEffect(() => {
-    if (!isPremium || !healthKitEnabled || effectiveUV <= 0) return;
-    syncHealthKit(effectiveUV);
-  }, [isPremium, healthKitEnabled, syncHealthKit, effectiveUV]);
+    if (!isPremium || !healthKitEnabled) return;
+    syncHealthKit(passiveSyncUv);
+  }, [isPremium, healthKitEnabled, syncHealthKit, passiveSyncUv]);
 
   // Calculate time to goal using D-Engine
   const remainingIU = Math.max(

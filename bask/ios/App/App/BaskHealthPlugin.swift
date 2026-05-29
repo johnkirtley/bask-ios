@@ -5,11 +5,28 @@ import HealthKit
 @objc(BaskHealthPlugin)
 public class BaskHealthPlugin: CAPPlugin {
     private var healthStore: HKHealthStore?
-    private lazy var dateFormatter: ISO8601DateFormatter = {
+    private lazy var dateFormatterWithFractionalSeconds: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter
     }()
+
+    private lazy var dateFormatterInternetDateTime: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
+
+    private func parseISO8601Date(_ string: String) -> Date? {
+        if let date = dateFormatterWithFractionalSeconds.date(from: string) {
+            return date
+        }
+        return dateFormatterInternetDateTime.date(from: string)
+    }
+
+    private func formatISO8601Date(_ date: Date) -> String {
+        return dateFormatterWithFractionalSeconds.string(from: date)
+    }
 
     public override func load() {
         // Initialize HealthKit store
@@ -90,20 +107,20 @@ public class BaskHealthPlugin: CAPPlugin {
         let startDate: Date
         let endDate: Date
 
-        if let startString = startDateString, let start = self.dateFormatter.date(from: startString) {
+        if let startString = startDateString, let start = self.parseISO8601Date(startString) {
             startDate = start
         } else {
             startDate = calendar.startOfDay(for: Date())
         }
 
-        if let endString = endDateString, let end = self.dateFormatter.date(from: endString) {
+        if let endString = endDateString, let end = self.parseISO8601Date(endString) {
             endDate = end
         } else {
-            endDate = Date()
+            endDate = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: Date())) ?? Date()
         }
 
-        // Create a query to get cumulative sum
-        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
+        // Inclusive overlap with the requested window (full local calendar day from JS)
+        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: [])
 
         let query = HKStatisticsQuery(
             quantityType: timeInDaylightType,
@@ -115,8 +132,8 @@ public class BaskHealthPlugin: CAPPlugin {
                 if error.localizedDescription.contains("No data available") {
                     call.resolve([
                         "minutes": 0,
-                        "startDate": self.dateFormatter.string(from: startDate),
-                        "endDate": self.dateFormatter.string(from: endDate)
+                        "startDate": self.formatISO8601Date(startDate),
+                        "endDate": self.formatISO8601Date(endDate)
                     ])
                     return
                 }
@@ -135,8 +152,8 @@ public class BaskHealthPlugin: CAPPlugin {
 
             call.resolve([
                 "minutes": minutes,
-                "startDate": self.dateFormatter.string(from: startDate),
-                "endDate": self.dateFormatter.string(from: endDate)
+                "startDate": self.formatISO8601Date(startDate),
+                "endDate": self.formatISO8601Date(endDate)
             ])
         }
 
@@ -164,20 +181,19 @@ public class BaskHealthPlugin: CAPPlugin {
         let startDate: Date
         let endDate: Date
 
-        if let startString = startDateString, let start = self.dateFormatter.date(from: startString) {
+        if let startString = startDateString, let start = self.parseISO8601Date(startString) {
             startDate = start
         } else {
             startDate = calendar.startOfDay(for: Date())
         }
 
-        if let endString = endDateString, let end = self.dateFormatter.date(from: endString) {
+        if let endString = endDateString, let end = self.parseISO8601Date(endString) {
             endDate = end
         } else {
-            endDate = Date()
+            endDate = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: Date())) ?? Date()
         }
 
-        // Create a query to get cumulative sum
-        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
+        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: [])
 
         let query = HKStatisticsQuery(
             quantityType: vitaminDType,
@@ -203,8 +219,8 @@ public class BaskHealthPlugin: CAPPlugin {
 
             call.resolve([
                 "iu": iu,
-                "startDate": self.dateFormatter.string(from: startDate),
-                "endDate": self.dateFormatter.string(from: endDate)
+                "startDate": self.formatISO8601Date(startDate),
+                "endDate": self.formatISO8601Date(endDate)
             ])
         }
 
@@ -232,7 +248,7 @@ public class BaskHealthPlugin: CAPPlugin {
         // Get date from parameter or use current time
         let dateString = call.getString("date")
         let date: Date
-        if let dateStr = dateString, let parsedDate = self.dateFormatter.date(from: dateStr) {
+        if let dateStr = dateString, let parsedDate = self.parseISO8601Date(dateStr) {
             date = parsedDate
         } else {
             date = Date()
@@ -260,7 +276,7 @@ public class BaskHealthPlugin: CAPPlugin {
             call.resolve([
                 "success": success,
                 "iu": dosageIU,
-                "date": self.dateFormatter.string(from: date)
+                "date": self.formatISO8601Date(date)
             ])
         }
     }

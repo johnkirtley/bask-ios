@@ -369,14 +369,17 @@ export function useBaskSession(
           .catch(() => {});
       }
 
-      // Auto-sync vitamin D to Apple Health
+      // Auto-sync vitamin D to Apple Health when user enabled sync in Settings
       if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios' && state.currentIU > 0) {
         try {
-          const { BaskHealth } = await import('../lib/plugins/baskHealth');
-          await BaskHealth.writeDietaryVitaminD({
-            dosageIU: state.currentIU,
-            date: new Date().toISOString(),
-          });
+          const { isHealthKitSyncEnabled } = await import('../lib/healthKitSettings');
+          if (await isHealthKitSyncEnabled()) {
+            const { BaskHealth } = await import('../lib/plugins/baskHealth');
+            await BaskHealth.writeDietaryVitaminD({
+              dosageIU: state.currentIU,
+              date: new Date().toISOString(),
+            });
+          }
         } catch (error) {
           console.warn('Failed to sync vitamin D to HealthKit:', error);
         }

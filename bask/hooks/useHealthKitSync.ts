@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { BaskHealth } from '../lib/plugins/baskHealth';
@@ -67,10 +67,20 @@ export function useHealthKitSync(userProfile?: {
     checkEnabled();
   }, []);
 
+  const lastUvRef = useRef<number | undefined>(undefined);
+
   // Sync HealthKit data
   const syncHealthKitData = useCallback(
     async (averageUV?: number) => {
       if (!state.isEnabled || !fitzpatrickType) {
+        return;
+      }
+
+      if (averageUV !== undefined) {
+        lastUvRef.current = averageUV;
+      }
+      const uvForCalculation = averageUV ?? lastUvRef.current;
+      if (uvForCalculation === undefined) {
         return;
       }
 
@@ -127,8 +137,8 @@ export function useHealthKitSync(userProfile?: {
         // but this is an acceptable tradeoff for simplicity.
         const passiveDaylightMinutes = Math.max(0, daylightMinutes - manualSessionMinutes);
 
-        // Estimate IU from passive daylight using average UV (or fallback to 5 if not provided)
-        const estimatedUV = averageUV ?? 5;
+        // Estimate IU from passive daylight using representative daily UV (from caller)
+        const estimatedUV = uvForCalculation;
         let estimatedIU = calculateVitaminD(
           estimatedUV,
           passiveDaylightMinutes,
@@ -198,16 +208,13 @@ export function useHealthKitSync(userProfile?: {
     async function setupListener() {
       const listener = await App.addListener('appStateChange', ({ isActive }) => {
         if (isActive) {
-          syncHealthKitData();
+          syncHealthKitData(lastUvRef.current);
         }
       });
       cleanup = () => listener.remove();
     }
 
     setupListener();
-
-    // Initial sync on mount
-    syncHealthKitData();
 
     return () => {
       if (cleanup) cleanup();

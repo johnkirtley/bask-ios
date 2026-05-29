@@ -138,8 +138,7 @@ export const sessionsRepository = {
   },
 
   /**
-   * Upsert a HealthKit-sourced session for a specific day
-   * Only updates if new IU value is >= existing (avoid overwriting with incomplete data)
+   * Upsert a HealthKit-sourced session for a specific day (always reflects latest sync).
    */
   async upsertHealthKitSession(data: {
     date: string; // YYYY-MM-DD
