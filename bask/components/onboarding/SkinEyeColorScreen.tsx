@@ -18,14 +18,13 @@ interface SkinEyeColorScreenProps {
   onContinue: () => void;
 }
 
-// Fitzpatrick type mapping with descriptive labels
 const fitzpatrickTypes = [
-  { value: 'very-fair', roman: 'I', subtitle: 'Pale or freckled', colorHex: '#F9EBDD' },
-  { value: 'fair', roman: 'II', subtitle: 'White or fair', colorHex: '#EFD3B1' },
-  { value: 'medium', roman: 'III', subtitle: 'Light-medium', colorHex: '#D5A77F' },
-  { value: 'olive', roman: 'IV', subtitle: 'Olive or light brown', colorHex: '#9B6338' },
-  { value: 'brown', roman: 'V', subtitle: 'Brown', colorHex: '#6B3E26' },
-  { value: 'dark-brown', roman: 'VI', subtitle: 'Deeply pigmented', colorHex: '#3C2016' },
+  { value: 'very-fair', roman: 'I', colorHex: '#F9EBDD' },
+  { value: 'fair', roman: 'II', colorHex: '#EFD3B1' },
+  { value: 'medium', roman: 'III', colorHex: '#D5A77F' },
+  { value: 'olive', roman: 'IV', colorHex: '#9B6338' },
+  { value: 'brown', roman: 'V', colorHex: '#6B3E26' },
+  { value: 'dark-brown', roman: 'VI', colorHex: '#3C2016' },
 ];
 
 export default function SkinEyeColorScreen({
@@ -78,7 +77,6 @@ export default function SkinEyeColorScreen({
               key={type.value}
               color={type.colorHex}
               title={`Type ${type.roman}`}
-              sub={type.subtitle}
               selected={skinTone === type.value}
               onClick={() => tap(() => onSkinToneSelect(type.value))}
             />
