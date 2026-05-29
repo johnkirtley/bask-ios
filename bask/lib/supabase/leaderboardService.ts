@@ -472,6 +472,44 @@ export const leaderboardService = {
     }
   },
 
+  async submitStreak(params: {
+    currentStreak: number;
+    longestStreak: number;
+  }): Promise<void> {
+    const optedIn = await this.isOptedIn();
+    if (!optedIn) return;
+
+    if (!isSupabaseConfigured()) return;
+
+    let credentials = await getCredentialsFromStorage();
+    if (!credentials) {
+      await this.optIn();
+      credentials = await getCredentialsFromStorage();
+      if (!credentials) return;
+    }
+
+    try {
+      const supabase = getSupabaseClient();
+      const { error } = await supabase.rpc('update_leaderboard_streak', {
+        p_public_user_id: credentials.publicUserId,
+        p_write_token: credentials.writeToken,
+        p_current_streak: Math.max(0, Math.round(params.currentStreak)),
+        p_longest_streak: Math.max(0, Math.round(params.longestStreak)),
+      });
+
+      if (error) {
+        if (error.message.includes('Invalid credentials')) {
+          await clearCredentials();
+          await this.optIn();
+          return this.submitStreak(params);
+        }
+        console.warn('Streak sync failed:', error.message);
+      }
+    } catch (error) {
+      console.warn('Streak sync error:', error);
+    }
+  },
+
   async getLeaderboard(
     period: 'today' | 'week' = 'week',
     countryCode?: string,

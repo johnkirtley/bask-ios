@@ -22,7 +22,9 @@ CREATE TABLE IF NOT EXISTS leaderboard_users (
     CHECK (location_precision IN ('none', 'country', 'region', 'city')),
   opted_in_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  is_active BOOLEAN NOT NULL DEFAULT true
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  current_streak INTEGER NOT NULL DEFAULT 0,
+  longest_streak INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS leaderboard_user_secrets (
@@ -321,6 +323,8 @@ RETURNS TABLE(
   region_label TEXT,
   city_label TEXT,
   location_precision TEXT,
+  current_streak INTEGER,
+  longest_streak INTEGER,
   total_iu BIGINT,
   total_sun_minutes BIGINT,
   session_count BIGINT,
@@ -346,7 +350,12 @@ AS $$
       AND d.session_date < p_end
       AND (p_country_code IS NULL OR u.country_code = p_country_code)
     GROUP BY d.public_user_id
-    HAVING SUM(d.total_sun_seconds) > 0
+  ),
+  active_users AS (
+    SELECT u.*
+    FROM leaderboard_users u
+    WHERE u.is_active = true
+      AND (p_country_code IS NULL OR u.country_code = p_country_code)
   )
   SELECT
     u.anonymous_name,
@@ -354,14 +363,24 @@ AS $$
     CASE WHEN u.location_precision IN ('region', 'city') THEN u.region_label ELSE NULL END AS region_label,
     CASE WHEN u.location_precision = 'city' THEN u.city_label ELSE NULL END AS city_label,
     u.location_precision,
-    a.total_iu,
-    (a.total_sun_seconds / 60)::BIGINT AS total_sun_minutes,
-    a.session_count,
-    a.last_updated_at,
-    ROW_NUMBER() OVER (ORDER BY a.total_iu DESC, a.last_updated_at ASC) AS rank
-  FROM aggregated a
-  JOIN leaderboard_users u ON u.public_user_id = a.public_user_id
-  ORDER BY a.total_iu DESC, a.last_updated_at ASC
+    u.current_streak,
+    u.longest_streak,
+    COALESCE(a.total_iu, 0)::BIGINT AS total_iu,
+    COALESCE((a.total_sun_seconds / 60)::BIGINT, 0) AS total_sun_minutes,
+    COALESCE(a.session_count, 0)::BIGINT AS session_count,
+    COALESCE(a.last_updated_at, u.updated_at) AS last_updated_at,
+    ROW_NUMBER() OVER (
+      ORDER BY
+        u.current_streak DESC,
+        u.longest_streak DESC,
+        COALESCE(a.last_updated_at, u.updated_at) ASC
+    ) AS rank
+  FROM active_users u
+  LEFT JOIN aggregated a ON a.public_user_id = u.public_user_id
+  ORDER BY
+    u.current_streak DESC,
+    u.longest_streak DESC,
+    COALESCE(a.last_updated_at, u.updated_at) ASC
   LIMIT LEAST(GREATEST(p_limit, 1), 100);
 $$;
 
@@ -386,6 +405,40 @@ BEGIN
 
   UPDATE leaderboard_users
   SET is_active = p_is_active, updated_at = now()
+  WHERE public_user_id = p_public_user_id;
+END;
+$$;
+
+-- ==========================================
+-- RPC: Update streak (current + longest)
+-- ==========================================
+
+CREATE OR REPLACE FUNCTION update_leaderboard_streak(
+  p_public_user_id UUID,
+  p_write_token TEXT,
+  p_current_streak INTEGER,
+  p_longest_streak INTEGER
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions
+AS $$
+BEGIN
+  IF NOT verify_write_token(p_public_user_id, p_write_token) THEN
+    RAISE EXCEPTION 'Invalid credentials';
+  END IF;
+
+  IF p_current_streak < 0 OR p_current_streak > 100000
+     OR p_longest_streak < 0 OR p_longest_streak > 100000 THEN
+    RAISE EXCEPTION 'Invalid streak value';
+  END IF;
+
+  UPDATE leaderboard_users
+  SET
+    current_streak = p_current_streak,
+    longest_streak = GREATEST(longest_streak, p_longest_streak),
+    updated_at = now()
   WHERE public_user_id = p_public_user_id;
 END;
 $$;
@@ -443,3 +496,4 @@ GRANT EXECUTE ON FUNCTION submit_leaderboard_session TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION get_leaderboard TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION delete_leaderboard_user TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION set_leaderboard_active TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION update_leaderboard_streak TO anon, authenticated;

@@ -10,6 +10,7 @@ import {
   StreakTransitionResult,
 } from '../lib/database';
 import { notificationService } from '../lib/services/notificationService';
+import { leaderboardService } from '../lib/supabase/leaderboardService';
 
 interface UseStreakStateResult {
   summary: GoalStreakSummary | null;
@@ -45,6 +46,11 @@ export function useStreakState(dailyGoal?: number): UseStreakStateResult {
 
         setSummary(result.summary);
         setState(result.state);
+
+        void leaderboardService.submitStreak({
+          currentStreak: result.summary.currentStreak,
+          longestStreak: result.summary.longestStreak,
+        });
 
         if (result.events.streakStarted) {
           setFirstLogToastOpen(true);

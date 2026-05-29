@@ -306,6 +306,7 @@ export default function LeaderboardSettings() {
             type: 'text',
             value: pendingName ?? anonymousName ?? '',
             placeholder: 'e.g. swift-meadow',
+            attributes: { maxlength: 30 },
           },
         ]}
         buttons={[

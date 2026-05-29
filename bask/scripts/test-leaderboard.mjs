@@ -58,11 +58,75 @@ if (url.includes('your-project') || anonKey.includes('your-anon')) {
 
 const supabase = createClient(url, anonKey);
 
+// Optional seeding: `node scripts/test-leaderboard.mjs --seed` or `--seed=20`
+const seedArg = process.argv.find((a) => a === '--seed' || a.startsWith('--seed='));
+const seedCount = seedArg
+  ? Math.max(1, Math.min(100, Number(seedArg.split('=')[1]) || 10))
+  : 0;
+
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 function todayBounds() {
   const now = new Date();
   const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
   return { start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) };
+}
+
+async function seedRandomStreaks() {
+  console.log(`\nSeeding ${seedCount} users with randomized streaks...\n`);
+  const seeded = [];
+
+  for (let i = 0; i < seedCount; i++) {
+    const name = `streak-demo-${Date.now().toString(36)}-${i}`;
+    const { data: reg, error: regErr } = await supabase.rpc('register_leaderboard_user', {
+      p_anonymous_name: name,
+      p_country_code: 'US',
+      p_region_label: null,
+      p_city_label: null,
+      p_location_precision: 'country',
+    });
+    if (regErr) {
+      console.warn(`⚠️  Skipped seed user ${name}: ${regErr.message}`);
+      continue;
+    }
+    const u = Array.isArray(reg) ? reg[0] : reg;
+
+    const currentStreak = randInt(0, 150);
+    const longestStreak = currentStreak + randInt(0, 60);
+
+    const { error: streakErr } = await supabase.rpc('update_leaderboard_streak', {
+      p_public_user_id: u.public_user_id,
+      p_write_token: u.write_token,
+      p_current_streak: currentStreak,
+      p_longest_streak: longestStreak,
+    });
+    if (streakErr) {
+      console.warn(`⚠️  Streak set failed for ${name}: ${streakErr.message}`);
+      continue;
+    }
+
+    // A session so the user is visible in IU-based leaderboard queries too.
+    await supabase.rpc('submit_leaderboard_session', {
+      p_public_user_id: u.public_user_id,
+      p_write_token: u.write_token,
+      p_local_session_id: `seed-${u.public_user_id}`,
+      p_iu_gained: randInt(200, 5000),
+      p_duration_seconds: randInt(300, 3600),
+      p_country_code: 'US',
+    });
+
+    seeded.push({ name, currentStreak, longestStreak });
+  }
+
+  seeded.sort((a, b) => b.currentStreak - a.currentStreak);
+  console.log('Seeded users (sorted by current streak):');
+  for (const s of seeded) {
+    console.log(`  current ${String(s.currentStreak).padStart(3)} / longest ${s.longestStreak} — ${s.name}`);
+  }
+  ok(`Seeded ${seeded.length} persistent users with randomized streaks (not cleaned up)`);
 }
 
 async function main() {
@@ -323,6 +387,50 @@ async function main() {
     );
   }
   ok('inactive users do not consume rank slots');
+
+  // 10b. Streak storage — set test current/longest streaks on both users
+  const { error: streakErr } = await supabase.rpc('update_leaderboard_streak', {
+    p_public_user_id: row.public_user_id,
+    p_write_token: row.write_token,
+    p_current_streak: 12,
+    p_longest_streak: 30,
+  });
+  if (streakErr) {
+    if (streakErr.message.includes('Could not find the function')) {
+      fail(
+        `update_leaderboard_streak RPC not found. Run bask/supabase/leaderboard-streak.sql in Supabase SQL Editor.\n   ${streakErr.message}`,
+      );
+    }
+    fail(`update_leaderboard_streak failed: ${streakErr.message}`);
+  }
+
+  const { error: streakBErr } = await supabase.rpc('update_leaderboard_streak', {
+    p_public_user_id: rowB.public_user_id,
+    p_write_token: rowB.write_token,
+    p_current_streak: 5,
+    p_longest_streak: 5,
+  });
+  if (streakBErr) fail(`update_leaderboard_streak (user B) failed: ${streakBErr.message}`);
+  ok('update_leaderboard_streak works (user A: 12/30, user B: 5/5)');
+
+  // 10c. Invalid streak value rejected
+  const { error: badStreakErr } = await supabase.rpc('update_leaderboard_streak', {
+    p_public_user_id: row.public_user_id,
+    p_write_token: row.write_token,
+    p_current_streak: -1,
+    p_longest_streak: 0,
+  });
+  if (!badStreakErr || !badStreakErr.message.includes('Invalid streak value')) {
+    fail(
+      `Expected Invalid streak value on negative streak, got: ${badStreakErr?.message ?? 'no error'}`,
+    );
+  }
+  ok('update_leaderboard_streak rejects invalid streak values');
+
+  // 10d. Optional: seed persistent users with randomized streaks for UI review
+  if (seedCount > 0) {
+    await seedRandomStreaks();
+  }
 
   // 11. Cleanup
   await supabase.rpc('delete_leaderboard_user', {
