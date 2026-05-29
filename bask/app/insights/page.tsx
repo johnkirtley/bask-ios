@@ -396,7 +396,7 @@ export default function Insights() {
           <div className='px-6 py-6 pt-safe'>
             <button
               onClick={() => setSelectedCard(null)}
-              className='flex items-center gap-2 text-solar-flare mb-4 active:scale-[0.98] transition-transform'>
+              className='flex items-center gap-2 text-text-primary mb-4 active:scale-[0.98] transition-transform'>
               <svg
                 xmlns='http://www.w3.org/2000/svg'
                 fill='none'
@@ -778,8 +778,7 @@ export default function Insights() {
                     </div>
 
                     {isHero && (
-                      <div className='mt-3 flex items-center justify-center gap-2 text-sm font-medium'
-                        style={{ color: insight.accentColor }}>
+                      <div className='mt-3 flex items-center justify-center gap-2 text-sm font-medium text-text-primary'>
                         <span>Read More</span>
                         <svg
                           xmlns='http://www.w3.org/2000/svg'
