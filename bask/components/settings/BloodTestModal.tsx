@@ -93,7 +93,7 @@ export default function BloodTestModal({
       onDidDismiss={onClose}
       initialBreakpoint={0.85}
       breakpoints={[0, 0.85, 1]}>
-      <div className="bg-light-bg min-h-full p-6 pb-safe flex flex-col">
+      <div className="bg-light-bg h-full p-6 pb-safe flex flex-col">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
           <div className="w-12 h-12 rounded-full bg-solar-flare/15 flex items-center justify-center">

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import AtmosphericBackground from './AtmosphericBackground';
 import WhyZeroIUTooltip from './WhyZeroIUTooltip';
 import Mascot from '../ui/Mascot';
+import { effectiveUv } from '../../lib/dEngine';
 import type { SunData } from '../../lib/sunDataUtils';
 
 interface ActiveSessionViewProps {
@@ -142,6 +143,11 @@ export default function ActiveSessionView({
               <div className='text-[24px] font-black text-text-primary tabular-nums tracking-[-0.02em] mt-1'>
                 {uvIndex.toFixed(1)}
               </div>
+              {uvIndex >= 3 && effectiveUv(uvIndex, cloudCover) < 3 && (
+                <div className='text-[10px] font-semibold text-amber-600 leading-tight mt-0.5'>
+                  Clouds blocking D-rays
+                </div>
+              )}
             </div>
             <div className='bg-white rounded-card px-4 py-2.5 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_6px_24px_rgba(40,30,10,0.06)] border-l-4 border-[#F8A3A1]'>
               <span className='text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em]'>

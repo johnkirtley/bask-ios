@@ -29,6 +29,7 @@ import {
   formatTimeToBurn,
   formatDurationMinutes,
   calculateDailyDecayAmount,
+  effectiveUv,
 } from '../lib/dEngine';
 import { resolveFitzpatrickType } from '../lib/profileUtils';
 import { leaderboardService } from '../lib/supabase/leaderboardService';
@@ -153,10 +154,7 @@ export default function Home() {
   // Session tracking — pass sun data from parent to avoid duplicate WeatherKit polling
   const sessionSunData = useMemo(() => {
     const rawUvIndex = sunData.uvIndex;
-    const effective =
-      sunData.cloudCover !== undefined
-        ? rawUvIndex * (1 - sunData.cloudCover * 0.7)
-        : rawUvIndex;
+    const effective = effectiveUv(rawUvIndex, sunData.cloudCover);
     return { rawUvIndex, effectiveUV: effective };
   }, [sunData.uvIndex, sunData.cloudCover]);
   const session = useBaskSession(fitzpatrickType, answers.age, sessionSunData);
@@ -410,18 +408,12 @@ export default function Home() {
     }
 
     // Shadow rule: no vitamin D synthesis below UV 3, so the estimate is blank.
-    // Explain that the "--" is from weak sun, not the lab value.
+    // Keep this to one short status sentence — the lab note renders separately.
     if (!isFinite(timeToGoal) && effectiveUV < 3) {
-      return labGuidanceHint
-        ? `UV is too low for vitamin D right now — your skin needs UV 3+ (usually midday). ${labGuidanceHint}`
-        : 'UV is too low for vitamin D right now — your skin needs UV 3+, usually around midday.';
-    }
-
-    if (
-      labGuidanceHint &&
-      (effectiveUV <= 0 || !isFinite(timeToGoal) || timeToGoal > 120)
-    ) {
-      return labGuidanceHint;
+      // Raw UV is strong but clouds are cutting it below the synthesis threshold.
+      return sunData.uvIndex >= 3
+        ? 'Clouds are blocking vitamin-D rays right now.'
+        : 'UV is too low for vitamin D right now — usually peaks around midday.';
     }
 
     if (isFinite(timeToGoal) && timeToGoal > 120) {
@@ -582,6 +574,7 @@ export default function Home() {
                   ? 'Waiting for UV data'
                   : timeToGoalSubtext
               }
+              timeToGoalLabHint={!isLoading ? labGuidanceHint : null}
               isLoading={isLoading}
               burnRisk={burnRisk}
               burnRiskSubtext={

@@ -1,13 +1,11 @@
 import type { HourlyForecastItem } from './plugins/baskWeather';
+import { effectiveUv } from './dEngine';
 
 /**
  * Effective UV for an hour (matches home page / D-Window cloud attenuation).
  */
 export function effectiveUvFromHour(hour: HourlyForecastItem): number {
-  const raw = hour.uvIndex;
-  return hour.cloudCover !== undefined
-    ? raw * (1 - hour.cloudCover * 0.7)
-    : raw;
+  return effectiveUv(hour.uvIndex, hour.cloudCover);
 }
 
 /**

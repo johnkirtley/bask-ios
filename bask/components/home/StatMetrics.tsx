@@ -6,6 +6,7 @@ import GlassCardWrapper from './GlassCardWrapper';
 interface StatMetricsProps {
   timeToGoal: string;
   timeToGoalSubtext?: string;
+  timeToGoalLabHint?: string | null;
   isLoading?: boolean;
   burnRisk: string;
   burnRiskSubtext?: string;
@@ -22,6 +23,7 @@ interface StatMetricsProps {
 export default function StatMetrics({
   timeToGoal,
   timeToGoalSubtext,
+  timeToGoalLabHint,
   isLoading,
   burnRisk,
   burnRiskSubtext,
@@ -55,6 +57,11 @@ export default function StatMetrics({
               {timeToGoalSubtext && (
                 <div className='text-[11px] text-text-muted mt-0.5'>
                   {timeToGoalSubtext}
+                </div>
+              )}
+              {timeToGoalLabHint && (
+                <div className='text-[10px] text-text-muted/80 leading-snug mt-1.5 pl-2 border-l-2 border-black/[0.06]'>
+                  {timeToGoalLabHint}
                 </div>
               )}
             </>

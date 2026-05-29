@@ -9,6 +9,7 @@ import {
   getSynthesisSecondaryMessage,
   isInSynthesisWindow,
 } from '../../lib/dWindowForecast';
+import { formatEstimatedIU } from '../../lib/dEngine';
 import GlassCardWrapper from './GlassCardWrapper';
 import ProBadge from '../ui/ProBadge';
 import { useSubscription } from '../../hooks/useSubscription';
@@ -589,7 +590,7 @@ function WindowDisplay({
               />
             </svg>
             <span className='text-text-secondary font-medium'>
-              ~{window.estimatedIU.toLocaleString()} IU
+              ~{formatEstimatedIU(window.estimatedIU)} IU
             </span>
           </div>
           <div className='w-px h-3.5 bg-black/10' />

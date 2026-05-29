@@ -81,6 +81,23 @@ export function getAgeMultiplier(age: number | null): number {
 }
 
 /**
+ * Cloud-cover attenuation of UV for vitamin D synthesis.
+ * Single source of truth for the `raw × (1 - cloudCover × 0.7)` heuristic used across the app.
+ * cloudCover is a 0-1 fraction (WeatherKit). Returns rawUv unchanged when cloudCover is undefined.
+ */
+export function effectiveUv(rawUv: number, cloudCover?: number): number {
+  if (cloudCover === undefined) return rawUv;
+  return rawUv * (1 - cloudCover * 0.7);
+}
+
+/**
+ * Round an IU figure to the nearest 50 so it reads as an estimate, not a false-precision number.
+ */
+export function formatEstimatedIU(iu: number): string {
+  return (Math.round(iu / 50) * 50).toLocaleString();
+}
+
+/**
  * Calculate vitamin D (IU) generated from sun exposure
  * Based on Holick's research on vitamin D photobiology
  *
