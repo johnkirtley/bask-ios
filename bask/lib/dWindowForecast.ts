@@ -6,6 +6,8 @@ import {
   calculateTimeToBurn,
   getAgeMultiplier,
   BASE_IU_PER_MINUTE,
+  effectiveUv,
+  formatEstimatedIU,
 } from './dEngine';
 
 /**
@@ -39,7 +41,8 @@ export interface OptimalWindow {
   startTime: string; // "12:15 PM" - recommended session start
   endTime: string; // "12:40 PM" - recommended session end
   durationMinutes: number; // recommended session duration
-  avgUvIndex: number;
+  avgUvIndex: number; // raw UV (for display)
+  effectiveUvIndex: number; // cloud-adjusted UV (for synthesis-quality decisions)
   estimatedIU: number; // Estimated vitamin D for this window
   reason: string; // Why this is the optimal window
   cloudCover: number; // Average cloud cover %
@@ -100,7 +103,7 @@ function determineNoWindowReason(
     // Raw UV was sufficient, but need to determine if clouds or low exposure is the blocker
     // Calculate effective UV (after cloud attenuation) for hours with raw UV >= 3
     const hoursWithEffectiveUV = hoursWithRawUV.filter(
-      (h) => h.uvIndex * (1 - h.cloudCover * 0.7) >= 3,
+      (h) => effectiveUv(h.uvIndex, h.cloudCover) >= 3,
     );
 
     if (hoursWithEffectiveUV.length > 0) {
@@ -197,8 +200,8 @@ export function calculateOptimalWindows(
 
   // Calculate overall efficiency
   const bestUV = Math.max(
-    effectiveTodayWindow?.avgUvIndex || 0,
-    tomorrowWindow?.avgUvIndex || 0,
+    effectiveTodayWindow?.effectiveUvIndex || 0,
+    tomorrowWindow?.effectiveUvIndex || 0,
   );
   let efficiency: 'excellent' | 'good' | 'moderate' | 'poor';
   if (bestUV >= 5) efficiency = 'excellent';
@@ -243,7 +246,7 @@ function findSynthesisWindow(
       (h) =>
         h.hour >= 8 &&
         h.hour <= 18 &&
-        h.uvIndex * (1 - h.cloudCover * 0.7) >= 3,
+        effectiveUv(h.uvIndex, h.cloudCover) >= 3,
     )
     .sort((a, b) => a.hour - b.hour);
 
@@ -457,7 +460,7 @@ function findOptimalWindow(
     bestWindow.hours.length;
   // Cloud cover approximation: (1 - cloudCover * 0.7) is a rough heuristic
   // Thin clouds vs. storm clouds differ, but this is acceptable for estimation
-  const effectiveUV = bestWindow.avgUV * (1 - avgCloudCover * 0.7);
+  const effectiveUV = effectiveUv(bestWindow.avgUV, avgCloudCover);
 
   const minutesToFullGoal = calculateMinutesToIU(
     targetIU,
@@ -530,6 +533,7 @@ function findOptimalWindow(
     endTime,
     durationMinutes,
     avgUvIndex: bestWindow.avgUV,
+    effectiveUvIndex: effectiveUV,
     estimatedIU,
     reason,
     cloudCover: avgCloudCover,
@@ -655,17 +659,21 @@ function generateRecommendations(
     (maxForecastedUV !== undefined && maxForecastedUV < 3) ||
     noWindowReason === 'clouds-blocking';
 
-  // Today's recommendation — only when a window exists (status rows cover no-window cases)
-  if (today && today.avgUvIndex >= 5 && isNowInOpportunityWindow(today, now)) {
+  // Today's recommendation — gate on cloud-adjusted UV so "perfect sun" reflects real synthesis
+  if (
+    today &&
+    today.effectiveUvIndex >= 5 &&
+    isNowInOpportunityWindow(today, now)
+  ) {
     recommendations.push({
       type: 'window',
       priority: 1,
       content: {
         headline: 'Perfect sun right now!',
-        details: `${today.durationMinutes} min outside will give you ${today.estimatedIU} IU.`,
+        details: `About ${today.durationMinutes} min in the sun — an estimated ~${formatEstimatedIU(today.estimatedIU)} IU.`,
       },
     });
-  } else if (today && today.avgUvIndex >= 3) {
+  } else if (today && today.effectiveUvIndex >= 3) {
     recommendations.push({
       type: 'window',
       priority: 2,
@@ -685,8 +693,8 @@ function generateRecommendations(
     });
   }
 
-  // Tomorrow's recommendation — only actionable windows (forecast card covers no-window cases)
-  if (tomorrow && tomorrow.avgUvIndex >= 5) {
+  // Tomorrow's recommendation — gate on cloud-adjusted UV, display raw UV
+  if (tomorrow && tomorrow.effectiveUvIndex >= 5) {
     recommendations.push({
       type: 'window',
       priority: 4,
@@ -697,13 +705,13 @@ function generateRecommendations(
         } (UV ${tomorrow.avgUvIndex.toFixed(1)}).`,
       },
     });
-  } else if (tomorrow && tomorrow.avgUvIndex >= 3) {
+  } else if (tomorrow && tomorrow.effectiveUvIndex >= 3) {
     recommendations.push({
       type: 'window',
       priority: 5,
       content: {
         headline: `Tomorrow: ${tomorrow.startTime}–${tomorrow.endTime}`,
-        details: `${tomorrow.estimatedIU} IU available.`,
+        details: `An estimated ~${formatEstimatedIU(tomorrow.estimatedIU)} IU available.`,
       },
     });
   }
