@@ -174,7 +174,7 @@ export default function BloodTestModal({
             </div>
 
             <p className="text-xs text-text-secondary">
-              💡 Optimal range: 40-60 ng/mL (100-150 nmol/L)
+              💡 Many labs use 40–60 ng/mL (100–150 nmol/L) as a reference range
             </p>
 
             {canRemove && (
