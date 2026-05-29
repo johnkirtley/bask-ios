@@ -79,6 +79,14 @@ export interface DWindowForecast {
   tomorrow: OptimalWindow | null;
   todaySynthesis: SynthesisWindow | null;
   tomorrowSynthesis: SynthesisWindow | null;
+  /**
+   * Raw-UV daylight band on days where clouds blocked synthesis.
+   * Only populated when the day's noWindowReason is 'clouds-blocking',
+   * so it is mutually exclusive with today/tomorrow windows and synthesis.
+   * Used to schedule a softer "step outside anyway" notification.
+   */
+  todayCloudBlocked: SynthesisWindow | null;
+  tomorrowCloudBlocked: SynthesisWindow | null;
   efficiency: 'excellent' | 'good' | 'moderate' | 'poor';
   recommendations: Recommendation[];
   noWindowReason?: 'uv-too-low' | 'clouds-blocking' | 'low-exposure';
@@ -221,11 +229,27 @@ export function calculateOptimalWindows(
     todayNoWindowReason,
   );
 
+  // Cloud-blocked daylight bands — only when clouds (not low UV / exposure)
+  // are the blocker, so these never coexist with a window or synthesis band.
+  let todayCloudBlocked =
+    todayNoWindowReason === 'clouds-blocking'
+      ? findCloudBlockedBand(todayForecast, 'Today')
+      : null;
+  if (todayCloudBlocked && now > todayCloudBlocked.endsAt) {
+    todayCloudBlocked = null;
+  }
+  const tomorrowCloudBlocked =
+    tomorrowNoWindowReason === 'clouds-blocking'
+      ? findCloudBlockedBand(tomorrowForecast, 'Tomorrow')
+      : null;
+
   return {
     today: effectiveTodayWindow,
     tomorrow: tomorrowWindow,
     todaySynthesis: effectiveTodaySynthesis,
     tomorrowSynthesis,
+    todayCloudBlocked,
+    tomorrowCloudBlocked,
     efficiency,
     recommendations,
     noWindowReason,
@@ -248,6 +272,39 @@ function findSynthesisWindow(
         h.hour <= 18 &&
         effectiveUv(h.uvIndex, h.cloudCover) >= 3,
     )
+    .sort((a, b) => a.hour - b.hour);
+
+  if (viableHours.length === 0) return null;
+
+  const first = viableHours[0];
+  const last = viableHours[viableHours.length - 1];
+  const startHour = first.hour;
+  const endHour = last.hour + 1;
+
+  const startsAt = buildDateFromHour(first.date, startHour, 0);
+  const endsAt = buildDateFromHour(last.date, endHour, 0);
+
+  return {
+    date: first.date,
+    dayLabel,
+    startTime: formatTime(startHour, 0),
+    endTime: formatTime(endHour, 0),
+    startsAt,
+    endsAt,
+  };
+}
+
+/**
+ * Find the raw-UV daylight band (UV >= 3, 8 AM–6 PM) ignoring cloud cover.
+ * These are hours that would have supported synthesis if not for clouds —
+ * used to time a softer "step outside anyway" nudge on cloud-blocked days.
+ */
+function findCloudBlockedBand(
+  forecast: HourlyForecastItem[],
+  dayLabel: string,
+): SynthesisWindow | null {
+  const viableHours = forecast
+    .filter((h) => h.hour >= 8 && h.hour <= 18 && h.uvIndex >= 3)
     .sort((a, b) => a.hour - b.hour);
 
   if (viableHours.length === 0) return null;

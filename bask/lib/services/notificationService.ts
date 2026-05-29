@@ -31,6 +31,8 @@ const NOTIFICATION_IDS = {
   tomorrowSynthesisStart: 1004,
   todaySynthesisEnding: 1005,
   tomorrowSynthesisEnding: 1006,
+  todayCloudBlocked: 1007,
+  tomorrowCloudBlocked: 1008,
 };
 
 const ALL_NOTIFICATION_IDS = Object.values(NOTIFICATION_IDS);
@@ -125,6 +127,8 @@ export function hashForecastForNotifications(
     tomorrow: windowSnapshot(forecast.tomorrow),
     todaySynthesis: synthesisSnapshot(forecast.todaySynthesis),
     tomorrowSynthesis: synthesisSnapshot(forecast.tomorrowSynthesis),
+    todayCloudBlocked: synthesisSnapshot(forecast.todayCloudBlocked),
+    tomorrowCloudBlocked: synthesisSnapshot(forecast.tomorrowCloudBlocked),
   });
 }
 
@@ -134,7 +138,9 @@ function hasSchedulableForecast(forecast: DWindowForecast | null): boolean {
     forecast.today ||
       forecast.tomorrow ||
       forecast.todaySynthesis ||
-      forecast.tomorrowSynthesis,
+      forecast.tomorrowSynthesis ||
+      forecast.todayCloudBlocked ||
+      forecast.tomorrowCloudBlocked,
   );
 }
 
@@ -341,9 +347,65 @@ export const notificationService = {
       if (ending) notifications.push(ending);
     }
 
+    if (forecast.todayCloudBlocked) {
+      const cloudBlocked = this.createCloudBlockedNotification(
+        forecast.todayCloudBlocked,
+        NOTIFICATION_IDS.todayCloudBlocked,
+        settings.leadTimeMinutes,
+        now,
+      );
+      if (cloudBlocked) notifications.push(cloudBlocked);
+    }
+
+    if (forecast.tomorrowCloudBlocked) {
+      const cloudBlocked = this.createCloudBlockedNotification(
+        forecast.tomorrowCloudBlocked,
+        NOTIFICATION_IDS.tomorrowCloudBlocked,
+        settings.leadTimeMinutes,
+        now,
+      );
+      if (cloudBlocked) notifications.push(cloudBlocked);
+    }
+
     if (notifications.length > 0) {
       await LocalNotifications.schedule({ notifications });
     }
+  },
+
+  /**
+   * Create an encouragement notification for a cloud-blocked day.
+   * Clouds dropped effective UV below the synthesis threshold, so there's no
+   * real D-window — but a walk outside is still worthwhile. Fires at the start
+   * of the raw-UV daylight band (minus lead time); skipped if already past.
+   */
+  createCloudBlockedNotification(
+    band: SynthesisWindow,
+    id: number,
+    leadTimeMinutes: number,
+    now: Date = new Date(),
+  ): ScheduleOptions['notifications'][0] | null {
+    const notificationTime = new Date(
+      band.startsAt.getTime() - leadTimeMinutes * 60 * 1000,
+    );
+    if (!isScheduleTimeValid(notificationTime, now)) return null;
+
+    return {
+      id,
+      title: 'Clouds are limiting UV today',
+      body: 'Vitamin D synthesis is blocked by cloud cover — but a walk outside still does you good. ☀️',
+      schedule: {
+        at: notificationTime,
+        allowWhileIdle: true,
+      },
+      sound: 'default',
+      actionTypeId: 'DWINDOW_REMINDER',
+      extra: {
+        type: 'cloud_blocked',
+        bandStart: band.startTime,
+        bandEnd: band.endTime,
+        dayRef: band.dayLabel === 'Tomorrow' ? 'tomorrow' : 'today',
+      },
+    };
   },
 
   /**
