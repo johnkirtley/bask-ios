@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS leaderboard_sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   public_user_id UUID NOT NULL REFERENCES leaderboard_users(public_user_id) ON DELETE CASCADE,
   local_session_id TEXT NOT NULL,
-  iu_gained INTEGER NOT NULL CHECK (iu_gained > 0 AND iu_gained <= 50000),
+  iu_gained INTEGER NOT NULL CHECK (iu_gained >= 0 AND iu_gained <= 50000),
   duration_seconds INTEGER NOT NULL CHECK (duration_seconds > 0 AND duration_seconds <= 28800),
   country_code TEXT,
   region_label TEXT,
@@ -246,7 +246,7 @@ BEGIN
     RAISE EXCEPTION 'Missing session id';
   END IF;
 
-  IF p_iu_gained <= 0 OR p_iu_gained > 50000 THEN
+  IF p_iu_gained < 0 OR p_iu_gained > 50000 THEN
     RAISE EXCEPTION 'Invalid IU value';
   END IF;
 
@@ -346,7 +346,7 @@ AS $$
       AND d.session_date < p_end
       AND (p_country_code IS NULL OR u.country_code = p_country_code)
     GROUP BY d.public_user_id
-    HAVING SUM(d.total_iu) > 0
+    HAVING SUM(d.total_sun_seconds) > 0
   )
   SELECT
     u.anonymous_name,

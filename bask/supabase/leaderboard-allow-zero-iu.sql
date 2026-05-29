@@ -1,37 +1,18 @@
--- Leaderboard pause: hide inactive users from public rankings without deleting data.
--- Run in Supabase SQL Editor on existing projects (after schema.sql / unique-anonymous-name.sql).
+-- Allow zero-IU sessions to be recorded (e.g. low-UV basking that produces 0 IU).
+-- Sessions still count toward session_count and sun_minutes; IU ranking is unaffected.
+-- Run in Supabase SQL Editor on existing projects (after schema.sql / leaderboard-pause.sql).
 -- See supabase/RECOVERY.md
 
-ALTER TABLE leaderboard_users
-  ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT true;
-
--- ==========================================
--- RPC: Pause / resume participation
--- ==========================================
-
-CREATE OR REPLACE FUNCTION set_leaderboard_active(
-  p_public_user_id UUID,
-  p_write_token TEXT,
-  p_is_active BOOLEAN
-)
-RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public, extensions
-AS $$
-BEGIN
-  IF NOT verify_write_token(p_public_user_id, p_write_token) THEN
-    RAISE EXCEPTION 'Invalid credentials';
-  END IF;
-
-  UPDATE leaderboard_users
-  SET is_active = p_is_active, updated_at = now()
-  WHERE public_user_id = p_public_user_id;
-END;
-$$;
+-- Relax the table CHECK so 0 IU is valid (was: iu_gained > 0).
+ALTER TABLE leaderboard_sessions
+  DROP CONSTRAINT IF EXISTS leaderboard_sessions_iu_gained_check;
+ALTER TABLE leaderboard_sessions
+  ADD CONSTRAINT leaderboard_sessions_iu_gained_check
+  CHECK (iu_gained >= 0 AND iu_gained <= 50000);
 
 -- ==========================================
 -- RPC: Submit session (idempotent per local_session_id)
+-- Relaxed IU guard: allow 0, reject only negative / over-cap.
 -- ==========================================
 
 CREATE OR REPLACE FUNCTION submit_leaderboard_session(
@@ -127,6 +108,8 @@ $$;
 
 -- ==========================================
 -- RPC: Public leaderboard (aggregate only)
+-- Include anyone who logged session time, not just users with IU > 0.
+-- (IU ranking is being phased out in favor of streak length.)
 -- ==========================================
 
 CREATE OR REPLACE FUNCTION get_leaderboard(
@@ -184,5 +167,3 @@ AS $$
   ORDER BY a.total_iu DESC, a.last_updated_at ASC
   LIMIT LEAST(GREATEST(p_limit, 1), 100);
 $$;
-
-GRANT EXECUTE ON FUNCTION set_leaderboard_active TO anon, authenticated;

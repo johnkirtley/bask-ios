@@ -17,8 +17,6 @@ interface LeaderboardLocationModalProps {
 const PRECISION_OPTIONS: { value: LocationPrecision; label: string }[] = [
   { value: 'none', label: 'Hide location' },
   { value: 'country', label: 'Show country only' },
-  { value: 'region', label: 'Show region/state + country' },
-  { value: 'city', label: 'Show city + region' },
 ];
 
 export default function LeaderboardLocationModal({
@@ -42,14 +40,9 @@ export default function LeaderboardLocationModal({
   }, [isOpen, location]);
 
   const needsCountry = precision !== 'none';
-  const needsRegion = precision === 'region' || precision === 'city';
-  const needsCity = precision === 'city';
 
   const canSave =
-    precision === 'none' ||
-    (needsCountry && countryCode.trim().length > 0 &&
-      (!needsRegion || regionLabel.trim().length > 0) &&
-      (!needsCity || cityLabel.trim().length > 0));
+    precision === 'none' || (needsCountry && countryCode.trim().length > 0);
 
   const handleSave = async () => {
     if (!canSave) return;
@@ -77,9 +70,9 @@ export default function LeaderboardLocationModal({
     <IonModal
       isOpen={isOpen}
       onDidDismiss={onClose}
-      initialBreakpoint={0.9}
-      breakpoints={[0, 0.9, 1]}>
-      <div className='bg-light-bg h-full p-6 pb-safe flex flex-col'>
+      initialBreakpoint={0.6}
+      breakpoints={[0, 0.6, 0.9]}>
+      <div className='bg-light-bg h-full p-6 pb-safe'>
         <div className='mb-6'>
           <h2 className='text-[17px] font-semibold text-text-primary'>Public Location</h2>
           <p className='text-sm text-text-secondary mt-1'>
@@ -87,7 +80,7 @@ export default function LeaderboardLocationModal({
           </p>
         </div>
 
-        <div className='flex-1 overflow-y-auto space-y-5'>
+        <div className='space-y-5'>
           <fieldset className='space-y-2'>
             {PRECISION_OPTIONS.map((option) => (
               <label
@@ -123,31 +116,6 @@ export default function LeaderboardLocationModal({
             </div>
           )}
 
-          {needsRegion && (
-            <div>
-              <label className='text-xs text-text-secondary block mb-2'>State / region</label>
-              <input
-                type='text'
-                value={regionLabel}
-                onChange={(e) => setRegionLabel(e.target.value)}
-                placeholder='e.g. TX'
-                className='w-full p-3 rounded-xl bg-white/70 border border-black/5 text-text-primary text-sm'
-              />
-            </div>
-          )}
-
-          {needsCity && (
-            <div>
-              <label className='text-xs text-text-secondary block mb-2'>City</label>
-              <input
-                type='text'
-                value={cityLabel}
-                onChange={(e) => setCityLabel(e.target.value)}
-                placeholder='e.g. Austin'
-                className='w-full p-3 rounded-xl bg-white/70 border border-black/5 text-text-primary text-sm'
-              />
-            </div>
-          )}
         </div>
 
         <div className='mt-6 flex gap-3'>

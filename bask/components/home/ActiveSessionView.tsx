@@ -135,7 +135,7 @@ export default function ActiveSessionView({
         <div className='px-6'>
           {/* Stat row */}
           <div className='grid grid-cols-2 gap-3'>
-            <div className='bg-white rounded-card p-4 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_6px_24px_rgba(40,30,10,0.06)] border-l-4 border-[#FFC93C]'>
+            <div className='bg-white rounded-card px-4 py-2.5 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_6px_24px_rgba(40,30,10,0.06)] border-l-4 border-[#FFC93C]'>
               <span className='text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em]'>
                 UV Now
               </span>
@@ -143,9 +143,9 @@ export default function ActiveSessionView({
                 {uvIndex.toFixed(1)}
               </div>
             </div>
-            <div className='bg-white rounded-card p-4 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_6px_24px_rgba(40,30,10,0.06)] border-l-4 border-[#F8A3A1]'>
+            <div className='bg-white rounded-card px-4 py-2.5 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_6px_24px_rgba(40,30,10,0.06)] border-l-4 border-[#F8A3A1]'>
               <span className='text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em]'>
-                Burn In
+                Sunburn Risk In
               </span>
               <div className={`text-[24px] font-black tabular-nums tracking-[-0.02em] mt-1 ${
                 remainingSunburnSeconds <= 120 ? 'text-ember-alert' : 'text-text-primary'
@@ -229,7 +229,7 @@ export default function ActiveSessionView({
               </button>
             </>
           )}
-          <p className='text-sm text-text-secondary mt-1'>
+          <p className='text-sm text-text-secondary mt-1 text-center'>
             Pocket your phone — I&apos;ll keep counting for you
           </p>
         </div>

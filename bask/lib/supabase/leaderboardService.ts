@@ -424,7 +424,7 @@ export const leaderboardService = {
     durationSeconds: number;
   }): Promise<void> {
     const { localSessionId, iuGained, durationSeconds } = params;
-    if (iuGained <= 0 || durationSeconds <= 0) return;
+    if (durationSeconds <= 0) return;
 
     const optedIn = await this.isOptedIn();
     if (!optedIn) return;
@@ -446,7 +446,7 @@ export const leaderboardService = {
         p_public_user_id: credentials.publicUserId,
         p_write_token: credentials.writeToken,
         p_local_session_id: String(localSessionId),
-        p_iu_gained: Math.round(iuGained),
+        p_iu_gained: Math.max(0, Math.round(iuGained)),
         p_duration_seconds: Math.round(durationSeconds),
         p_country_code: location.locationPrecision !== 'none' ? location.countryCode || null : null,
         p_region_label:

@@ -125,7 +125,7 @@ BEGIN
     RAISE EXCEPTION 'Missing session id';
   END IF;
 
-  IF p_iu_gained <= 0 OR p_iu_gained > 50000 THEN
+  IF p_iu_gained < 0 OR p_iu_gained > 50000 THEN
     RAISE EXCEPTION 'Invalid IU value';
   END IF;
 
