@@ -9,6 +9,7 @@ import {
   resetOnboardingProfileFields,
   syncProfileFromOnboarding,
 } from '../lib/profileUtils';
+import { capture, ANALYTICS_EVENTS } from '../lib/analytics';
 
 const DEFAULT_ONBOARDING: OnboardingState = {
   isComplete: false,
@@ -189,6 +190,16 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       }
 
       setState(newState);
+
+      capture(ANALYTICS_EVENTS.onboardingCompleted, {
+        fitzpatrick_type: null,
+        age: answers.age,
+        weight_unit: answers.weightUnit,
+        symptom_count: answers.symptoms.length,
+        location_permission_granted: answers.locationPermissionGranted,
+        notification_permission_granted: answers.notificationPermissionGranted,
+        healthkit_permission_granted: answers.healthKitPermissionGranted,
+      });
     },
     [dbReady]
   );

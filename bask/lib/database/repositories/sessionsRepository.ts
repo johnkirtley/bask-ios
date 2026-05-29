@@ -149,10 +149,17 @@ export const sessionsRepository = {
   }): Promise<void> {
     const db = await databaseService.getConnection();
 
-    // Check if HealthKit session already exists for this date
+    // Anchor the session to local noon, stored as a proper UTC instant. This makes
+    // date(started_at, 'localtime') round-trip to the intended local day across all
+    // timezones, and keeps started_at a uniform ISO-Z string for range queries.
+    const [year, month, day] = data.date.split('-').map(Number);
+    const startedAtIso = new Date(year, month - 1, day, 12, 0, 0).toISOString();
+    const endedAtIso = new Date(year, month - 1, day, 23, 59, 59).toISOString();
+
+    // Check if HealthKit session already exists for this date (data.date is a local date key)
     const existing = await db.query(
       `SELECT id, iu_gained FROM bask_sessions
-       WHERE date(started_at, 'localtime') = date(?, 'localtime')
+       WHERE date(started_at, 'localtime') = ?
        AND source = 'healthkit'
        LIMIT 1`,
       [data.date]
@@ -184,8 +191,8 @@ export const sessionsRepository = {
           duration_seconds, iu_gained, source, synced_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          `${data.date}T00:00:00`, // Start of day
-          `${data.date}T23:59:59`, // End of day
+          startedAtIso, // Local noon, stored as UTC instant
+          endedAtIso, // Local end-of-day, stored as UTC instant
           data.uv_index,
           'healthkit', // Placeholder preset ID
           50, // Match the exposure percent used in useHealthKitSync calculation
@@ -207,7 +214,7 @@ export const sessionsRepository = {
     const result = await db.query(
       `SELECT COALESCE(SUM(duration_seconds), 0) as total
        FROM bask_sessions
-       WHERE date(started_at, 'localtime') = date(?, 'localtime')
+       WHERE date(started_at, 'localtime') = ?
        AND source = 'manual'`,
       [date]
     );
@@ -221,7 +228,7 @@ export const sessionsRepository = {
   async deleteHealthKitSession(date: string): Promise<void> {
     const db = await databaseService.getConnection();
     await db.run(
-      `DELETE FROM bask_sessions WHERE date(started_at, 'localtime') = date(?, 'localtime') AND source = 'healthkit'`,
+      `DELETE FROM bask_sessions WHERE date(started_at, 'localtime') = ? AND source = 'healthkit'`,
       [date]
     );
   },

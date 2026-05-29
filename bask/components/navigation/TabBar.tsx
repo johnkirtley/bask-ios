@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { ROUTES } from '../../lib/constants';
 import { useModal } from '../../contexts/ModalContext';
+import { capture, ANALYTICS_EVENTS } from '../../lib/analytics';
 import Mascot from '../ui/Mascot';
 
 interface TabConfig {
@@ -82,6 +83,8 @@ export default function TabBar() {
   };
 
   const handleTabPress = async (path: string) => {
+    capture(ANALYTICS_EVENTS.navTabClicked, { tab: path });
+
     // Trigger native haptic feedback
     try {
       await Haptics.impact({ style: ImpactStyle.Light });

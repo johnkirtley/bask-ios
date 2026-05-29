@@ -1,8 +1,13 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import {
+  capture,
+  ANALYTICS_EVENTS,
+  getOnboardingStepName,
+} from '../../lib/analytics';
 import { OnboardingAnswers, PermissionResult } from '../../types';
 import { databaseService } from '../../lib/database/connection';
 import {
@@ -57,6 +62,20 @@ export default function OnboardingFlow() {
   const { completeOnboarding } = useOnboardingContext();
   const [currentScreen, setCurrentScreen] = useState(0);
   const [answers, setAnswers] = useState<OnboardingAnswers>(DEFAULT_ANSWERS);
+
+  // Emit a step-view event whenever the visible onboarding screen changes
+  // (including the initial screen). Powers the PostHog drop-off funnel.
+  const prevScreenRef = useRef<number | null>(null);
+  useEffect(() => {
+    const prev = prevScreenRef.current;
+    const direction = prev === null || currentScreen >= prev ? 'forward' : 'back';
+    capture(ANALYTICS_EVENTS.onboardingStepViewed, {
+      step_index: currentScreen,
+      step_name: getOnboardingStepName(currentScreen),
+      direction,
+    });
+    prevScreenRef.current = currentScreen;
+  }, [currentScreen]);
 
   const handleContinue = useCallback(async () => {
     try {

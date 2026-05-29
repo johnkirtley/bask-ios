@@ -10,6 +10,18 @@ export const DB_CONFIG = {
 // RevenueCat Configuration
 export const REVENUECAT_API_KEY =
   process.env.NEXT_PUBLIC_REVENUECAT_API_KEY || '';
+
+// PostHog Analytics Configuration.
+// When the key is empty, analytics is fully disabled (no-op) — keeps dev/CI clean.
+export const POSTHOG = {
+  key: process.env.NEXT_PUBLIC_POSTHOG_KEY || '',
+  host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
+} as const;
+
+// Analytics settings keys (stored in local SQLite `settings` table)
+export const ANALYTICS_SETTINGS = {
+  distinctId: 'analytics_distinct_id',
+} as const;
 // RevenueCat Entitlement IDs
 export const ENTITLEMENTS = {
   pro: 'Bask Pro',

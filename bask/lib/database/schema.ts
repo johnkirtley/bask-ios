@@ -132,6 +132,17 @@ const migrations: Migration[] = [
       )`,
     ],
   },
+  {
+    version: 6,
+    up: [
+      // HealthKit sessions previously stored a timezone-naive started_at
+      // (`YYYY-MM-DDT00:00:00`), which mis-attributed passive daylight to the wrong
+      // local day for negative-UTC-offset users. These rows are fully reconstructable
+      // from Apple Health, so drop them; they re-sync with correct UTC-anchored
+      // timestamps on the next foreground sync.
+      `DELETE FROM bask_sessions WHERE source = 'healthkit'`,
+    ],
+  },
 ];
 
 export async function runMigrations(): Promise<void> {

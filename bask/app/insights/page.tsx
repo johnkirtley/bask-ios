@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Browser } from '@capacitor/browser';
 import { useOnboardingContext } from '../../contexts/OnboardingContext';
 import { deriveFitzpatrickType } from '../../lib/dEngine';
 import AtmosphericBackground from '../../components/home/AtmosphericBackground';
@@ -17,6 +18,8 @@ type InsightCard = {
   gradientFrom: string; // Gradient start color
   gradientTo: string; // Gradient end color
   pullQuote?: string; // Key sentence to highlight
+  sources?: { label: string; url: string }[]; // tappable citation links
+  citation?: string; // attribution line, e.g. "Harvard Medical School, AJCN (2025)"
 };
 
 export default function Insights() {
@@ -30,6 +33,115 @@ export default function Insights() {
     : 2;
 
   const insights: InsightCard[] = [
+    {
+      id: 'aging-telomeres',
+      title: 'Vitamin D & Healthy Aging',
+      subtitle: 'A Harvard trial linked it to slower aging',
+      icon: 'sparkles',
+      accentColor: '#FFC93C',
+      gradientFrom: 'rgba(255, 201, 60, 0.15)',
+      gradientTo: 'rgba(244, 165, 54, 0.10)',
+      pullQuote: 'A Harvard trial linked daily vitamin D to slower biological aging.',
+      content: [
+        'In a randomized, placebo-controlled study of over 1,000 adults aged 50+, participants taking 2,000 IU of vitamin D daily showed less than half the telomere shortening of those on placebo over four years — roughly the equivalent of three fewer years of aging.',
+        'Telomeres are the protective caps on your DNA that naturally wear down as you age.',
+      ],
+      citation: 'Harvard Medical School & Mass General Brigham · American Journal of Clinical Nutrition (2025)',
+      sources: [
+        { label: 'Harvard Gazette', url: 'https://news.harvard.edu/gazette/story/2025/05/vitamin-d-supplements-may-slow-biological-aging/' },
+        { label: 'Harvard Health', url: 'https://www.health.harvard.edu/staying-healthy/daily-vitamin-d-supplements-may-help-slow-aging' },
+      ],
+    },
+    {
+      id: 'immunity-inflammation',
+      title: 'Immunity & Inflammation',
+      subtitle: 'Fewer autoimmune conditions, lower inflammation',
+      icon: 'shield',
+      accentColor: '#5BB47A',
+      gradientFrom: 'rgba(91, 180, 122, 0.15)',
+      gradientTo: 'rgba(91, 180, 122, 0.10)',
+      pullQuote: 'The same trial associated vitamin D with fewer autoimmune conditions and lower inflammation.',
+      content: [
+        'Alongside the aging findings, the vitamin D group developed fewer new autoimmune diseases and showed reduced markers of inflammation.',
+        'This is part of a growing body of evidence connecting vitamin D status to immune regulation.',
+      ],
+      citation: 'Harvard Medical School, VITAL Trial (2025)',
+      sources: [
+        { label: 'Harvard Gazette', url: 'https://news.harvard.edu/gazette/story/2025/05/vitamin-d-supplements-may-slow-biological-aging/' },
+      ],
+    },
+    {
+      id: 'timing-location',
+      title: 'Why Timing & Location Matter',
+      subtitle: 'Season, latitude, and time of day',
+      icon: 'clock',
+      accentColor: '#F59E0B',
+      gradientFrom: 'rgba(245, 158, 11, 0.15)',
+      gradientTo: 'rgba(217, 119, 6, 0.10)',
+      pullQuote: 'Where and when you get sun changes how much vitamin D you can make.',
+      content: [
+        'The sun\'s UVB rays are what trigger vitamin D production in your skin — but their strength depends on season, latitude, and time of day.',
+        'In northern cities like Boston, the sun is too weak to produce meaningful vitamin D from roughly November through February. This is exactly why tracking your real sun window beats simply "getting outside."',
+      ],
+      citation: 'Harvard Health Publishing — "6 Things You Should Know About Vitamin D"',
+      sources: [
+        { label: 'Harvard Health', url: 'https://www.health.harvard.edu/healthy-aging-and-longevity/6-things-you-should-know-about-vitamin-d' },
+      ],
+    },
+    {
+      id: 'how-much-sun',
+      title: 'How Much Sun You Actually Need',
+      subtitle: 'Short, regular sessions add up',
+      icon: 'sun',
+      accentColor: '#F4A536',
+      gradientFrom: 'rgba(244, 165, 54, 0.15)',
+      gradientTo: 'rgba(244, 165, 54, 0.10)',
+      pullQuote: 'Short, regular sun sessions can support healthy vitamin D levels.',
+      content: [
+        'General guidance suggests around 10–15 minutes of midday sun on bare skin (like arms and legs), a few times per week, can help maintain healthy levels for many people.',
+        'Skin tone, age, location, and sunscreen all shift the amount needed — which is why personalized tracking matters.',
+      ],
+      citation: 'Harvard Health Publishing',
+      sources: [
+        { label: 'Harvard Health', url: 'https://www.health.harvard.edu/healthy-aging-and-longevity/6-things-you-should-know-about-vitamin-d' },
+      ],
+    },
+    {
+      id: 'deficiency-prevalence',
+      title: 'How Common Deficiency Is',
+      subtitle: 'A large share of Americans fall short',
+      icon: 'user',
+      accentColor: '#A8DADC',
+      gradientFrom: 'rgba(168, 218, 220, 0.15)',
+      gradientTo: 'rgba(136, 204, 206, 0.10)',
+      pullQuote: 'A large share of Americans don\'t get enough vitamin D.',
+      content: [
+        'National survey (NHANES) estimates vary by the threshold used: roughly 1 in 4 adults is considered deficient, and a substantially larger share fall below levels many researchers consider optimal.',
+        'Risk is higher for people with darker skin, those who live farther from the equator, and during winter.',
+      ],
+      citation: 'NHANES — U.S. National Health and Nutrition Examination Survey',
+      sources: [
+        { label: 'NCBI / PMC', url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC6075634/' },
+      ],
+    },
+    {
+      id: 'beyond-vitamin-d',
+      title: 'Sunlight Beyond Vitamin D',
+      subtitle: 'Mood, immunity, and more',
+      icon: 'layers',
+      accentColor: '#06B6D4',
+      gradientFrom: 'rgba(6, 182, 212, 0.15)',
+      gradientTo: 'rgba(8, 145, 178, 0.10)',
+      pullQuote: 'Sunlight affects far more than bone health.',
+      content: [
+        'The active form of vitamin D is thought to help regulate over 1,000 genes across the body.',
+        'Beyond vitamin D itself, sun exposure has been associated with improved mood, immune function, and cardiovascular effects — supporting the idea that healthy sun habits are about more than a single nutrient.',
+      ],
+      citation: 'Environmental Health Perspectives (NIH) — "Benefits of Sunlight: A Bright Spot for Human Health"',
+      sources: [
+        { label: 'NCBI / PMC', url: 'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2290997/' },
+      ],
+    },
     {
       id: 'vitamin-d-basics',
       title: 'Vitamin D Basics',
@@ -263,6 +375,14 @@ export default function Insights() {
             d='M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z'
           />
         );
+      case 'sparkles':
+        return (
+          <path
+            strokeLinecap='round'
+            strokeLinejoin='round'
+            d='M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.456-2.456L14.25 6l1.035-.259a3.375 3.375 0 002.456-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z'
+          />
+        );
       default:
         return null;
     }
@@ -354,8 +474,8 @@ export default function Insights() {
                   </div>
                 </div>
 
-                {/* Pull quote after 2nd paragraph */}
-                {index === 1 && selectedInsight.pullQuote && (
+                {/* Pull quote after 2nd paragraph (or last, when content is short) */}
+                {index === Math.min(1, selectedInsight.content.length - 1) && selectedInsight.pullQuote && (
                   <div className='pull-quote-enter mt-5 ml-14'>
                     <div className='backdrop-blur-xl bg-white/70 rounded-card p-5 border-l-4 shadow-sm'
                       style={{ borderLeftColor: selectedInsight.accentColor }}>
@@ -414,6 +534,65 @@ export default function Insights() {
                     </li>
                   ))}
                 </ul>
+              </div>
+            )}
+
+            {/* Sources - tappable citations */}
+            {selectedInsight.sources && selectedInsight.sources.length > 0 && (
+              <div className='mt-8 backdrop-blur-xl bg-white/70 rounded-card p-6 border border-black/5 shadow-sm'>
+                <h3 className='font-bold text-lg mb-2 flex items-center gap-2'
+                  style={{ color: selectedInsight.accentColor }}>
+                  <svg
+                    xmlns='http://www.w3.org/2000/svg'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    strokeWidth={2.5}
+                    stroke='currentColor'
+                    className='w-6 h-6'>
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      d='M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25'
+                    />
+                  </svg>
+                  Sources
+                </h3>
+                {selectedInsight.citation && (
+                  <p className='text-text-secondary text-xs leading-relaxed mb-4'>
+                    {selectedInsight.citation}
+                  </p>
+                )}
+                <div className='space-y-2'>
+                  {selectedInsight.sources.map((source, index) => (
+                    <button
+                      key={index}
+                      onClick={() => Browser.open({ url: source.url })}
+                      className='w-full flex items-center gap-3 backdrop-blur-xl bg-white/70 rounded-xl p-3 border border-black/5 shadow-sm active:scale-[0.98] transition-transform text-left'>
+                      <div className='flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center'
+                        style={{ background: `${selectedInsight.accentColor}20` }}>
+                        <svg
+                          xmlns='http://www.w3.org/2000/svg'
+                          fill='none'
+                          viewBox='0 0 24 24'
+                          strokeWidth={2}
+                          stroke={selectedInsight.accentColor}
+                          className='w-4 h-4'>
+                          <path strokeLinecap='round' strokeLinejoin='round' d='M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25' />
+                        </svg>
+                      </div>
+                      <span className='flex-1 text-text-primary text-sm font-medium'>{source.label}</span>
+                      <svg
+                        xmlns='http://www.w3.org/2000/svg'
+                        fill='none'
+                        viewBox='0 0 24 24'
+                        strokeWidth={2}
+                        stroke='currentColor'
+                        className='w-5 h-5 text-text-secondary flex-shrink-0'>
+                        <path strokeLinecap='round' strokeLinejoin='round' d='M9 5l7 7-7 7' />
+                      </svg>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>

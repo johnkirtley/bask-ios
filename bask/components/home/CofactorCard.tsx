@@ -5,6 +5,7 @@ import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { App } from '@capacitor/app';
 import { cofactorsRepository, CofactorType } from '../../lib/database';
 import GlassCardWrapper from './GlassCardWrapper';
+import { capture, ANALYTICS_EVENTS } from '../../lib/analytics';
 
 interface CofactorCardProps {
   onCofactorLogged?: () => void;
@@ -89,6 +90,8 @@ export default function CofactorCard({ onCofactorLogged }: CofactorCardProps) {
       if (!isCurrentlyLogged) {
         // Log the cofactor
         await cofactorsRepository.create(type);
+
+        capture(ANALYTICS_EVENTS.cofactorLogged, { cofactor_type: type });
 
         // Update state
         if (type === 'magnesium') {

@@ -6,6 +6,7 @@ import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { sessionsRepository } from '../lib/database';
 import { leaderboardService } from '../lib/supabase/leaderboardService';
+import { capture, ANALYTICS_EVENTS } from '../lib/analytics';
 import { calculateVitaminD, calculateTimeToBurn, getExposurePercent, formatSunburnCountdown } from '../lib/dEngine';
 import { BaskLiveActivity } from '../lib/plugins';
 import type { BaskSessionStatus } from '../types';
@@ -149,6 +150,12 @@ export function useBaskSession(
           projectedTimeToBurn: calculateTimeToBurn(rawUV, fitzpatrickType), // Burn risk uses raw UV
           sessionId,
           liveActivityId,
+        });
+
+        capture(ANALYTICS_EVENTS.sessionStarted, {
+          clothing_preset_id: clothingPresetId,
+          exposure_percent: exposurePercent,
+          uv_index: rawUV,
         });
 
         // Haptic feedback
@@ -301,6 +308,11 @@ export function useBaskSession(
         }).catch(e => console.error('Failed to update Live Activity on pause:', e));
       }
 
+      capture(ANALYTICS_EVENTS.sessionPaused, {
+        elapsed_seconds: prev.elapsedSeconds,
+        current_iu: Math.round(prev.currentIU),
+      });
+
       return {
         ...prev,
         status: 'paused',
@@ -322,6 +334,10 @@ export function useBaskSession(
       const adjustedStartTime = prev.startTime
         ? new Date(prev.startTime.getTime() + pauseDuration)
         : prev.startTime;
+
+      capture(ANALYTICS_EVENTS.sessionResumed, {
+        pause_duration_seconds: Math.round(pauseDuration / 1000),
+      });
 
       // Update Live Activity to resumed state
       if (prev.liveActivityId && Capacitor.isNativePlatform()) {
@@ -397,6 +413,11 @@ export function useBaskSession(
         }
       }
 
+      capture(ANALYTICS_EVENTS.sessionEnded, {
+        duration_seconds: state.elapsedSeconds,
+        iu_gained: Math.round(state.currentIU),
+      });
+
       const completedSession = { ...state };
 
       setState({
@@ -420,6 +441,11 @@ export function useBaskSession(
     if (timerRef.current) clearInterval(timerRef.current);
 
     try {
+      capture(ANALYTICS_EVENTS.sessionCancelled, {
+        elapsed_seconds: state.elapsedSeconds,
+        iu_gained: Math.round(state.currentIU),
+      });
+
       if (state.sessionId) {
         await sessionsRepository.delete(state.sessionId);
       }

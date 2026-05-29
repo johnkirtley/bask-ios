@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { IonAlert } from '@ionic/react';
 import { userProfileRepository } from '@/lib/database/repositories/userProfileRepository';
+import { capture, ANALYTICS_EVENTS } from '@/lib/analytics';
 import Mascot from '../ui/Mascot';
 import { getMascotMood } from '@/lib/mascotUtils';
 
@@ -74,6 +75,10 @@ export default function BaskRing({
 
   const handleGoalUpdate = async (newGoal: number) => {
     try {
+      capture(ANALYTICS_EVENTS.dailyGoalChanged, {
+        new_goal_iu: newGoal,
+        previous_goal_iu: displayedGoal ?? vitaminDGoal,
+      });
       setDisplayedGoal(newGoal); // Update immediately (optimistic)
       await userProfileRepository.setDailyGoal(newGoal);
       onGoalUpdated?.(); // Trigger refresh

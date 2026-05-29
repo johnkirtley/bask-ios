@@ -8,7 +8,10 @@ import { OnboardingProvider, useOnboardingContext } from '../contexts/Onboarding
 import { useSubscription } from '../hooks/useSubscription';
 import OnboardingFlow from './onboarding/OnboardingFlow';
 import NotificationBootstrap from './NotificationBootstrap';
+import AnalyticsBootstrap from './analytics/AnalyticsBootstrap';
+import PageviewTracker from './analytics/PageviewTracker';
 import BrandSpinner from './ui/LoadingSpinner';
+import { capture, ANALYTICS_EVENTS } from '../lib/analytics';
 
 // Initialize Ionic React with iOS mode
 setupIonicReact({
@@ -37,6 +40,15 @@ function OnboardingGate({ children }: { children: React.ReactNode }) {
   // Ref to prevent double-triggering paywall
   const paywallTriggered = useRef(false);
 
+  // Fire onboarding_started once when the onboarding flow is first shown.
+  const onboardingStartedRef = useRef(false);
+  useEffect(() => {
+    if (isLoaded && !isComplete && !onboardingStartedRef.current) {
+      onboardingStartedRef.current = true;
+      capture(ANALYTICS_EVENTS.onboardingStarted);
+    }
+  }, [isLoaded, isComplete]);
+
   // Effect to show paywall after onboarding completes
   useEffect(() => {
     async function showPostOnboardingPaywall() {
@@ -52,6 +64,7 @@ function OnboardingGate({ children }: { children: React.ReactNode }) {
       setIsShowingPaywall(true);
 
       try {
+        capture(ANALYTICS_EVENTS.paywallPresented, { source: 'post_onboarding' });
         // presentPaywall is async and returns when user dismisses
         await presentPaywall();
       } catch {
@@ -87,6 +100,8 @@ export default function IonicProvider({ children }: IonicProviderProps) {
     <IonApp>
       <NotificationBootstrap />
       <SubscriptionProvider>
+        <AnalyticsBootstrap />
+        <PageviewTracker />
         <OnboardingProvider>
           <ModalProvider>
             <OnboardingGate>{children}</OnboardingGate>

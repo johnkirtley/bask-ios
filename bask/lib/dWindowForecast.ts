@@ -5,6 +5,7 @@ import {
   FitzpatrickType,
   calculateTimeToBurn,
   getAgeMultiplier,
+  BASE_IU_PER_MINUTE,
 } from './dEngine';
 
 /**
@@ -547,9 +548,8 @@ function calculateMinutesToIU(
 ): number {
   if (uvIndex < 3 || exposurePercent <= 0 || targetIU <= 0) return Infinity;
 
-  const BASE_IU_PER_MINUTE = 100;
   const skinMultiplier =
-    SKIN_MULTIPLIERS[fitzpatrickType as FitzpatrickType] ?? 1.6;
+    SKIN_MULTIPLIERS[fitzpatrickType as FitzpatrickType] ?? 3.0;
   const exposureFraction = exposurePercent / 100;
   const uvFactor = uvIndex / 10;
   const ageFactor = getAgeMultiplier(age);
@@ -580,9 +580,8 @@ function calculateIUForDuration(
   // Shadow Rule: UV must be >= 3 for vitamin D synthesis
   if (uvIndex < 3) return 0;
 
-  const BASE_IU_PER_MINUTE = 100;
   const skinMultiplier =
-    SKIN_MULTIPLIERS[fitzpatrickType as FitzpatrickType] ?? 1.6;
+    SKIN_MULTIPLIERS[fitzpatrickType as FitzpatrickType] ?? 3.0;
   const exposureFraction = exposurePercent / 100;
   const uvFactor = uvIndex / 10;
   const ageFactor = getAgeMultiplier(age);

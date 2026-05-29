@@ -1,26 +1,69 @@
-node_modules
-.DS_Store
+# Dependencies
+node_modules/
+
+# Build output
+out/
+bask/out/
+.next/
+build/
+
+# Environment & secrets
 .env
-/build
-.vscode
-.idea
+.env.*
+!.env.example
+*.pem
+*.local
+.env.production
+
+# IDE & editor
+.vscode/
+.idea/
+.cursor/
+.claude/
+.ruby-lsp/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs & temp
 *.log
 *.bak
 *.tmp
 *.swp
-*.env
-*.local
-*.pem
-coverage
-.next
-/out
-.pnp
-.pnp.js
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.tsbuildinfo
+
+# TypeScript / Next.js
+*.tsbuildinfo
 next-env.d.ts
-.env*.local
-.vercel
-.env.production
+
+# Deploy
+.vercel/
+
+# Legacy Expo (unused — Capacitor project)
+.expo/
+
+# Local dev notes & AI context (not for repo)
+CURRENT_TASKS.md
+PROMPT.md
+CLAUDE.md
+bask/APP_SUMMARY.md
+bask/LANDING_PAGE_CONTEXT.md
+
+# Local screenshots
+/IMG_*.PNG
+/IMG_*.png
+/IMG_*.jpeg
+/IMG_*.jpg
+
+# Agent tooling
+.ralphrc
+
+# Test coverage
+coverage/
+
+# Yarn / npm
+.pnp
+.pnp.js

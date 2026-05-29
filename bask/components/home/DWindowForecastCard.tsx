@@ -315,7 +315,7 @@ export default function DWindowForecastCard({
                 now={now}
               />
             ) : (
-              <div className='rounded-xl p-3 bg-black/[0.03] border border-black/5 text-center'>
+              <div className='rounded-xl p-3 bg-solar-flare/[0.06] border border-solar-warm/[0.15] text-center'>
                 <p className='text-sm font-medium text-text-primary'>
                   No D-Window today
                 </p>
@@ -365,7 +365,7 @@ export default function DWindowForecastCard({
                 </button>
               )
             ) : (
-              <div className='rounded-xl p-3 bg-black/[0.03] border border-black/5 text-center'>
+              <div className='rounded-xl p-3 bg-solar-flare/[0.06] border border-solar-warm/[0.15] text-center'>
                 <p className='text-sm font-medium text-text-primary'>
                   No D-Window predicted yet
                 </p>
@@ -416,10 +416,8 @@ export default function DWindowForecastCard({
 function LockedTomorrowWindow() {
   return (
     <div
-      className='backdrop-blur-sm bg-white/50 rounded-xl p-3.5 border border-black/5 relative overflow-hidden'
+      className='backdrop-blur-sm bg-vitality-mint/[0.12] rounded-xl p-3.5 border border-black/5 relative overflow-hidden'
       aria-hidden='true'>
-      <div className='absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-amber-50/40 to-transparent pointer-events-none' />
-
       <div className='relative animate-pulse'>
         <div className='flex items-center justify-between mb-3'>
           <div className='h-4 w-16 rounded bg-black/10' />
@@ -518,10 +516,7 @@ function WindowDisplay({
     : null;
 
   return (
-    <div className='backdrop-blur-sm bg-white/50 rounded-xl p-3.5 border border-black/5 relative overflow-hidden'>
-      {/* Subtle gradient accent */}
-      <div className='absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-amber-50/40 to-transparent pointer-events-none' />
-
+    <div className='backdrop-blur-sm bg-vitality-mint/[0.12] rounded-xl p-3.5 border border-black/5 relative overflow-hidden'>
       <div className='relative'>
         {/* Header */}
         <div className='flex items-center justify-between mb-3'>
@@ -550,7 +545,7 @@ function WindowDisplay({
             <span className='text-[#F4A536] text-2xl font-bold tracking-tight whitespace-nowrap bg-gradient-to-br from-[#F4A536] to-[#E8941F] bg-clip-text text-transparent'>
               {window.windowStartTime}
             </span>
-            <span className='text-[#F4A536]/40 text-xl font-light'>—</span>
+            <span className='text-[#F4A536]/60 text-xl font-light'>—</span>
             <span className='text-[#F4A536] text-2xl font-bold tracking-tight whitespace-nowrap bg-gradient-to-br from-[#F4A536] to-[#E8941F] bg-clip-text text-transparent'>
               {window.windowEndTime}
             </span>
@@ -558,21 +553,21 @@ function WindowDisplay({
         </div>
 
         {/* Session Duration Badge */}
-        <div className='inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/40 mb-3'>
+        <div className='inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-bask-teal/[0.15] border border-bask-teal/30 mb-3'>
           <svg
             xmlns='http://www.w3.org/2000/svg'
             fill='none'
             viewBox='0 0 24 24'
             strokeWidth={2}
             stroke='currentColor'
-            className='w-3.5 h-3.5 text-amber-600'>
+            className='w-3.5 h-3.5 text-[#137677]'>
             <path
               strokeLinecap='round'
               strokeLinejoin='round'
               d='M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z'
             />
           </svg>
-          <span className='text-xs font-semibold text-amber-900'>
+          <span className='text-xs font-semibold text-[#137677]'>
             {window.durationMinutes} min session recommended
           </span>
         </div>
@@ -588,7 +583,7 @@ function WindowDisplay({
               viewBox='0 0 24 24'
               strokeWidth={2}
               stroke='currentColor'
-              className='w-3.5 h-3.5 text-[#F4A536]'
+              className='w-3.5 h-3.5 text-grove-green-dark'
               aria-hidden='true'>
               <path
                 strokeLinecap='round'

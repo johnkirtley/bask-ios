@@ -7,16 +7,30 @@ export type FitzpatrickType = 1 | 2 | 3 | 4 | 5 | 6;
 export type BurnRiskLevel = 'Low' | 'Moderate' | 'High' | 'Very High' | 'Extreme';
 
 /**
- * Skin multipliers for vitamin D synthesis
- * Higher Fitzpatrick types require more sun exposure to produce the same vitamin D
+ * Base IU generation rate at UV 10, 100% exposure, Type I skin, peak age.
+ * Calibrated so a fair-skin (Type I) full-body 1-MED summer session lands at
+ * ~10,000-15,000 IU, matching published vitamin D photobiology (Holick).
+ * Single source of truth — shared with dWindowForecast to prevent drift.
+ */
+export const BASE_IU_PER_MINUTE = 1500;
+
+/**
+ * Skin multipliers for vitamin D synthesis (higher = slower per-minute synthesis).
+ *
+ * These scale ~proportionally with the MED (burn-time) table in calculateTimeToBurn
+ * so that the burn-capped saturation yield (∝ MED_minutes / skinMultiplier) is roughly
+ * equal across skin types — everyone reaches a similar photochemical pre-D3 limit — while
+ * fair skin still synthesizes *fastest* (lowest multiplier → highest rate). Keeping the two
+ * tables proportional avoids an inversion where darker skin out-produces fair skin at the cap.
+ * IMPORTANT: if you change MED_MINUTES_AT_UV1, re-derive these to stay proportional.
  */
 export const SKIN_MULTIPLIERS: Record<FitzpatrickType, number> = {
   1: 1.0,   // Type I - Very fair, always burns, never tans
-  2: 1.3,   // Type II - Fair, burns easily, tans minimally
-  3: 1.6,   // Type III - Medium, sometimes burns, tans gradually
-  4: 2.5,   // Type IV - Olive, rarely burns, tans easily
-  5: 4.0,   // Type V - Brown, very rarely burns, tans very easily
-  6: 5.0,   // Type VI - Dark brown to black, never burns, tans very easily
+  2: 1.5,   // Type II - Fair, burns easily, tans minimally
+  3: 3.0,   // Type III - Medium, sometimes burns, tans gradually
+  4: 4.5,   // Type IV - Olive, rarely burns, tans easily
+  5: 6.0,   // Type V - Brown, very rarely burns, tans very easily
+  6: 7.5,   // Type VI - Dark brown to black, never burns, tans very easily
 };
 
 /**
@@ -95,14 +109,11 @@ export function calculateVitaminD(
   // Below UV 3, users get UVA (skin damage) but zero vitamin D synthesis
   if (uvIndex < 3) return 0;
 
-  // Base IU generation rate at UV 10, 100% exposure, Type I skin, peak age
-  const BASE_IU_PER_MINUTE = 100;
-
   // Cap synthesis at the burn threshold (biological saturation)
   const timeToBurn = calculateTimeToBurn(uvIndex, fitzpatrickType);
   const effectiveMinutes = Math.min(minutes, timeToBurn);
 
-  const skinMultiplier = SKIN_MULTIPLIERS[fitzpatrickType] ?? 1.6;
+  const skinMultiplier = SKIN_MULTIPLIERS[fitzpatrickType] ?? 3.0;
   const exposureFraction = exposurePercent / 100;
   const uvFactor = uvIndex / 10;
   const ageFactor = getAgeMultiplier(age ?? null);
@@ -132,8 +143,7 @@ export function calculateTimeToGoal(
   // Shadow Rule: UV must be >= 3 for vitamin D synthesis
   if (uvIndex < 3 || exposurePercent <= 0 || targetIU <= 0) return Infinity;
 
-  const BASE_IU_PER_MINUTE = 100;
-  const skinMultiplier = SKIN_MULTIPLIERS[fitzpatrickType] ?? 1.6;
+  const skinMultiplier = SKIN_MULTIPLIERS[fitzpatrickType] ?? 3.0;
   const exposureFraction = exposurePercent / 100;
   const uvFactor = uvIndex / 10;
   const ageFactor = getAgeMultiplier(age ?? null);

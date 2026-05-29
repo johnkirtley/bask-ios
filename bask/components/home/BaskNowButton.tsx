@@ -1,6 +1,7 @@
 'use client';
 
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { capture, ANALYTICS_EVENTS } from '../../lib/analytics';
 
 interface BaskNowButtonProps {
   preset: string;
@@ -40,6 +41,8 @@ export default function BaskNowButton({
   };
 
   const handlePresetChange = async () => {
+    capture(ANALYTICS_EVENTS.clothingEditorOpened);
+
     try {
       await Haptics.impact({ style: ImpactStyle.Light });
     } catch {

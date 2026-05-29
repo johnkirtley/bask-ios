@@ -337,18 +337,28 @@ export const streaksRepository = {
     const previousState = await streakStateRepository.get();
     const summary = await this.getGoalStreakSummary(dailyGoal, previousState);
     const todayKey = getLocalDateKey(new Date());
-    const yesterdayKey = getLocalDateKey(addDays(new Date(), -1));
     const lastQualifyingDate = summary.lastQualifyingDate;
     const previousLastQualifyingDate = previousState.lastQualifyingDate;
     const previousStreakAlive = previousState.currentStreak > 0;
     const missedGraceDay =
       previousLastQualifyingDate !== null &&
       daysBetweenLocalDateKeys(todayKey, previousLastQualifyingDate) > 1;
+    // The streak actually broke the first fully-missed day after the grace day:
+    // last qualifying + 1 (grace, streak survives) + 1 (break). Detection may run
+    // days later, so derive the real break day instead of assuming "yesterday".
+    const streakDeathDate = previousLastQualifyingDate
+      ? getLocalDateKey(
+          addDays(
+            startOfLocalDay(new Date(`${previousLastQualifyingDate}T00:00:00`)),
+            2,
+          ),
+        )
+      : getLocalDateKey(addDays(new Date(), -1));
     const streakDied =
       previousStreakAlive &&
       summary.currentStreak === 0 &&
       missedGraceDay &&
-      previousState.lastStreakDeathDate !== yesterdayKey;
+      previousState.lastStreakDeathDate !== streakDeathDate;
     const milestoneReached =
       reason === 'log' &&
       isValidMilestone(summary.currentStreak) &&
@@ -372,7 +382,7 @@ export const streaksRepository = {
       ),
       lastQualifyingDate,
       lastStreakDeathDate: streakDied
-        ? yesterdayKey
+        ? streakDeathDate
         : previousState.lastStreakDeathDate,
       lastStreakDeathLength: streakDied
         ? previousState.currentStreak

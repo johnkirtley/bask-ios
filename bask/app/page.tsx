@@ -46,6 +46,7 @@ import { BaskWeather } from '../lib/plugins';
 import type { HourlyForecastItem } from '../lib/plugins/baskWeather';
 import { getRepresentativeUvForPassiveSync } from '../lib/healthKitUvUtils';
 import { handleLocationPermissionAction } from '../lib/locationPermissionUtils';
+import { capture, ANALYTICS_EVENTS } from '../lib/analytics';
 import AtmosphericBackground from '../components/home/AtmosphericBackground';
 import BaskRing from '../components/home/BaskRing';
 import StatMetrics from '../components/home/StatMetrics';
@@ -300,6 +301,7 @@ export default function Home() {
 
     App.addListener('appStateChange', ({ isActive }) => {
       if (isActive) {
+        capture(ANALYTICS_EVENTS.appOpened);
         void loadForecast();
         void loadTodayTotal('app_open');
         void leaderboardService.syncParticipationState();
@@ -438,6 +440,7 @@ export default function Home() {
 
   // Handle location warning press
   const handleLocationWarningPress = async () => {
+    capture(ANALYTICS_EVENTS.locationPermissionRequested, { source: 'home' });
     await handleLocationPermissionAction();
   };
 
@@ -578,7 +581,7 @@ export default function Home() {
                   : "Today's decay covered";
               })()}
               decayCovered={todayTotal >= dailyDecay}
-              decayInfoText='Your body breaks down vitamin D over time. With a 15-day half-life, you lose about 4.5% of your stored vitamin D each day. Regular sun exposure or supplementation helps maintain healthy levels.'
+              decayInfoText='Vitamin D has a roughly 15-day half-life, so the body gradually clears it over time — on the order of a few percent per day. Regular sun exposure or supplementation helps maintain healthy levels. This is general educational information, not a measurement of your personal vitamin D level.'
             />
           </div>
 
@@ -647,6 +650,10 @@ export default function Home() {
         isOpen={isPresetSelectorOpen}
         onClose={() => setIsPresetSelectorOpen(false)}
         onSelect={(id) => {
+          capture(ANALYTICS_EVENTS.clothingPresetChanged, {
+            preset_id: id,
+            coverage_percent: presets.find((p) => p.id === id)?.coveragePercent,
+          });
           setSelectedPresetId(id);
           setIsPresetSelectorOpen(false);
         }}

@@ -31,6 +31,7 @@ import ScienceFAQ from '../../components/settings/ScienceFAQ';
 import LeaderboardSettings from '../../components/settings/LeaderboardSettings';
 import BloodTestModal from '../../components/settings/BloodTestModal';
 import { userProfileRepository } from '../../lib/database/repositories/userProfileRepository';
+import { capture, ANALYTICS_EVENTS } from '../../lib/analytics';
 
 // Icon components
 const ChevronRightIcon = () => (
@@ -189,6 +190,15 @@ const BeakerIcon = () => (
 
 export default function SettingsPage() {
   const { isPremium, restore, isLoading, presentPaywall } = useSubscription();
+
+  // Wrap paywall presentation so every entry point is recorded with its source.
+  const openPaywall = useCallback(
+    (source: string) => {
+      capture(ANALYTICS_EVENTS.paywallPresented, { source });
+      return presentPaywall();
+    },
+    [presentPaywall],
+  );
   const { resetOnboarding } = useOnboardingContext();
   const [showOnboardingResetConfirm, setShowOnboardingResetConfirm] =
     useState(false);
@@ -371,7 +381,7 @@ export default function SettingsPage() {
   const handleToggleNotifications = async () => {
     // Gate for non-premium users
     if (!isPremium) {
-      await presentPaywall();
+      await openPaywall('notifications_gate');
       return;
     }
 
@@ -481,7 +491,7 @@ export default function SettingsPage() {
             ) : (
               <div className='backdrop-blur-xl bg-white/70 border border-black/5 shadow-sm rounded-xl overflow-hidden mb-3'>
                 <button
-                  onClick={() => presentPaywall()}
+                  onClick={() => openPaywall('settings_upgrade_button')}
                   className='w-full p-4 flex items-center justify-between active:scale-[0.98] transition-all'>
                   <div className='flex items-center gap-3'>
                     <div className='w-10 h-10 bg-solar-flare/15 rounded-full flex items-center justify-center text-solar-flare'>
@@ -550,7 +560,7 @@ export default function SettingsPage() {
               {/* HealthKit Toggle */}
               <div
                 className={`p-4 flex items-center justify-between ${!isPremium ? 'cursor-pointer active:bg-black/5 transition-colors' : ''}`}
-                onClick={!isPremium ? async () => await presentPaywall() : undefined}>
+                onClick={!isPremium ? async () => await openPaywall('premium_feature') : undefined}>
                 <div className='flex items-center gap-3'>
                   <span className='text-text-secondary'>
                     <HeartIcon />
@@ -618,7 +628,7 @@ export default function SettingsPage() {
               {/* D-Window Alerts Toggle */}
               <div
                 className={`p-4 flex items-center justify-between border-b border-black/5 ${!isPremium ? 'cursor-pointer active:bg-black/5 transition-colors' : ''}`}
-                onClick={!isPremium ? async () => await presentPaywall() : undefined}>
+                onClick={!isPremium ? async () => await openPaywall('premium_feature') : undefined}>
                 <div className='flex items-center gap-3'>
                   <span className='text-text-secondary'>
                     <BellIcon />
@@ -749,6 +759,10 @@ export default function SettingsPage() {
                     app.
                   </li>
                   <li>Your data is stored locally on your device.</li>
+                  <li>
+                    We use PostHog for anonymous app usage and performance
+                    monitoring.
+                  </li>
                   <li>
                     If you opt into the Touch Grass Leaderboard, only your anonymous score is
                     shared — see Community settings above.

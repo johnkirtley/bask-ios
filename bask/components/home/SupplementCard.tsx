@@ -6,6 +6,7 @@ import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { App } from '@capacitor/app';
 import { supplementsRepository, cofactorsRepository } from '../../lib/database';
 import { BaskHealth } from '../../lib/plugins/baskHealth';
+import { capture, ANALYTICS_EVENTS } from '../../lib/analytics';
 import GlassCardWrapper from './GlassCardWrapper';
 import { BloodTestCalibration } from '../../lib/bloodTestUtils';
 
@@ -191,6 +192,11 @@ export default function SupplementCard({
     try {
       // Log the supplement to database
       await supplementsRepository.create(dosage);
+
+      capture(ANALYTICS_EVENTS.supplementLogged, {
+        dosage_iu: dosage,
+        total_iu_today: todayTotalIU + dosage,
+      });
 
       // Write to HealthKit when user enabled Apple Health sync (iOS only)
       if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
