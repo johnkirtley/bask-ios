@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import type { ReactNode } from 'react';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import AtmosphericBackground from './AtmosphericBackground';
 import WhyZeroIUTooltip from './WhyZeroIUTooltip';
 import Mascot from '../ui/Mascot';
@@ -20,6 +22,80 @@ interface ActiveSessionViewProps {
   uvIndex: number;
   cloudCover?: number;
   exposurePercent: number;
+}
+
+/**
+ * How long the user must hold the Stop button before the session ends.
+ * A deliberate press-and-hold prevents accidental pocket taps from ending a session.
+ */
+const HOLD_TO_STOP_MS = 1500;
+
+/**
+ * A Stop control that only fires `onComplete` after a sustained press-and-hold.
+ * A momentary tap (e.g. accidental pressure while the phone is in a pocket) releases
+ * before the threshold and does nothing. A progress fill animates during the hold so
+ * the gesture is discoverable and intentional.
+ */
+function HoldToStopButton({
+  onComplete,
+  className,
+  children,
+}: {
+  onComplete: () => void;
+  className?: string;
+  children: ReactNode;
+}) {
+  const [isHolding, setIsHolding] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const cancelHold = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    setIsHolding(false);
+  };
+
+  const startHold = () => {
+    if (timerRef.current) return;
+    setIsHolding(true);
+    Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+    timerRef.current = setTimeout(() => {
+      timerRef.current = null;
+      setIsHolding(false);
+      onComplete();
+    }, HOLD_TO_STOP_MS);
+  };
+
+  // Clean up the timer if the component unmounts mid-hold
+  useEffect(() => () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+  }, []);
+
+  return (
+    <button
+      onPointerDown={startHold}
+      onPointerUp={cancelHold}
+      onPointerLeave={cancelHold}
+      onPointerCancel={cancelHold}
+      style={{ touchAction: 'none', userSelect: 'none', WebkitUserSelect: 'none' }}
+      className={`relative overflow-hidden ${className ?? ''}`}>
+      {/* Progress fill that sweeps across while held */}
+      <span
+        aria-hidden
+        className='absolute inset-y-0 left-0 bg-ember-alert/15'
+        style={{
+          width: isHolding ? '100%' : '0%',
+          transition: isHolding
+            ? `width ${HOLD_TO_STOP_MS}ms linear`
+            : 'width 150ms ease-out',
+        }}
+      />
+      <span className='relative z-10 flex items-center justify-center gap-2'>
+        {isHolding ? 'Hold to stop…' : children}
+      </span>
+    </button>
+  );
 }
 
 /**
@@ -213,21 +289,21 @@ export default function ActiveSessionView({
                 className='flex-1 py-4 bg-gradient-to-r from-[#FFC93C] to-[#F4A536] rounded-full text-lg font-black text-[#2A2419] shadow-[0_12px_30px_rgba(244,165,54,0.33)] active:scale-[0.98] transition-transform'>
                 Resume
               </button>
-              <button
-                onClick={onEnd}
-                className='flex-1 py-4 bg-white rounded-full text-lg font-black text-[#2A2419] shadow-[0_4px_14px_rgba(40,30,10,0.07)] active:scale-[0.98] transition-transform flex items-center justify-center gap-2'>
+              <HoldToStopButton
+                onComplete={onEnd}
+                className='flex-1 py-4 bg-white rounded-full text-lg font-black text-[#2A2419] shadow-[0_4px_14px_rgba(40,30,10,0.07)] active:scale-[0.98] transition-transform'>
                 <span className='w-3 h-3 rounded-sm bg-ember-alert' />
                 Stop
-              </button>
+              </HoldToStopButton>
             </div>
           ) : (
             <>
-              <button
-                onClick={onEnd}
-                className='w-full py-4 bg-white rounded-full text-lg font-black text-[#2A2419] shadow-[0_4px_14px_rgba(40,30,10,0.07)] active:scale-[0.98] transition-transform flex items-center justify-center gap-2'>
+              <HoldToStopButton
+                onComplete={onEnd}
+                className='w-full py-4 bg-white rounded-full text-lg font-black text-[#2A2419] shadow-[0_4px_14px_rgba(40,30,10,0.07)] active:scale-[0.98] transition-transform'>
                 <span className='w-3 h-3 rounded-sm bg-ember-alert' />
                 Stop Session
-              </button>
+              </HoldToStopButton>
               <button
                 onClick={onPause}
                 className='py-2 text-sm font-semibold text-text-secondary active:opacity-60 transition-opacity'>
