@@ -12,6 +12,7 @@ import { cofactorsRepository, Cofactor } from '../../lib/database/repositories/c
 import CalendarStreak from '../../components/history/CalendarStreak';
 import SwipeableCard from '../../components/history/SwipeableCard';
 import EditEntryModal from '../../components/history/EditEntryModal';
+import AddSessionModal from '../../components/history/AddSessionModal';
 import { useSubscription } from '../../hooks/useSubscription';
 import ProBadge from '../../components/ui/ProBadge';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
@@ -42,6 +43,7 @@ export default function History() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editTarget, setEditTarget] = useState<HistoryEntry | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [isStreakSheetOpen, setIsStreakSheetOpen] = useState(false);
   const { summary: streakSummary, state: streakState, refreshStreak } = useStreakState();
 
@@ -509,6 +511,22 @@ export default function History() {
         <div className='px-6 py-6 pt-safe'>
           <h1 className='text-[32px] font-extrabold tracking-[-0.02em] text-text-primary'>History</h1>
           <p className='text-text-secondary mt-1'>Your vitamin D journey</p>
+          <button
+            type='button'
+            onClick={() => setShowAddModal(true)}
+            aria-label='Add manual session'
+            className='mt-4 w-full flex items-center justify-center gap-2 rounded-full bg-solar-flare text-white shadow-lg py-3 text-sm font-semibold active:scale-[0.98] transition-transform'>
+            <svg
+              xmlns='http://www.w3.org/2000/svg'
+              fill='none'
+              viewBox='0 0 24 24'
+              strokeWidth={2.5}
+              stroke='currentColor'
+              className='w-5 h-5'>
+              <path strokeLinecap='round' strokeLinejoin='round' d='M12 4.5v15m7.5-7.5h-15' />
+            </svg>
+            Add Manual Session
+          </button>
         </div>
 
         {/* Tab Navigation */}
@@ -793,6 +811,16 @@ export default function History() {
           }}
           entry={editTarget}
           onSave={handleEditSave}
+        />
+
+        {/* Add Session Modal */}
+        <AddSessionModal
+          isOpen={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          onSaved={() => {
+            loadHistory();
+            void refreshStreak('log');
+          }}
         />
 
         <StreakDetailSheet

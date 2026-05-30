@@ -476,6 +476,8 @@ export default function Home() {
         uvIndex={sunData.uvIndex}
         cloudCover={sunData.cloudCover}
         exposurePercent={exposurePercent}
+        dailyGoalIU={sunData.vitaminDGoal}
+        baselineTodayIU={todayTotal}
       />
     );
   }

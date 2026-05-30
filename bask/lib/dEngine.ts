@@ -103,10 +103,13 @@ export function formatEstimatedIU(iu: number): string {
  *
  * Formula: IU = (UVI/10) × Minutes × Exposure% × (1/SkinMultiplier) × AgeFactor × BaseRate
  *
- * Biological Saturation: Vitamin D synthesis is self-limiting. Once you reach ~1 MED
+ * Biological Saturation: Vitamin D synthesis is self-limiting. As you approach ~1 MED
  * (Minimum Erythemal Dose, aka time to burn), pre-vitamin D3 begins converting to
- * inert isomers (lumisterol/tachysterol) instead of active vitamin D3. Therefore,
- * extended sun exposure beyond the burn threshold does not produce additional vitamin D.
+ * inert isomers (lumisterol/tachysterol) instead of active vitamin D3. Rather than a hard
+ * stop at the burn threshold, this is modeled as diminishing returns: minutes up to ~1 MED
+ * count fully, and exposure beyond it asymptotically approaches a small ceiling. This keeps
+ * the live counter inching upward (never frozen) while staying honest that extra sun yields
+ * little additional vitamin D.
  *
  * @param uvIndex - Current UV index (0-11+)
  * @param minutes - Duration of exposure in minutes
@@ -126,9 +129,16 @@ export function calculateVitaminD(
   // Below UV 3, users get UVA (skin damage) but zero vitamin D synthesis
   if (uvIndex < 3) return 0;
 
-  // Cap synthesis at the burn threshold (biological saturation)
+  // Biological saturation as diminishing returns (not a hard stop): minutes up to ~1 MED
+  // (burn threshold) count fully; beyond it, extra exposure asymptotically approaches a
+  // small ceiling instead of freezing the counter.
   const timeToBurn = calculateTimeToBurn(uvIndex, fitzpatrickType);
-  const effectiveMinutes = Math.min(minutes, timeToBurn);
+  const baseMinutes = Math.min(minutes, timeToBurn);
+  const overMinutes = Math.max(0, minutes - timeToBurn);
+  const POST_BURN_CEILING = 0.25; // up to +25% of the 1-MED yield past saturation
+  const taperMinutes =
+    timeToBurn * POST_BURN_CEILING * (1 - Math.exp(-overMinutes / Math.max(1, timeToBurn)));
+  const effectiveMinutes = baseMinutes + taperMinutes;
 
   const skinMultiplier = SKIN_MULTIPLIERS[fitzpatrickType] ?? 3.0;
   const exposureFraction = exposurePercent / 100;

@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { Haptics, NotificationType } from '@capacitor/haptics';
 import AtmosphericBackground from './AtmosphericBackground';
 import WhyZeroIUTooltip from './WhyZeroIUTooltip';
+import HoldToStopButton from './HoldToStopButton';
 import Mascot from '../ui/Mascot';
-import { effectiveUv } from '../../lib/dEngine';
+import { effectiveUv, formatEstimatedIU } from '../../lib/dEngine';
 import type { SunData } from '../../lib/sunDataUtils';
 
 interface ActiveSessionViewProps {
@@ -20,6 +22,8 @@ interface ActiveSessionViewProps {
   uvIndex: number;
   cloudCover?: number;
   exposurePercent: number;
+  dailyGoalIU: number;
+  baselineTodayIU: number;
 }
 
 /**
@@ -38,9 +42,26 @@ export default function ActiveSessionView({
   uvIndex,
   cloudCover,
   exposurePercent,
+  dailyGoalIU,
+  baselineTodayIU,
 }: ActiveSessionViewProps) {
   const [isWhyZeroTooltipOpen, setIsWhyZeroTooltipOpen] = useState(false);
   const [showZeroIUHint, setShowZeroIUHint] = useState(false);
+
+  // Daily goal: projected total = already-banked today + this session
+  const projectedTodayIU = baselineTodayIU + currentIU;
+  const goalReached = dailyGoalIU > 0 && projectedTodayIU >= dailyGoalIU;
+
+  // Fire a success haptic the first time the goal is crossed *during* the session.
+  // If the user was already at/over goal when the session started, don't celebrate on mount.
+  const goalHapticFiredRef = useRef(false);
+  const startedAtOrOverGoalRef = useRef(dailyGoalIU > 0 && baselineTodayIU >= dailyGoalIU);
+  useEffect(() => {
+    if (goalReached && !goalHapticFiredRef.current && !startedAtOrOverGoalRef.current) {
+      goalHapticFiredRef.current = true;
+      Haptics.notification({ type: NotificationType.Success }).catch(() => {});
+    }
+  }, [goalReached]);
 
   // Track accumulated time at zero IU across pause/resume cycles
   const accumulatedZeroTimeRef = useRef(0);
@@ -130,6 +151,21 @@ export default function ActiveSessionView({
             aria-atomic='true'>
             {formattedTime}
           </div>
+
+          {/* Daily goal reached celebration */}
+          {goalReached && (
+            <div
+              className='mt-5 flex flex-col items-center gap-1 rounded-full bg-gradient-to-r from-solar-flare to-solar-warm px-5 py-2.5 text-center shadow-[0_8px_24px_rgba(244,165,54,0.33)] animate-fade-in motion-safe:flame-pulse'
+              role='status'
+              aria-live='polite'>
+              <span className='text-sm font-black tracking-[0.01em] text-[#2A2419]'>
+                🎉 Daily goal reached
+              </span>
+              <span className='text-[11px] font-bold uppercase tracking-[0.1em] text-[#2A2419]/70'>
+                {formatEstimatedIU(projectedTodayIU)} IU banked today
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Session Stats */}
@@ -213,21 +249,11 @@ export default function ActiveSessionView({
                 className='flex-1 py-4 bg-gradient-to-r from-[#FFC93C] to-[#F4A536] rounded-full text-lg font-black text-[#2A2419] shadow-[0_12px_30px_rgba(244,165,54,0.33)] active:scale-[0.98] transition-transform'>
                 Resume
               </button>
-              <button
-                onClick={onEnd}
-                className='flex-1 py-4 bg-white rounded-full text-lg font-black text-[#2A2419] shadow-[0_4px_14px_rgba(40,30,10,0.07)] active:scale-[0.98] transition-transform flex items-center justify-center gap-2'>
-                <span className='w-3 h-3 rounded-sm bg-ember-alert' />
-                Stop
-              </button>
+              <HoldToStopButton onHoldComplete={onEnd} label='Stop' className='flex-1' />
             </div>
           ) : (
             <>
-              <button
-                onClick={onEnd}
-                className='w-full py-4 bg-white rounded-full text-lg font-black text-[#2A2419] shadow-[0_4px_14px_rgba(40,30,10,0.07)] active:scale-[0.98] transition-transform flex items-center justify-center gap-2'>
-                <span className='w-3 h-3 rounded-sm bg-ember-alert' />
-                Stop Session
-              </button>
+              <HoldToStopButton onHoldComplete={onEnd} label='Stop Session' className='w-full' />
               <button
                 onClick={onPause}
                 className='py-2 text-sm font-semibold text-text-secondary active:opacity-60 transition-opacity'>
