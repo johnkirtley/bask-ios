@@ -18,6 +18,14 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import StreakSummaryRow from '../../components/history/StreakSummaryRow';
 import StreakDetailSheet from '../../components/streaks/StreakDetailSheet';
 import { useStreakState } from '../../hooks/useStreakState';
+import AddSessionModal, { type ManualSessionInput } from '../../components/history/AddSessionModal';
+import { useSunData } from '../../hooks/useSunData';
+import { useOnboardingContext } from '../../contexts/OnboardingContext';
+import { resolveFitzpatrickType } from '../../lib/profileUtils';
+import {
+  userProfileRepository,
+  UserProfile,
+} from '../../lib/database/repositories/userProfileRepository';
 
 type HistoryEntry = {
   type: 'session' | 'supplement' | 'cofactor';
@@ -44,6 +52,20 @@ export default function History() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [isStreakSheetOpen, setIsStreakSheetOpen] = useState(false);
   const { summary: streakSummary, state: streakState, refreshStreak } = useStreakState();
+
+  // Manual "Add Session" state
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [manualUserProfile, setManualUserProfile] = useState<UserProfile | null>(null);
+  const { answers } = useOnboardingContext();
+  const { uvCurve, cloudCover } = useSunData();
+  useEffect(() => {
+    userProfileRepository
+      .get()
+      .then(setManualUserProfile)
+      .catch(() => setManualUserProfile(null));
+  }, []);
+  const manualFitzpatrickType = resolveFitzpatrickType(manualUserProfile, answers);
+  const manualAge = answers.age ?? null;
 
   // Force free users back to 7 days if they somehow have a premium range set
   useEffect(() => {
@@ -338,6 +360,15 @@ export default function History() {
     }
   };
 
+  const handleAddSave = async (session: ManualSessionInput) => {
+    try {
+      await sessionsRepository.create({ ...session, source: 'manual' });
+      await loadHistory();
+    } catch (error) {
+      console.error('Failed to add manual session:', error);
+    }
+  };
+
   const renderEntry = (entry: HistoryEntry, index: number) => {
     const entryId = getEntryId(entry);
     let cardContent;
@@ -506,9 +537,17 @@ export default function History() {
     <AtmosphericBackground>
       <div className='min-h-screen pb-20 overflow-x-hidden overflow-hidden overscroll-contain'>
         {/* Header */}
-        <div className='px-6 py-6 pt-safe'>
-          <h1 className='text-[32px] font-extrabold tracking-[-0.02em] text-text-primary'>History</h1>
-          <p className='text-text-secondary mt-1'>Your vitamin D journey</p>
+        <div className='px-6 py-6 pt-safe flex items-start justify-between'>
+          <div>
+            <h1 className='text-[32px] font-extrabold tracking-[-0.02em] text-text-primary'>History</h1>
+            <p className='text-text-secondary mt-1'>Your vitamin D journey</p>
+          </div>
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            aria-label='Add session'
+            className='mt-1 w-10 h-10 rounded-full bg-solar-flare flex items-center justify-center text-white text-2xl font-black leading-none shadow-md active:scale-95 transition-transform'>
+            +
+          </button>
         </div>
 
         {/* Tab Navigation */}
@@ -793,6 +832,17 @@ export default function History() {
           }}
           entry={editTarget}
           onSave={handleEditSave}
+        />
+
+        {/* Add Manual Session Modal */}
+        <AddSessionModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          onSave={handleAddSave}
+          uvCurve={uvCurve}
+          cloudCover={cloudCover}
+          fitzpatrickType={manualFitzpatrickType}
+          age={manualAge}
         />
 
         <StreakDetailSheet

@@ -267,6 +267,8 @@ export default function AddSessionModal({
       <ClothingPresetSelector
         isOpen={isPresetSelectorOpen}
         onClose={() => setIsPresetSelectorOpen(false)}
+        presets={getMockClothingPresets()}
+        selectedId={presetId}
         onSelect={(id) => {
           setPresetId(id);
           setIsPresetSelectorOpen(false);
