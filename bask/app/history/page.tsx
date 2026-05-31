@@ -394,7 +394,7 @@ export default function History() {
                 </div>
                 <div className='flex items-baseline justify-between'>
                   <span className='text-text-secondary text-xs'>UV Index</span>
-                  <span className='text-text-primary text-sm font-semibold'>{session.uv_index}</span>
+                  <span className='text-text-primary text-sm font-semibold'>{Math.round(session.uv_index)}</span>
                 </div>
                 <div className='flex items-baseline justify-between'>
                   <span className='text-text-secondary text-xs'>Skin Exposed</span>
