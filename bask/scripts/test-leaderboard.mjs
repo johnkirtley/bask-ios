@@ -1,10 +1,14 @@
 #!/usr/bin/env node
 /**
  * Smoke test for Touch Grass Leaderboard Supabase setup.
- * Run from bask/: node scripts/test-leaderboard.mjs
+ * Run from bask/: npm run test:leaderboard
+ *
+ * For realistic bootstrap data, use: npm run seed:leaderboard
+ * Do NOT pass --seed here (removed; it created unrealistic demo rows).
  */
 
 import { readFileSync } from 'fs';
+import { spawn } from 'child_process';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
@@ -58,56 +62,7 @@ if (url.includes('your-project') || anonKey.includes('your-anon')) {
 
 const supabase = createClient(url, anonKey);
 
-// Optional seeding: `node scripts/test-leaderboard.mjs --seed` or `--seed=20`
-const seedArg = process.argv.find((a) => a === '--seed' || a.startsWith('--seed='));
-const seedCount = seedArg
-  ? Math.max(1, Math.min(100, Number(seedArg.split('=')[1]) || 10))
-  : 0;
-
-function randInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function pick(arr) {
-  return arr[randInt(0, arr.length - 1)];
-}
-
-// Location samples spanning hemispheres + a unicode label to test rendering.
-const SEED_LOCATIONS = [
-  { countryCode: 'US', regionLabel: 'California', cityLabel: 'Los Angeles' },
-  { countryCode: 'AU', regionLabel: 'New South Wales', cityLabel: 'Sydney' },
-  { countryCode: 'GB', regionLabel: 'England', cityLabel: 'London' },
-  { countryCode: 'BR', regionLabel: 'São Paulo', cityLabel: 'São Paulo' },
-  { countryCode: 'JP', regionLabel: 'Tokyo', cityLabel: 'Shibuya' },
-  { countryCode: 'ZA', regionLabel: 'Western Cape', cityLabel: 'Cape Town' },
-  { countryCode: 'DE', regionLabel: 'Bavaria', cityLabel: 'München' },
-  { countryCode: 'IN', regionLabel: 'Maharashtra', cityLabel: 'Mumbai' },
-  { countryCode: 'NO', regionLabel: 'Oslo', cityLabel: 'Oslo' },
-  { countryCode: 'MX', regionLabel: 'Jalisco', cityLabel: 'Guadalajara' },
-];
-
-const SEED_PRECISIONS = ['none', 'country', 'region', 'city'];
-
-// Streak archetypes — includes a broken streak (current 0, longest high).
-const SEED_STREAKS = [
-  { label: 'none', current: () => 0, longest: () => randInt(0, 5) },
-  { label: 'broken', current: () => 0, longest: () => randInt(20, 120) },
-  { label: 'low', current: () => randInt(1, 9), longest: (c) => c + randInt(0, 10) },
-  { label: 'mid', current: () => randInt(10, 60), longest: (c) => c + randInt(0, 40) },
-  { label: 'high', current: () => randInt(61, 200), longest: (c) => c + randInt(0, 100) },
-  { label: 'elite', current: () => randInt(201, 400), longest: (c) => c + randInt(0, 200) },
-];
-
-// Sun-time archetypes (total minutes across N sessions). "long"/"marathon"
-// push total sun well past 60 min to exercise large-value UI formatting.
-const SEED_SUN = [
-  { label: 'short', minMinutes: 5, maxMinutes: 45, sessions: [1, 1] },
-  { label: 'medium', minMinutes: 60, maxMinutes: 150, sessions: [1, 2] },
-  { label: 'long', minMinutes: 180, maxMinutes: 360, sessions: [2, 3] },
-  { label: 'marathon', minMinutes: 420, maxMinutes: 720, sessions: [2, 4] },
-];
-
-const MAX_SESSION_SECONDS = 28800; // matches submit_leaderboard_session cap
+const legacySeedArg = process.argv.find((a) => a === '--seed' || a.startsWith('--seed='));
 
 function todayBounds() {
   const now = new Date();
@@ -116,98 +71,25 @@ function todayBounds() {
   return { start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) };
 }
 
-async function submitSunSessions(u, location, precision, sun) {
-  const sessionCount = randInt(sun.sessions[0], sun.sessions[1]);
-  const totalMinutes = randInt(sun.minMinutes, sun.maxMinutes);
-  let totalSeconds = 0;
-
-  for (let s = 0; s < sessionCount; s++) {
-    const minutes = Math.max(1, Math.round(totalMinutes / sessionCount));
-    const durationSeconds = Math.min(MAX_SESSION_SECONDS, minutes * 60);
-    totalSeconds += durationSeconds;
-
-    await supabase.rpc('submit_leaderboard_session', {
-      p_public_user_id: u.public_user_id,
-      p_write_token: u.write_token,
-      p_local_session_id: `seed-${u.public_user_id}-${s}`,
-      p_iu_gained: randInt(300, 6000),
-      p_duration_seconds: durationSeconds,
-      // Only attach labels the user's precision actually exposes.
-      p_country_code: precision !== 'none' ? location.countryCode : null,
-      p_region_label:
-        precision === 'region' || precision === 'city' ? location.regionLabel : null,
-      p_city_label: precision === 'city' ? location.cityLabel : null,
-    });
-  }
-
-  return Math.round(totalSeconds / 60);
-}
-
-async function seedRandomStreaks() {
-  console.log(`\nSeeding ${seedCount} varied users...\n`);
-  const seeded = [];
-
-  for (let i = 0; i < seedCount; i++) {
-    // Cycle archetypes by index so coverage is guaranteed, then randomize within.
-    const location = pick(SEED_LOCATIONS);
-    const precision = SEED_PRECISIONS[i % SEED_PRECISIONS.length];
-    const streak = SEED_STREAKS[i % SEED_STREAKS.length];
-    const sun = SEED_SUN[i % SEED_SUN.length];
-
-    const name = `streak-demo-${Date.now().toString(36)}-${i}`;
-    const { data: reg, error: regErr } = await supabase.rpc('register_leaderboard_user', {
-      p_anonymous_name: name,
-      p_country_code: precision !== 'none' ? location.countryCode : null,
-      p_region_label:
-        precision === 'region' || precision === 'city' ? location.regionLabel : null,
-      p_city_label: precision === 'city' ? location.cityLabel : null,
-      p_location_precision: precision,
-    });
-    if (regErr) {
-      console.warn(`⚠️  Skipped seed user ${name}: ${regErr.message}`);
-      continue;
-    }
-    const u = Array.isArray(reg) ? reg[0] : reg;
-
-    const currentStreak = streak.current();
-    const longestStreak = streak.longest(currentStreak);
-
-    const { error: streakErr } = await supabase.rpc('update_leaderboard_streak', {
-      p_public_user_id: u.public_user_id,
-      p_write_token: u.write_token,
-      p_current_streak: currentStreak,
-      p_longest_streak: longestStreak,
-    });
-    if (streakErr) {
-      console.warn(`⚠️  Streak set failed for ${name}: ${streakErr.message}`);
-      continue;
-    }
-
-    const sunMinutes = await submitSunSessions(u, location, precision, sun);
-
-    seeded.push({
-      name,
-      currentStreak,
-      longestStreak,
-      precision,
-      country: precision === 'none' ? '—' : location.countryCode,
-      sunMinutes,
-    });
-  }
-
-  seeded.sort((a, b) => b.currentStreak - a.currentStreak);
-  console.log('Seeded users (sorted by current streak):');
-  for (const s of seeded) {
-    console.log(
-      `  streak ${String(s.currentStreak).padStart(3)}/${String(s.longestStreak).padEnd(3)}` +
-        ` | sun ${String(s.sunMinutes).padStart(3)}m` +
-        ` | ${s.country.padEnd(3)} ${s.precision.padEnd(7)} | ${s.name}`,
-    );
-  }
-  ok(`Seeded ${seeded.length} varied persistent users (not cleaned up)`);
+function redirectToBootstrapSeed(seedArg) {
+  const count = seedArg.includes('=') ? seedArg.split('=')[1] : '22';
+  console.warn(
+    '\n⚠️  --seed on test-leaderboard.mjs is deprecated (it created unrealistic streak-demo users).',
+  );
+  console.warn(`   Running: npm run seed:leaderboard -- --count=${count}\n`);
+  const child = spawn(
+    process.execPath,
+    [resolve(__dirname, 'seed-leaderboard.mjs'), `--count=${count}`],
+    { stdio: 'inherit', cwd: resolve(__dirname, '..') },
+  );
+  child.on('exit', (code) => process.exit(code ?? 1));
 }
 
 async function main() {
+  if (legacySeedArg) {
+    redirectToBootstrapSeed(legacySeedArg);
+    return;
+  }
   console.log('\nBask Leaderboard — Supabase smoke test\n');
 
   // 1. Empty leaderboard read
@@ -504,11 +386,6 @@ async function main() {
     );
   }
   ok('update_leaderboard_streak rejects invalid streak values');
-
-  // 10d. Optional: seed persistent users with randomized streaks for UI review
-  if (seedCount > 0) {
-    await seedRandomStreaks();
-  }
 
   // 11. Cleanup
   await supabase.rpc('delete_leaderboard_user', {

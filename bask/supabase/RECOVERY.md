@@ -19,6 +19,42 @@ Use this guide when setup partially succeeded or re-running the full schema fail
 | **Enforce unique anonymous names** (existing project) | [`unique-anonymous-name.sql`](unique-anonymous-name.sql) |
 | **Add pause/opt-out support** (existing project) | [`leaderboard-pause.sql`](leaderboard-pause.sql) |
 | **Tables exist** + functions already patched | Nothing — run smoke test only |
+| **Remove unrealistic demo users** | [`cleanup-demo-leaderboard.sql`](cleanup-demo-leaderboard.sql) |
+| **Populate board at launch** | `npm run seed:leaderboard` from `bask/` |
+
+## Demo data cleanup
+
+If the board has `streak-demo-*` users or smoke-test leftovers from `test-leaderboard.mjs --seed`:
+
+1. Open Supabase **SQL Editor**.
+2. Run the **preview** query in [`cleanup-demo-leaderboard.sql`](cleanup-demo-leaderboard.sql).
+3. Confirm only demo/test rows are listed (no real `gentle-dolphin`-style opt-ins).
+4. Uncomment and run the **DELETE** block in the same file.
+
+## Bootstrap seed (realistic early community)
+
+After cleanup, from `bask/`:
+
+```bash
+npm run seed:leaderboard              # default ~22 users
+npm run seed:leaderboard -- --count=25
+npm run seed:leaderboard -- --dry-run # preview only
+npm run seed:leaderboard -- --wipe-bootstrap  # remove prior bootstrap rows (uses local manifest)
+```
+
+Bootstrap users use adjective-animal names, streaks capped at 4 days, and session IDs prefixed `lb-bootstrap-`. Write tokens are stored in `scripts/.leaderboard-bootstrap-manifest.json` (gitignored) so `--wipe-bootstrap` can delete them without SQL.
+
+To wipe bootstrap users without the manifest:
+
+```sql
+DELETE FROM leaderboard_users
+WHERE public_user_id IN (
+  SELECT DISTINCT public_user_id FROM leaderboard_sessions
+  WHERE local_session_id LIKE 'lb-bootstrap-%'
+);
+```
+
+Do **not** use `test-leaderboard.mjs --seed` on production (deprecated; redirects to `seed:leaderboard`).
 
 ## Recovery steps (your current situation)
 
@@ -32,7 +68,7 @@ Use this guide when setup partially succeeded or re-running the full schema fail
    (no `/rest/v1` suffix)
 5. Run smoke test from `bask/`:
    ```bash
-   node scripts/test-leaderboard.mjs
+   npm run test:leaderboard
    ```
 
 ## Expected smoke test output
