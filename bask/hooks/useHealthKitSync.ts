@@ -21,6 +21,7 @@ interface HealthKitSyncState {
 
 const MAX_DAYLIGHT_MINUTES = 480; // 8 hours sanity cap
 const MAX_PASSIVE_IU = 20000; // Sanity cap for estimated IU
+const MIN_PASSIVE_IU = 100; // Minimum IU for a passive card to be worth showing (mirrors MIN_VIABLE_IU in dWindowForecast.ts)
 
 /**
  * Hook to sync HealthKit timeInDaylight data with Bask sessions
@@ -137,8 +138,24 @@ export function useHealthKitSync(userProfile?: {
         // Clamp estimated IU to sanity limits
         estimatedIU = Math.min(estimatedIU, MAX_PASSIVE_IU);
 
-        // Always upsert HealthKit session to database (even if passive daylight is 0 after subtracting manual sessions)
-        // This ensures DB stays in sync with HealthKit data
+        // If the residual passive daylight is negligible (e.g. a manual session
+        // absorbed ~all of the watch's daylight), don't surface an empty/near-zero
+        // card. Delete any stale row from a prior sync and stop here.
+        if (passiveDaylightMinutes <= 0 || estimatedIU < MIN_PASSIVE_IU) {
+          await sessionsRepository.deleteHealthKitSession(dateStr);
+          setState((prev) => ({
+            ...prev,
+            passiveDaylightMinutes: 0,
+            passiveIU: 0,
+            isSyncing: false,
+            lastSyncAt: new Date().toISOString(),
+            syncCount: prev.syncCount + 1,
+            error: null,
+          }));
+          return;
+        }
+
+        // Upsert the HealthKit session for the meaningful residual daylight
         await sessionsRepository.upsertHealthKitSession({
           date: dateStr,
           duration_seconds: passiveDaylightMinutes * 60,

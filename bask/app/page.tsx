@@ -107,6 +107,7 @@ export default function Home() {
   const {
     isLive,
     locationDenied,
+    locationNeedsConnection,
     isLoading,
     locationCity,
     locationState,
@@ -449,7 +450,11 @@ export default function Home() {
   // Handle location warning press
   const handleLocationWarningPress = async () => {
     capture(ANALYTICS_EVENTS.locationPermissionRequested, { source: 'home' });
-    await handleLocationPermissionAction();
+    const status = await handleLocationPermissionAction();
+    if (status === 'granted') {
+      // Re-run fetchSunData immediately so the screen flips to live data
+      refreshGoal();
+    }
   };
 
   // Handle session start
@@ -521,6 +526,20 @@ export default function Home() {
                     />
                     <span className='text-xs text-ember-alert group-hover:text-red-600'>
                       Enable Location for Accurate Data
+                    </span>
+                  </button>
+                )}
+                {!isLive && !locationDenied && locationNeedsConnection && (
+                  <button
+                    onClick={handleLocationWarningPress}
+                    className='flex items-center gap-1.5 mt-1 group'
+                    aria-label='Connect your location for live sun data'>
+                    <div
+                      className='w-2 h-2 rounded-full bg-amber-400 animate-pulse-live'
+                      aria-hidden='true'
+                    />
+                    <span className='text-xs text-amber-600 group-hover:text-amber-700'>
+                      Connect your location for live UV data
                     </span>
                   </button>
                 )}

@@ -58,6 +58,9 @@ bask/LANDING_PAGE_CONTEXT.md
 /IMG_*.jpeg
 /IMG_*.jpg
 
+# Leaderboard bootstrap manifest (contains write tokens)
+bask/scripts/.leaderboard-bootstrap-manifest.json
+
 # Agent tooling
 .ralphrc
 

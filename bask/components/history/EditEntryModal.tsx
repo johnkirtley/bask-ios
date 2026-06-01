@@ -197,7 +197,7 @@ export default function EditEntryModal({ isOpen, onClose, entry, onSave }: EditE
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-text-secondary text-sm">UV Index</span>
-                <span className="text-text-primary">{(entry.data as BaskSession).uv_index}</span>
+                <span className="text-text-primary">{Math.round((entry.data as BaskSession).uv_index)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-text-secondary text-sm">Exposure</span>

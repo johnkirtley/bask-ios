@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import { Haptics, NotificationType } from '@capacitor/haptics';
 import AtmosphericBackground from './AtmosphericBackground';
 import WhyZeroIUTooltip from './WhyZeroIUTooltip';
-import HoldToStopButton from './HoldToStopButton';
 import Mascot from '../ui/Mascot';
 import { effectiveUv, formatEstimatedIU } from '../../lib/dEngine';
 import type { SunData } from '../../lib/sunDataUtils';
@@ -249,11 +248,21 @@ export default function ActiveSessionView({
                 className='flex-1 py-4 bg-gradient-to-r from-[#FFC93C] to-[#F4A536] rounded-full text-lg font-black text-[#2A2419] shadow-[0_12px_30px_rgba(244,165,54,0.33)] active:scale-[0.98] transition-transform'>
                 Resume
               </button>
-              <HoldToStopButton onHoldComplete={onEnd} label='Stop' className='flex-1' />
+              <button
+                onClick={onEnd}
+                className='flex-1 py-4 bg-white rounded-full text-lg font-black text-[#2A2419] shadow-[0_4px_14px_rgba(40,30,10,0.07)] active:scale-[0.98] transition-transform flex items-center justify-center gap-2'>
+                <span className='w-3 h-3 rounded-sm bg-ember-alert' />
+                Stop
+              </button>
             </div>
           ) : (
             <>
-              <HoldToStopButton onHoldComplete={onEnd} label='Stop Session' className='w-full' />
+              <button
+                onClick={onEnd}
+                className='w-full py-4 bg-white rounded-full text-lg font-black text-[#2A2419] shadow-[0_4px_14px_rgba(40,30,10,0.07)] active:scale-[0.98] transition-transform flex items-center justify-center gap-2'>
+                <span className='w-3 h-3 rounded-sm bg-ember-alert' />
+                Stop Session
+              </button>
               <button
                 onClick={onPause}
                 className='py-2 text-sm font-semibold text-text-secondary active:opacity-60 transition-opacity'>
