@@ -130,7 +130,7 @@ export default function HealthKitPermissionScreen({
           }}
         >
           <ReadWriteRow tag="We read" text="Time in Daylight from Apple Watch (iOS 17+)" />
-          <ReadWriteRow tag="We write" text="Vitamin D from your bask sessions" />
+          <ReadWriteRow tag="We write" text="Vitamin D supplement intake" />
         </div>
       </div>
     </WarmBody>

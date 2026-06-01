@@ -576,7 +576,7 @@ export default function SettingsPage() {
                   <div className='flex-1'>
                     <span className='text-text-primary'>Apple Health</span>
                     <p className='text-xs text-text-secondary'>
-                      Time in Daylight and Vitamin D sync
+                      Time in Daylight and supplement sync
                     </p>
                   </div>
                 </div>

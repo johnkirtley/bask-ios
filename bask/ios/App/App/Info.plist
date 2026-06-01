@@ -23,7 +23,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Bask uses your outdoor time and Vitamin D data from Apple Health to automatically track sun exposure and calibrate your daily needs.</string>
+	<string>Bask uses your Time in Daylight and Vitamin D data from Apple Health to estimate outdoor exposure and supplement totals.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>Bask syncs your Vitamin D supplement intake to Apple Health so other health apps can see your complete nutritional data.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
