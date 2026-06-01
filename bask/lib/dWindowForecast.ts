@@ -16,6 +16,9 @@ import {
  * cannot produce meaningful vitamin D -- don't recommend the window.
  */
 const MIN_VIABLE_IU = 100;
+const MIN_RECOMMENDED_SESSION_MINUTES = 5;
+const SAME_DAY_RECOMMENDATION_LEAD_MINUTES = 5;
+const SAME_DAY_RECOMMENDATION_ROUNDING_MINUTES = 5;
 
 /**
  * Full-day band when effective UV supports vitamin D synthesis (Shadow Rule).
@@ -36,7 +39,7 @@ export interface SynthesisWindow {
 export interface OptimalWindow {
   date: string; // ISO8601 date
   dayLabel: string; // "Today" or "Tomorrow"
-  windowStartTime: string; // "11:00 AM" - start of best scored session block
+  windowStartTime: string; // "11:00 AM" - actionable start of best scored session block
   windowEndTime: string; // "2:00 PM" - end of best scored session block
   startTime: string; // "12:15 PM" - recommended session start
   endTime: string; // "12:40 PM" - recommended session end
@@ -164,6 +167,7 @@ export function calculateOptimalWindows(
     exposurePercent,
     targetIU,
     age,
+    now,
   );
   const tomorrowWindow = findOptimalWindow(
     tomorrowForecast,
@@ -172,6 +176,7 @@ export function calculateOptimalWindows(
     exposurePercent,
     targetIU,
     age,
+    now,
   );
 
   const todaySynthesis = findSynthesisWindow(todayForecast, 'Today');
@@ -337,6 +342,18 @@ function buildDateFromHour(
   return date;
 }
 
+function roundedSameDayRecommendationStart(now: Date): Date {
+  const earliest = new Date(
+    now.getTime() + SAME_DAY_RECOMMENDATION_LEAD_MINUTES * 60_000,
+  );
+  const intervalMs = SAME_DAY_RECOMMENDATION_ROUNDING_MINUTES * 60_000;
+  return new Date(Math.ceil(earliest.getTime() / intervalMs) * intervalMs);
+}
+
+function formatDateTime(date: Date): string {
+  return formatTime(date.getHours(), date.getMinutes());
+}
+
 /**
  * Live countdown label when approaching today's synthesis window.
  */
@@ -451,18 +468,24 @@ function findOptimalWindow(
   exposurePercent: number,
   targetIU: number,
   age: number | null,
+  now: Date = new Date(),
 ): OptimalWindow | null {
   if (forecast.length === 0) return null;
+
+  const sameDayStart =
+    dayLabel === 'Today' ? roundedSameDayRecommendationStart(now) : null;
 
   // Filter for reasonable basking hours (UV >= 3 for D synthesis, between 8 AM and 6 PM)
   let usableHours = forecast.filter(
     (h) => h.uvIndex >= 3 && h.hour >= 8 && h.hour <= 18,
   );
 
-  // For today, exclude hours that have already passed
-  if (dayLabel === 'Today') {
-    const currentHour = new Date().getHours();
-    usableHours = usableHours.filter((h) => h.hour >= currentHour);
+  // For today, exclude hours that cannot support a near-future recommendation.
+  if (sameDayStart) {
+    usableHours = usableHours.filter((h) => {
+      const hourEnd = buildDateFromHour(h.date, h.hour + 1, 0);
+      return hourEnd > sameDayStart;
+    });
   }
 
   if (usableHours.length === 0) return null;
@@ -497,6 +520,25 @@ function findOptimalWindow(
         }
       }
       if (!contiguous) continue;
+
+      if (sameDayStart) {
+        const windowStart = buildDateFromHour(
+          window[0].date,
+          window[0].hour,
+          0,
+        );
+        const windowEnd = buildDateFromHour(
+          window[window.length - 1].date,
+          window[window.length - 1].hour + 1,
+          0,
+        );
+        const recommendedStart =
+          sameDayStart > windowStart ? sameDayStart : windowStart;
+        const availableMinutes = Math.floor(
+          (windowEnd.getTime() - recommendedStart.getTime()) / 60_000,
+        );
+        if (availableMinutes < MIN_RECOMMENDED_SESSION_MINUTES) continue;
+      }
 
       const windowScore = window.reduce((sum, h) => sum + scoreHour(h), 0);
       const avgUV =
@@ -533,7 +575,7 @@ function findOptimalWindow(
 
   // Recommend one burn-safe session (or less if the goal is already within reach)
   const durationMinutes = Math.max(
-    5,
+    MIN_RECOMMENDED_SESSION_MINUTES,
     Math.min(
       isFinite(minutesToFullGoal) ? minutesToFullGoal : timeToBurn,
       timeToBurn,
@@ -544,21 +586,39 @@ function findOptimalWindow(
   // Calculate full UV-viable opportunity window (the multi-hour range)
   const windowStartHour = bestWindow.start.hour;
   const windowEndHour = bestWindow.hours[bestWindow.hours.length - 1].hour + 1; // +1 because we want the end of the last hour
-  const windowStartTime = formatTime(windowStartHour, 0);
+  const windowStartAt = buildDateFromHour(
+    bestWindow.start.date,
+    windowStartHour,
+    0,
+  );
+  const windowEndAt = buildDateFromHour(
+    bestWindow.hours[bestWindow.hours.length - 1].date,
+    windowEndHour,
+    0,
+  );
+  const recommendedStartAt =
+    sameDayStart && sameDayStart > windowStartAt ? sameDayStart : windowStartAt;
+  const availableMinutes = Math.floor(
+    (windowEndAt.getTime() - recommendedStartAt.getTime()) / 60_000,
+  );
+  if (availableMinutes < MIN_RECOMMENDED_SESSION_MINUTES) return null;
+
+  const windowStartTime = formatDateTime(recommendedStartAt);
   const windowEndTime = formatTime(windowEndHour, 0);
 
   // Calculate recommended session times (within the opportunity window)
-  const startHour = bestWindow.start.hour;
-  const endHour = startHour + Math.floor(durationMinutes / 60);
-  const endMinute = durationMinutes % 60;
+  const adjustedDurationMinutes = Math.min(durationMinutes, availableMinutes);
+  const endAt = new Date(
+    recommendedStartAt.getTime() + adjustedDurationMinutes * 60_000,
+  );
 
-  const startTime = formatTime(startHour, 0);
-  const endTime = formatTime(endHour, endMinute);
+  const startTime = windowStartTime;
+  const endTime = formatDateTime(endAt);
 
   // Calculate estimated IU for this window
   const estimatedIU = Math.round(
     calculateIUForDuration(
-      durationMinutes,
+      adjustedDurationMinutes,
       effectiveUV,
       exposurePercent,
       fitzpatrickType,
@@ -588,7 +648,7 @@ function findOptimalWindow(
     windowEndTime,
     startTime,
     endTime,
-    durationMinutes,
+    durationMinutes: adjustedDurationMinutes,
     avgUvIndex: bestWindow.avgUV,
     effectiveUvIndex: effectiveUV,
     estimatedIU,

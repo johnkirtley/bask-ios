@@ -8,27 +8,7 @@ Maintenance rule: every finalized plan or approved plan change should update thi
 
 ## Open
 
-### 1. Fix Stale Current-Hour D-Window Recommendations
-
-Priority: High  
-Risk: Low  
-Status: Ready
-
-Prevent today's D-window recommendation from showing a start time that has already passed.
-
-Implementation notes:
-
-- Keep this as a TypeScript calculation/display change in `lib/dWindowForecast.ts`.
-- For same-day windows, clamp the start time to a near-future time, such as `now + 5 minutes`, rounded to the next 5-minute boundary.
-- If the current hour is nearly over and too little viable time remains, choose the next viable block or show no useful window.
-
-Validation:
-
-- At 10:05, a 10:00-11:00 viable window starts around 10:10.
-- At 10:55, the app does not recommend starting at 10:00.
-- Notification scheduling does not receive a past start time.
-
-### 2. Add UV Data Confidence Labels To Add Session
+### 1. Add UV Data Confidence Labels To Add Session
 
 Priority: High  
 Risk: Low  
@@ -49,7 +29,7 @@ Validation:
 - Selecting a time without direct hourly UV data shows `Estimated from nearby forecast`.
 - The IU calculation behavior remains unchanged in this first pass.
 
-### 3. Preserve And Harden Apple Watch Daylight IU Estimation
+### 2. Preserve And Harden Apple Watch Daylight IU Estimation
 
 Priority: Medium  
 Risk: Medium  
@@ -101,6 +81,14 @@ Reason for deferral:
 - The previous UTC/local-day concern is much less important for streak-only ranking.
 
 ## Completed
+
+### Fix Stale Current-Hour D-Window Recommendations
+
+Completed: 2026-06-01  
+Priority: High  
+Risk: Low
+
+Clamped same-day D-window starts to a near-future rounded time and skipped candidate windows with too little usable time remaining. Notification scheduling continues to use the adjusted `startTime`, preventing past starts. Validated with `npx tsc --noEmit --incremental false`, `npm run lint`, and targeted code-path inspection.
 
 ### Stop Writing Sun Sessions As Dietary Vitamin D
 
