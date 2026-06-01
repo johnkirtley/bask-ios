@@ -45,11 +45,12 @@ function createEmptySunData(): SunData {
  * On native error: Shows empty state
  * Updates every 5 minutes to stay current
  */
-export function useSunData(): SunData & { isLive: boolean; locationDenied: boolean; isLoading: boolean; locationCity?: string; locationState?: string; refreshGoal: () => void } {
+export function useSunData(): SunData & { isLive: boolean; locationDenied: boolean; locationNeedsConnection: boolean; isLoading: boolean; locationCity?: string; locationState?: string; refreshGoal: () => void } {
   const { answers } = useOnboardingContext();
   const [sunData, setSunData] = useState<SunData>(() => createEmptySunData());
   const [isLive, setIsLive] = useState(false);
   const [locationDenied, setLocationDenied] = useState(false);
+  const [locationNeedsConnection, setLocationNeedsConnection] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [locationCity, setLocationCity] = useState<string | undefined>(undefined);
   const [locationState, setLocationState] = useState<string | undefined>(undefined);
@@ -96,6 +97,7 @@ export function useSunData(): SunData & { isLive: boolean; locationDenied: boole
 
         if (permission?.status === 'denied') {
           setLocationDenied(true);
+          setLocationNeedsConnection(false);
           setSunData(createEmptySunData());
           setIsLive(false);
           setIsLoading(false);
@@ -106,6 +108,7 @@ export function useSunData(): SunData & { isLive: boolean; locationDenied: boole
         setLocationDenied(false);
 
         if (permission?.status !== 'granted') {
+          setLocationNeedsConnection(permission?.status === 'prompt');
           setSunData(createEmptySunData());
           setIsLive(false);
           setIsLoading(false);
@@ -173,6 +176,7 @@ export function useSunData(): SunData & { isLive: boolean; locationDenied: boole
         setSunData(newSunData);
         setIsLive(true);
         setLocationDenied(false); // Clear denial if permission was re-granted
+        setLocationNeedsConnection(false);
         setLocationCity(locationInfo.city);
         setLocationState(locationInfo.state);
         setIsLoading(false);
@@ -183,6 +187,7 @@ export function useSunData(): SunData & { isLive: boolean; locationDenied: boole
 
         const permission = await BaskWeather.getLocationPermissionStatus().catch(() => null);
         setLocationDenied(permission?.status === 'denied');
+        setLocationNeedsConnection(permission?.status === 'prompt');
 
         setSunData(createEmptySunData());
         setIsLive(false);
@@ -210,7 +215,7 @@ export function useSunData(): SunData & { isLive: boolean; locationDenied: boole
     };
   }, [goalRefreshTrigger, answers.skinTone, answers.sunReaction]);
 
-  return { ...sunData, isLive, locationDenied, isLoading, locationCity, locationState, refreshGoal };
+  return { ...sunData, isLive, locationDenied, locationNeedsConnection, isLoading, locationCity, locationState, refreshGoal };
 }
 
 /**
