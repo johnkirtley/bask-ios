@@ -1,13 +1,22 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { IonAlert } from '@ionic/react';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { OnboardingAnswers } from '../../types';
 import { deriveFitzpatrickType, FitzpatrickType } from '../../lib/dEngine';
 import { generateMockSunData } from '../../lib/sunDataUtils';
 import { BaskWeather } from '../../lib/plugins';
-import { requestOnboardingReview } from '../../lib/services/inAppReviewService';
+import { FEEDBACK_EMAIL } from '../../lib/constants';
+import { capture, ANALYTICS_EVENTS } from '../../lib/analytics';
+import {
+  markNativeReviewRequested,
+  markNegativeReviewFeedback,
+  markReviewPromptShown,
+  requestAppReview,
+  shouldSuppressReviewPrompts,
+} from '../../lib/services/inAppReviewService';
 import Mascot from '../ui/Mascot';
 import {
   WARM,
@@ -89,8 +98,8 @@ export default function ProcessingScreen({ answers, onComplete }: ProcessingScre
   const [currentStep, setCurrentStep] = useState(0);
   const [doneStep, setDoneStep] = useState(0);
   const [showResults, setShowResults] = useState(false);
-  const [reviewRequested, setReviewRequested] = useState(false);
-  const reviewTriggeredRef = useRef(false);
+  const [showReviewPrompt, setShowReviewPrompt] = useState(false);
+  const reviewPromptCheckedRef = useRef(false);
   const usedFallbackRef = useRef(false);
   const isReadyRef = useRef(isReady);
 
@@ -125,6 +134,35 @@ export default function ProcessingScreen({ answers, onComplete }: ProcessingScre
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!showResults || reviewPromptCheckedRef.current) return;
+    reviewPromptCheckedRef.current = true;
+
+    let cancelled = false;
+
+    async function maybeShowReviewPrompt() {
+      const shouldSuppress = await shouldSuppressReviewPrompts();
+      if (cancelled || shouldSuppress) return;
+
+      await markReviewPromptShown();
+      if (cancelled) return;
+
+      capture(ANALYTICS_EVENTS.reviewPromptShown, {
+        app_open_count: 0,
+        value_event_count: 0,
+      });
+      setShowReviewPrompt(true);
+    }
+
+    maybeShowReviewPrompt().catch((error) => {
+      console.warn('Failed to show onboarding review prompt:', error);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [showResults]);
 
   const fitzpatrickType = useMemo(
     () => resolveFitzpatrickFromAnswers(answers),
@@ -164,12 +202,6 @@ export default function ProcessingScreen({ answers, onComplete }: ProcessingScre
     };
   }, []);
 
-  useEffect(() => {
-    if (!showResults || reviewTriggeredRef.current) return;
-    reviewTriggeredRef.current = true;
-    requestOnboardingReview().finally(() => setReviewRequested(true));
-  }, [showResults]);
-
   const handleContinue = async () => {
     try {
       await Haptics.impact({ style: ImpactStyle.Medium });
@@ -179,7 +211,35 @@ export default function ProcessingScreen({ answers, onComplete }: ProcessingScre
     onComplete();
   };
 
-  const allDone = showResults && reviewRequested;
+  const handlePositiveReviewFeedback = async () => {
+    capture(ANALYTICS_EVENTS.reviewPositiveResponse, {
+      app_open_count: 0,
+      value_event_count: 0,
+    });
+    setShowReviewPrompt(false);
+    await requestAppReview();
+    await markNativeReviewRequested();
+    capture(ANALYTICS_EVENTS.reviewNativePromptRequested, {
+      source: 'onboarding',
+    });
+  };
+
+  const handleNegativeReviewFeedback = async () => {
+    capture(ANALYTICS_EVENTS.reviewNegativeResponse, {
+      app_open_count: 0,
+      value_event_count: 0,
+    });
+    await markNegativeReviewFeedback();
+    setShowReviewPrompt(false);
+    capture(ANALYTICS_EVENTS.reviewFeedbackOpened, {
+      source: 'onboarding',
+    });
+    window.location.href = `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(
+      'App Feedback',
+    )}`;
+  };
+
+  const allDone = showResults;
 
   return (
     <WarmBody
@@ -253,6 +313,28 @@ export default function ProcessingScreen({ answers, onComplete }: ProcessingScre
           })}
         </div>
       </div>
+
+      <IonAlert
+        isOpen={showReviewPrompt}
+        header='Enjoying Bask?'
+        message='Would you mind leaving a quick App Store review?'
+        buttons={[
+          {
+            text: 'Not really',
+            role: 'cancel',
+            handler: () => {
+              void handleNegativeReviewFeedback();
+            },
+          },
+          {
+            text: 'Yes',
+            handler: () => {
+              void handlePositiveReviewFeedback();
+            },
+          },
+        ]}
+        onDidDismiss={() => setShowReviewPrompt(false)}
+      />
     </WarmBody>
   );
 }

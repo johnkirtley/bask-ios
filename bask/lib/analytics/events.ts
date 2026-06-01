@@ -37,6 +37,11 @@ export const ANALYTICS_EVENTS = {
   paywallPresented: 'paywall_presented',
   locationPermissionRequested: 'location_permission_requested',
   appOpened: 'app_opened',
+  reviewPromptShown: 'review_prompt_shown',
+  reviewPositiveResponse: 'review_positive_response',
+  reviewNegativeResponse: 'review_negative_response',
+  reviewNativePromptRequested: 'review_native_prompt_requested',
+  reviewFeedbackOpened: 'review_feedback_opened',
 } as const;
 
 export type AnalyticsEventName =
@@ -121,4 +126,9 @@ export interface AnalyticsEventProps {
   paywall_presented: { source: string };
   location_permission_requested: { source: string };
   app_opened: void;
+  review_prompt_shown: { app_open_count: number; value_event_count: number };
+  review_positive_response: { app_open_count: number; value_event_count: number };
+  review_negative_response: { app_open_count: number; value_event_count: number };
+  review_native_prompt_requested: { source: 'onboarding' | 'value_prompt' | 'manual' };
+  review_feedback_opened: { source: 'onboarding' | 'value_prompt' | 'settings' };
 }

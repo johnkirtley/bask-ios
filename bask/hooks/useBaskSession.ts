@@ -7,6 +7,7 @@ import { Capacitor } from '@capacitor/core';
 import { sessionsRepository } from '../lib/database';
 import { leaderboardService } from '../lib/supabase/leaderboardService';
 import { capture, ANALYTICS_EVENTS } from '../lib/analytics';
+import { recordReviewValueEvent } from '../lib/services/inAppReviewService';
 import { calculateVitaminD, calculateTimeToBurn, getExposurePercent, formatSunburnCountdown } from '../lib/dEngine';
 import { BaskLiveActivity } from '../lib/plugins';
 import type { BaskSessionStatus } from '../types';
@@ -383,6 +384,12 @@ export function useBaskSession(
             durationSeconds: state.elapsedSeconds,
           })
           .catch(() => {});
+
+        try {
+          await recordReviewValueEvent();
+        } catch {
+          // Review eligibility should never block session completion.
+        }
       }
 
       // End Live Activity

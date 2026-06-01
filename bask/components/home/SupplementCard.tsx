@@ -7,6 +7,7 @@ import { App } from '@capacitor/app';
 import { supplementsRepository, cofactorsRepository } from '../../lib/database';
 import { BaskHealth } from '../../lib/plugins/baskHealth';
 import { capture, ANALYTICS_EVENTS } from '../../lib/analytics';
+import { recordReviewValueEvent } from '../../lib/services/inAppReviewService';
 import GlassCardWrapper from './GlassCardWrapper';
 import { BloodTestCalibration } from '../../lib/bloodTestUtils';
 
@@ -200,6 +201,11 @@ export default function SupplementCard({
     try {
       // Log the supplement to database
       await supplementsRepository.create(dosage);
+      try {
+        await recordReviewValueEvent();
+      } catch {
+        // Review eligibility should never block supplement logging.
+      }
 
       capture(ANALYTICS_EVENTS.supplementLogged, {
         dosage_iu: dosage,

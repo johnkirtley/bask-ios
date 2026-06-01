@@ -82,6 +82,14 @@ Reason for deferral:
 
 ## Completed
 
+### Replace Onboarding Review Prompt With Value-Based Review System
+
+Completed: 2026-06-01  
+Priority: High  
+Risk: Medium
+
+Replaced the automatic native onboarding review request with an `Enjoying Bask?` feedback prompt after plan generation, then request native review only after a positive response. Kept a later value-driven review touchpoint based on app opens plus sun-session or supplement value events, with paywall and active-session suppression, negative-feedback routing to support email, and review analytics. Validated with `npx tsc --noEmit --incremental false`, `npm run lint`, and code-path inspection.
+
 ### Fix Stale Current-Hour D-Window Recommendations
 
 Completed: 2026-06-01  

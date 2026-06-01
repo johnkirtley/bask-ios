@@ -21,7 +21,11 @@ import {
   notificationService,
   NotificationSettings,
 } from '../../lib/services/notificationService';
-import { requestAppReview } from '../../lib/services/inAppReviewService';
+import {
+  markNativeReviewRequested,
+  recordPaywallDismissedForReview,
+  requestAppReview,
+} from '../../lib/services/inAppReviewService';
 import AtmosphericBackground from '../../components/home/AtmosphericBackground';
 import Mascot from '../../components/ui/Mascot';
 // import ExportPhysicianReport from '../../components/settings/ExportPhysicianReport';
@@ -193,9 +197,13 @@ export default function SettingsPage() {
 
   // Wrap paywall presentation so every entry point is recorded with its source.
   const openPaywall = useCallback(
-    (source: string) => {
+    async (source: string) => {
       capture(ANALYTICS_EVENTS.paywallPresented, { source });
-      return presentPaywall();
+      try {
+        return await presentPaywall();
+      } finally {
+        await recordPaywallDismissedForReview();
+      }
     },
     [presentPaywall],
   );
@@ -351,6 +359,9 @@ export default function SettingsPage() {
   };
 
   const handleReportIssue = () => {
+    capture(ANALYTICS_EVENTS.reviewFeedbackOpened, {
+      source: 'settings',
+    });
     window.location.href = `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(
       'App Feedback',
     )}`;
@@ -364,6 +375,10 @@ export default function SettingsPage() {
   const handleRateApp = async () => {
     if (Capacitor.getPlatform() === 'ios') {
       await requestAppReview();
+      await markNativeReviewRequested();
+      capture(ANALYTICS_EVENTS.reviewNativePromptRequested, {
+        source: 'manual',
+      });
       return;
     }
     handleOpenLink('https://apps.apple.com/us/app/bask-app-id');

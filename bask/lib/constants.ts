@@ -37,6 +37,13 @@ export const STORAGE_KEYS = {
   reviewMilestone3: 'review_milestone_3',
   reviewCompleted: 'review_completed',
   onboardingReviewRequested: 'onboarding_review_requested',
+  reviewAppOpenCount: 'review_app_open_count',
+  reviewLastAppOpenDate: 'review_last_app_open_date',
+  reviewValueEventCount: 'review_value_event_count',
+  reviewLastPromptAt: 'review_last_prompt_at',
+  reviewNativeRequested: 'review_native_requested',
+  reviewNegativeFeedback: 'review_negative_feedback',
+  reviewLastPaywallDismissedAt: 'review_last_paywall_dismissed_at',
 } as const;
 
 // App Routes

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { IonToast } from '@ionic/react';
+import { IonAlert, IonToast } from '@ionic/react';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
@@ -49,6 +49,15 @@ import type { HourlyForecastItem } from '../lib/plugins/baskWeather';
 import { getRepresentativeUvForPassiveSync } from '../lib/healthKitUvUtils';
 import { handleLocationPermissionAction } from '../lib/locationPermissionUtils';
 import { capture, ANALYTICS_EVENTS } from '../lib/analytics';
+import { FEEDBACK_EMAIL } from '../lib/constants';
+import {
+  getReviewEligibility,
+  markNativeReviewRequested,
+  markNegativeReviewFeedback,
+  markReviewPromptShown,
+  recordReviewAppOpen,
+  requestAppReview,
+} from '../lib/services/inAppReviewService';
 import AtmosphericBackground from '../components/home/AtmosphericBackground';
 import BaskRing from '../components/home/BaskRing';
 import StatMetrics from '../components/home/StatMetrics';
@@ -133,6 +142,11 @@ export default function Home() {
   const [todayTotal, setTodayTotal] = useState(0);
   const [todaySunIU, setTodaySunIU] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [reviewCheckKey, setReviewCheckKey] = useState(0);
+  const [reviewPromptMetrics, setReviewPromptMetrics] = useState<{
+    appOpenCount: number;
+    valueEventCount: number;
+  } | null>(null);
   const refreshReasonRef = useRef<StreakTransitionReason>('app_open');
 
   useEffect(() => {
@@ -211,6 +225,9 @@ export default function Home() {
         setTodaySunIU(sessionsIU);
         setTodayTotal(sessionsIU + supplementsIU);
         await refreshStreak(reason);
+        if (reason === 'log' || reason === 'app_open') {
+          setReviewCheckKey((prev) => prev + 1);
+        }
       } catch (error) {
         console.error('Failed to load today total:', error);
       }
@@ -302,6 +319,9 @@ export default function Home() {
     App.addListener('appStateChange', ({ isActive }) => {
       if (isActive) {
         capture(ANALYTICS_EVENTS.appOpened);
+        recordReviewAppOpen().finally(() =>
+          setReviewCheckKey((prev) => prev + 1),
+        );
         void loadForecast();
         void loadTodayTotal('app_open');
         void leaderboardService.syncParticipationState();
@@ -314,6 +334,43 @@ export default function Home() {
       listenerHandle?.remove();
     };
   }, [loadForecast, loadTodayTotal]);
+
+  useEffect(() => {
+    recordReviewAppOpen().finally(() => setReviewCheckKey((prev) => prev + 1));
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function checkReviewEligibility() {
+      if (reviewPromptMetrics) return;
+
+      const eligibility = await getReviewEligibility({
+        isSessionActive: session.isActive || session.isPaused,
+      });
+      if (cancelled || !eligibility.eligible) return;
+
+      await markReviewPromptShown();
+      if (cancelled) return;
+
+      setReviewPromptMetrics({
+        appOpenCount: eligibility.appOpenCount,
+        valueEventCount: eligibility.valueEventCount,
+      });
+      capture(ANALYTICS_EVENTS.reviewPromptShown, {
+        app_open_count: eligibility.appOpenCount,
+        value_event_count: eligibility.valueEventCount,
+      });
+    }
+
+    checkReviewEligibility().catch((error) => {
+      console.warn('Failed to check review eligibility:', error);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [reviewCheckKey, reviewPromptMetrics, session.isActive, session.isPaused]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -463,6 +520,38 @@ export default function Home() {
       selectedPresetId,
       selectedPreset.coveragePercent,
     );
+  };
+
+  const handlePositiveReviewFeedback = async () => {
+    if (!reviewPromptMetrics) return;
+
+    capture(ANALYTICS_EVENTS.reviewPositiveResponse, {
+      app_open_count: reviewPromptMetrics.appOpenCount,
+      value_event_count: reviewPromptMetrics.valueEventCount,
+    });
+    setReviewPromptMetrics(null);
+    await requestAppReview();
+    await markNativeReviewRequested();
+    capture(ANALYTICS_EVENTS.reviewNativePromptRequested, {
+      source: 'value_prompt',
+    });
+  };
+
+  const handleNegativeReviewFeedback = async () => {
+    if (!reviewPromptMetrics) return;
+
+    capture(ANALYTICS_EVENTS.reviewNegativeResponse, {
+      app_open_count: reviewPromptMetrics.appOpenCount,
+      value_event_count: reviewPromptMetrics.valueEventCount,
+    });
+    await markNegativeReviewFeedback();
+    setReviewPromptMetrics(null);
+    capture(ANALYTICS_EVENTS.reviewFeedbackOpened, {
+      source: 'value_prompt',
+    });
+    window.location.href = `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(
+      'App Feedback',
+    )}`;
   };
 
   // If session is active or paused, show active session view
@@ -711,6 +800,28 @@ export default function Home() {
         duration={4000}
         position='top'
         cssClass='toast-safe-top'
+      />
+
+      <IonAlert
+        isOpen={!!reviewPromptMetrics}
+        header='Enjoying Bask?'
+        message='Would you mind leaving a quick App Store review?'
+        buttons={[
+          {
+            text: 'Not really',
+            role: 'cancel',
+            handler: () => {
+              void handleNegativeReviewFeedback();
+            },
+          },
+          {
+            text: 'Yes',
+            handler: () => {
+              void handlePositiveReviewFeedback();
+            },
+          },
+        ]}
+        onDidDismiss={() => setReviewPromptMetrics(null)}
       />
     </>
   );

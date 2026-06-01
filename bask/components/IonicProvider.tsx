@@ -12,6 +12,7 @@ import AnalyticsBootstrap from './analytics/AnalyticsBootstrap';
 import PageviewTracker from './analytics/PageviewTracker';
 import BrandSpinner from './ui/LoadingSpinner';
 import { capture, ANALYTICS_EVENTS } from '../lib/analytics';
+import { recordPaywallDismissedForReview } from '../lib/services/inAppReviewService';
 
 // Initialize Ionic React with iOS mode
 setupIonicReact({
@@ -71,6 +72,7 @@ function OnboardingGate({ children }: { children: React.ReactNode }) {
         // Paywall presentation failed silently
       } finally {
         // Mark paywall as shown regardless of purchase result
+        await recordPaywallDismissedForReview();
         await markPaywallShown();
         setIsShowingPaywall(false);
       }
