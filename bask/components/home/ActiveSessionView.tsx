@@ -46,6 +46,8 @@ export default function ActiveSessionView({
 }: ActiveSessionViewProps) {
   const [isWhyZeroTooltipOpen, setIsWhyZeroTooltipOpen] = useState(false);
   const [showZeroIUHint, setShowZeroIUHint] = useState(false);
+  const isCloudBlockingVitaminD =
+    uvIndex >= 3 && effectiveUv(uvIndex, cloudCover) < 3;
 
   // Daily goal: projected total = already-banked today + this session
   const projectedTodayIU = baselineTodayIU + currentIU;
@@ -54,9 +56,15 @@ export default function ActiveSessionView({
   // Fire a success haptic the first time the goal is crossed *during* the session.
   // If the user was already at/over goal when the session started, don't celebrate on mount.
   const goalHapticFiredRef = useRef(false);
-  const startedAtOrOverGoalRef = useRef(dailyGoalIU > 0 && baselineTodayIU >= dailyGoalIU);
+  const startedAtOrOverGoalRef = useRef(
+    dailyGoalIU > 0 && baselineTodayIU >= dailyGoalIU,
+  );
   useEffect(() => {
-    if (goalReached && !goalHapticFiredRef.current && !startedAtOrOverGoalRef.current) {
+    if (
+      goalReached &&
+      !goalHapticFiredRef.current &&
+      !startedAtOrOverGoalRef.current
+    ) {
       goalHapticFiredRef.current = true;
       Haptics.notification({ type: NotificationType.Success }).catch(() => {});
     }
@@ -107,7 +115,11 @@ export default function ActiveSessionView({
         {/* LIVE SESSION pill */}
         <div className='flex justify-center px-6 pt-6 pb-2'>
           <div className='bg-white/78 backdrop-blur-xl rounded-full px-4 py-2 shadow-sm flex items-center gap-2'>
-            <div className={`w-2 h-2 rounded-full bg-coral-accent ${isPaused ? '' : 'animate-pulse'}`} />
+            <div
+              className={`w-2 h-2 rounded-full bg-coral-accent ${
+                isPaused ? '' : 'animate-pulse'
+              }`}
+            />
             <span className='text-[11px] font-extrabold uppercase tracking-[0.12em] text-text-primary'>
               {isPaused ? 'Paused' : 'Live Session'}
             </span>
@@ -126,10 +138,15 @@ export default function ActiveSessionView({
                 left: '50%',
                 top: '50%',
                 transform: 'translate(-50%, -50%)',
-                background: 'radial-gradient(circle, rgba(255,201,60,0.3) 0%, transparent 70%)',
+                background:
+                  'radial-gradient(circle, rgba(255,201,60,0.3) 0%, transparent 70%)',
               }}
             />
-            <Mascot size={200} mood={isPaused ? 'sleepy' : 'excited'} floating={false} />
+            <Mascot
+              size={200}
+              mood={isPaused ? 'sleepy' : 'excited'}
+              floating={false}
+            />
           </div>
 
           {/* Hero IU counter */}
@@ -169,6 +186,41 @@ export default function ActiveSessionView({
 
         {/* Session Stats */}
         <div className='px-6'>
+          {isCloudBlockingVitaminD && (
+            <div
+              className='mb-3 rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 shadow-[0_8px_24px_rgba(120,82,20,0.08)]'
+              role='status'
+              aria-live='polite'>
+              <div className='flex items-start gap-3'>
+                <div className='mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-amber-700'>
+                  <svg
+                    xmlns='http://www.w3.org/2000/svg'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    strokeWidth={2}
+                    stroke='currentColor'
+                    className='h-4 w-4'
+                    aria-hidden='true'>
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      d='M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z'
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p className='text-sm font-extrabold text-text-primary'>
+                    Clouds are blocking vitamin D right now
+                  </p>
+                  <p className='mt-0.5 text-xs font-medium leading-snug text-text-secondary'>
+                    Your timer can keep running, but IU will stay at 0 until
+                    effective UV rises.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Stat row */}
           <div className='grid grid-cols-2 gap-3'>
             <div className='bg-white rounded-card px-4 py-2.5 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_6px_24px_rgba(40,30,10,0.06)] border-l-4 border-[#FFC93C]'>
@@ -178,9 +230,9 @@ export default function ActiveSessionView({
               <div className='text-[24px] font-black text-text-primary tabular-nums tracking-[-0.02em] mt-1'>
                 {uvIndex.toFixed(1)}
               </div>
-              {uvIndex >= 3 && effectiveUv(uvIndex, cloudCover) < 3 && (
+              {isCloudBlockingVitaminD && (
                 <div className='text-[10px] font-semibold text-amber-600 leading-tight mt-0.5'>
-                  Clouds blocking D-rays
+                  Vitamin D blocked by clouds
                 </div>
               )}
             </div>
@@ -188,9 +240,12 @@ export default function ActiveSessionView({
               <span className='text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em]'>
                 Sunburn Risk In
               </span>
-              <div className={`text-[24px] font-black tabular-nums tracking-[-0.02em] mt-1 ${
-                remainingSunburnSeconds <= 120 ? 'text-ember-alert' : 'text-text-primary'
-              }`}>
+              <div
+                className={`text-[24px] font-black tabular-nums tracking-[-0.02em] mt-1 ${
+                  remainingSunburnSeconds <= 120
+                    ? 'text-ember-alert'
+                    : 'text-text-primary'
+                }`}>
                 {sunburnCountdown}
               </div>
             </div>

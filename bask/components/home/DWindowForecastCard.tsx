@@ -19,6 +19,7 @@ interface DWindowForecastCardProps {
   onRefresh?: () => void;
   isRefreshing?: boolean;
   isPremium?: boolean;
+  isCurrentCloudBlocked?: boolean;
 }
 
 /** Re-render every minute so synthesis countdown stays current. */
@@ -206,6 +207,7 @@ export default function DWindowForecastCard({
   onRefresh,
   isRefreshing = false,
   isPremium = false,
+  isCurrentCloudBlocked = false,
 }: DWindowForecastCardProps) {
   const { presentPaywall } = useSubscription();
   const now = useMinuteTick();
@@ -239,8 +241,9 @@ export default function DWindowForecastCard({
     }
   };
 
-  // Active dot reflects when D synthesis is possible (broader band)
-  const isWindowActive = isInSynthesisWindow(forecast.todaySynthesis, now);
+  // Active dot reflects when D synthesis is possible under current conditions.
+  const isWindowActive =
+    !isCurrentCloudBlocked && isInSynthesisWindow(forecast.todaySynthesis, now);
 
   return (
     <div id='dwindow-forecast' className='w-full'>
@@ -306,6 +309,7 @@ export default function DWindowForecastCard({
                 window={forecast.today}
                 synthesis={forecast.todaySynthesis}
                 isActive={isWindowActive}
+                isCurrentCloudBlocked={isCurrentCloudBlocked}
                 now={now}
               />
             ) : forecast.todaySynthesis ? (
@@ -313,6 +317,7 @@ export default function DWindowForecastCard({
                 synthesis={forecast.todaySynthesis}
                 noWindowReason={forecast.todayNoWindowReason}
                 isActive={isWindowActive}
+                isCurrentCloudBlocked={isCurrentCloudBlocked}
                 now={now}
               />
             ) : (
@@ -443,16 +448,29 @@ function LockedTomorrowWindow() {
   );
 }
 
-function SynthesisRow({ message }: { message: string }) {
+function SynthesisRow({
+  message,
+  tone = 'default',
+}: {
+  message: string;
+  tone?: 'default' | 'blocked';
+}) {
   return (
-    <div className='flex items-center gap-1.5 mb-3 text-xs text-text-secondary'>
+    <div
+      className={`flex items-center gap-1.5 mb-3 text-xs ${
+        tone === 'blocked'
+          ? 'rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 font-semibold text-amber-800'
+          : 'text-text-secondary'
+      }`}>
       <svg
         xmlns='http://www.w3.org/2000/svg'
         fill='none'
         viewBox='0 0 24 24'
         strokeWidth={2}
         stroke='currentColor'
-        className='w-3.5 h-3.5 text-[#F4A536] flex-shrink-0'
+        className={`w-3.5 h-3.5 flex-shrink-0 ${
+          tone === 'blocked' ? 'text-amber-600' : 'text-[#F4A536]'
+        }`}
         aria-hidden='true'>
         <path
           strokeLinecap='round'
@@ -469,16 +487,19 @@ function SynthesisOnlyDisplay({
   synthesis,
   noWindowReason,
   isActive,
+  isCurrentCloudBlocked = false,
   now,
 }: {
   synthesis: SynthesisWindow;
   noWindowReason?: DWindowForecast['todayNoWindowReason'];
   isActive?: boolean;
+  isCurrentCloudBlocked?: boolean;
   now: Date;
 }) {
-  const message =
-    getSynthesisSecondaryMessage(synthesis, null, now) ??
-    `D synthesis possible ${synthesis.startTime} – ${synthesis.endTime}`;
+  const message = isCurrentCloudBlocked
+    ? 'Clouds are blocking vitamin D right now'
+    : getSynthesisSecondaryMessage(synthesis, null, now) ??
+      `D synthesis possible ${synthesis.startTime} – ${synthesis.endTime}`;
 
   return (
     <div className='rounded-xl p-3 bg-black/[0.03] border border-black/5'>
@@ -493,9 +514,14 @@ function SynthesisOnlyDisplay({
           </span>
         </div>
       )}
-      <SynthesisRow message={message} />
+      <SynthesisRow
+        message={message}
+        tone={isCurrentCloudBlocked ? 'blocked' : 'default'}
+      />
       <p className='text-xs text-text-secondary'>
-        {noWindowReason === 'low-exposure'
+        {isCurrentCloudBlocked
+          ? 'Check back when cloud cover clears; IU will stay at 0 while effective UV is below 3.'
+          : noWindowReason === 'low-exposure'
           ? 'UV is sufficient · exposure may be limiting meaningful IU'
           : 'No optimal session window today'}
       </p>
@@ -507,14 +533,18 @@ function WindowDisplay({
   window,
   synthesis,
   isActive,
+  isCurrentCloudBlocked = false,
   now,
 }: {
   window: OptimalWindow;
   synthesis?: SynthesisWindow | null;
   isActive?: boolean;
+  isCurrentCloudBlocked?: boolean;
   now: Date;
 }) {
-  const synthesisMessage = synthesis
+  const synthesisMessage = isCurrentCloudBlocked
+    ? `Clouds are blocking vitamin D right now · Best window at ${window.windowStartTime}`
+    : synthesis
     ? getSynthesisSecondaryMessage(synthesis, window, now)
     : null;
 
@@ -570,7 +600,12 @@ function WindowDisplay({
           </span>
         </div>
 
-        {synthesisMessage && <SynthesisRow message={synthesisMessage} />}
+        {synthesisMessage && (
+          <SynthesisRow
+            message={synthesisMessage}
+            tone={isCurrentCloudBlocked ? 'blocked' : 'default'}
+          />
+        )}
 
         {/* Stats */}
         <div className='flex flex-wrap items-center gap-2.5 text-xs pt-2.5 border-t border-black/5'>

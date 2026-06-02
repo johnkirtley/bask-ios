@@ -434,6 +434,8 @@ export default function Home() {
       : formatTimeToBurn(calculateTimeToBurn(sunData.uvIndex, fitzpatrickType));
 
   const canStartSession = !isLoading && effectiveUV > 0;
+  const isCurrentCloudBlocked =
+    !isLoading && sunData.uvIndex >= 3 && effectiveUV < 3;
 
   const labGuidanceHint = getBloodTestGuidanceHint(bloodTestCalibration);
 
@@ -719,6 +721,7 @@ export default function Home() {
                 onRefresh={loadForecast}
                 isRefreshing={isRefreshingForecast}
                 isPremium={isPremium}
+                isCurrentCloudBlocked={isCurrentCloudBlocked}
               />
             </div>
           )}
