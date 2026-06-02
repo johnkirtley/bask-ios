@@ -88,7 +88,7 @@ Completed: 2026-06-01
 Priority: High  
 Risk: Medium
 
-Replaced the automatic native onboarding review request with an `Enjoying Bask?` feedback prompt after plan generation, then request native review only after a positive response. Kept a later value-driven review touchpoint based on app opens plus sun-session or supplement value events, with paywall and active-session suppression, review analytics, and a softer negative path that asks before opening support email. Validated with `npx tsc --noEmit --incremental false`, `npm run lint`, and code-path inspection. Refined the negative onboarding path on 2026-06-02.
+Replaced the automatic native onboarding review request with an `Enjoying Bask?` feedback prompt after plan generation, then request native review only after a positive response. Kept a later value-driven review touchpoint based on app opens plus sun-session or supplement value events, with paywall and active-session suppression, review analytics, and softer negative paths that ask before opening support email. Validated with `npx tsc --noEmit --incremental false`, `npm run lint`, and code-path inspection. Refined the negative onboarding and Home value-prompt paths on 2026-06-02.
 
 ### Fix Stale Current-Hour D-Window Recommendations
 

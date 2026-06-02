@@ -147,7 +147,9 @@ export default function Home() {
     appOpenCount: number;
     valueEventCount: number;
   } | null>(null);
+  const [showReviewFeedbackPrompt, setShowReviewFeedbackPrompt] = useState(false);
   const refreshReasonRef = useRef<StreakTransitionReason>('app_open');
+  const reviewFeedbackPromptPendingRef = useRef(false);
 
   useEffect(() => {
     userProfileRepository
@@ -540,12 +542,17 @@ export default function Home() {
   const handleNegativeReviewFeedback = async () => {
     if (!reviewPromptMetrics) return;
 
+    reviewFeedbackPromptPendingRef.current = true;
     capture(ANALYTICS_EVENTS.reviewNegativeResponse, {
       app_open_count: reviewPromptMetrics.appOpenCount,
       value_event_count: reviewPromptMetrics.valueEventCount,
     });
     await markNegativeReviewFeedback();
     setReviewPromptMetrics(null);
+  };
+
+  const handleOpenReviewFeedbackEmail = () => {
+    setShowReviewFeedbackPrompt(false);
     capture(ANALYTICS_EVENTS.reviewFeedbackOpened, {
       source: 'value_prompt',
     });
@@ -821,7 +828,30 @@ export default function Home() {
             },
           },
         ]}
-        onDidDismiss={() => setReviewPromptMetrics(null)}
+        onDidDismiss={() => {
+          setReviewPromptMetrics(null);
+          if (reviewFeedbackPromptPendingRef.current) {
+            reviewFeedbackPromptPendingRef.current = false;
+            setShowReviewFeedbackPrompt(true);
+          }
+        }}
+      />
+
+      <IonAlert
+        isOpen={showReviewFeedbackPrompt}
+        header='Want to tell us what happened?'
+        message='You can send feedback, or keep going with your plan.'
+        buttons={[
+          {
+            text: 'No thanks',
+            role: 'cancel',
+          },
+          {
+            text: 'Send feedback',
+            handler: handleOpenReviewFeedbackEmail,
+          },
+        ]}
+        onDidDismiss={() => setShowReviewFeedbackPrompt(false)}
       />
     </>
   );

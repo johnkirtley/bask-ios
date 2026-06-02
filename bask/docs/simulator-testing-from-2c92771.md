@@ -19,7 +19,9 @@ Use this as a manual simulator checklist. Mark items off as tested.
 - [ ] Confirm the `Enjoying Bask?` prompt appears after the plan is generated.
 - [ ] Tap `Yes` and confirm the app requests the native App Store review prompt. Apple may suppress the visible native prompt in simulator.
 - [ ] After tapping `Yes`, confirm future `Enjoying Bask?` prompts are suppressed after app relaunch.
-- [ ] Repeat from clean state, tap `Not really`, and confirm feedback email routing opens.
+- [ ] Repeat from clean state, tap `Not really`, and confirm the feedback confirmation appears.
+- [ ] Tap `No thanks` and confirm the app stays on the plan screen without opening Mail.
+- [ ] Repeat from clean state, tap `Not really`, then `Send feedback`, and confirm feedback email routing opens.
 - [ ] After tapping `Not really`, confirm future `Enjoying Bask?` prompts are suppressed after app relaunch.
 - [ ] Confirm `See my plan` still works after either prompt response.
 - [ ] Confirm the post-onboarding paywall flow still appears as expected after onboarding completion.
@@ -64,7 +66,9 @@ Use this as a manual simulator checklist. Mark items off as tested.
 - [ ] Confirm the Home prompt does not appear during an active or paused sun session.
 - [ ] Confirm the Home prompt does not appear within 24 hours of dismissing a paywall.
 - [ ] Confirm a positive response requests native review and suppresses future review prompts.
-- [ ] Confirm a negative response opens feedback email and suppresses future review prompts.
+- [ ] Confirm a negative response shows the feedback confirmation and suppresses future review prompts.
+- [ ] Confirm `No thanks` keeps the user in the app.
+- [ ] Confirm `Send feedback` opens feedback email.
 
 ## Leaderboard And Session Completion Regression
 
