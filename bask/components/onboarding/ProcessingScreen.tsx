@@ -99,7 +99,9 @@ export default function ProcessingScreen({ answers, onComplete }: ProcessingScre
   const [doneStep, setDoneStep] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const [showReviewPrompt, setShowReviewPrompt] = useState(false);
+  const [showFeedbackPrompt, setShowFeedbackPrompt] = useState(false);
   const reviewPromptCheckedRef = useRef(false);
+  const feedbackPromptPendingRef = useRef(false);
   const usedFallbackRef = useRef(false);
   const isReadyRef = useRef(isReady);
 
@@ -225,12 +227,17 @@ export default function ProcessingScreen({ answers, onComplete }: ProcessingScre
   };
 
   const handleNegativeReviewFeedback = async () => {
+    feedbackPromptPendingRef.current = true;
     capture(ANALYTICS_EVENTS.reviewNegativeResponse, {
       app_open_count: 0,
       value_event_count: 0,
     });
     await markNegativeReviewFeedback();
     setShowReviewPrompt(false);
+  };
+
+  const handleOpenFeedbackEmail = () => {
+    setShowFeedbackPrompt(false);
     capture(ANALYTICS_EVENTS.reviewFeedbackOpened, {
       source: 'onboarding',
     });
@@ -333,7 +340,30 @@ export default function ProcessingScreen({ answers, onComplete }: ProcessingScre
             },
           },
         ]}
-        onDidDismiss={() => setShowReviewPrompt(false)}
+        onDidDismiss={() => {
+          setShowReviewPrompt(false);
+          if (feedbackPromptPendingRef.current) {
+            feedbackPromptPendingRef.current = false;
+            setShowFeedbackPrompt(true);
+          }
+        }}
+      />
+
+      <IonAlert
+        isOpen={showFeedbackPrompt}
+        header='Want to tell us what happened?'
+        message='You can send feedback, or keep going with your plan.'
+        buttons={[
+          {
+            text: 'No thanks',
+            role: 'cancel',
+          },
+          {
+            text: 'Send feedback',
+            handler: handleOpenFeedbackEmail,
+          },
+        ]}
+        onDidDismiss={() => setShowFeedbackPrompt(false)}
       />
     </WarmBody>
   );

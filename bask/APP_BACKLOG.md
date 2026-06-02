@@ -1,6 +1,6 @@
 # Bask App Backlog
 
-Last updated: 2026-06-01
+Last updated: 2026-06-02
 
 Use this as the running list for app fixes and feature work. Higher-priority open items stay higher in the list. When an item ships, move it to `Completed` with the completion date and a short note about what changed.
 
@@ -88,7 +88,7 @@ Completed: 2026-06-01
 Priority: High  
 Risk: Medium
 
-Replaced the automatic native onboarding review request with an `Enjoying Bask?` feedback prompt after plan generation, then request native review only after a positive response. Kept a later value-driven review touchpoint based on app opens plus sun-session or supplement value events, with paywall and active-session suppression, negative-feedback routing to support email, and review analytics. Validated with `npx tsc --noEmit --incremental false`, `npm run lint`, and code-path inspection.
+Replaced the automatic native onboarding review request with an `Enjoying Bask?` feedback prompt after plan generation, then request native review only after a positive response. Kept a later value-driven review touchpoint based on app opens plus sun-session or supplement value events, with paywall and active-session suppression, review analytics, and a softer negative path that asks before opening support email. Validated with `npx tsc --noEmit --incremental false`, `npm run lint`, and code-path inspection. Refined the negative onboarding path on 2026-06-02.
 
 ### Fix Stale Current-Hour D-Window Recommendations
 
