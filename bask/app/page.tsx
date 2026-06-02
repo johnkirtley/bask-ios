@@ -451,10 +451,9 @@ export default function Home() {
 
   // D-Window forecast is the source of truth for whether synthesis is possible
   // right now, so the supplement card stays consistent with the forecast card.
-  const synthesisActiveNow = isInSynthesisWindow(
-    dWindowForecast?.todaySynthesis ?? null,
-    now,
-  );
+  const synthesisActiveNow =
+    !isCurrentCloudBlocked &&
+    isInSynthesisWindow(dWindowForecast?.todaySynthesis ?? null, now);
 
   const timeToGoalSubtext = (() => {
     if (remainingIU <= 0) return "Today's goal reached";
@@ -474,7 +473,7 @@ export default function Home() {
     if (!isFinite(timeToGoal) && effectiveUV < 3) {
       // Raw UV is strong but clouds are cutting it below the synthesis threshold.
       return sunData.uvIndex >= 3
-        ? 'Clouds are blocking vitamin-D rays right now.'
+        ? 'Clouds are blocking vitamin D right now.'
         : 'UV is too low for vitamin D right now — usually peaks around midday.';
     }
 

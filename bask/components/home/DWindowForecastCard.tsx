@@ -202,6 +202,55 @@ function RecommendationCard({ rec }: { rec: Recommendation }) {
   );
 }
 
+const LOW_EXPOSURE_ACTION_HEADLINE = 'More skin exposure could make today viable';
+const LOW_UV_ACTION_HEADLINE = 'UV too weak for vitamin D synthesis';
+
+const CURRENT_CLOUD_BLOCKED_RECOMMENDATION: Recommendation = {
+  type: 'action',
+  priority: 0,
+  content: {
+    headline: 'Cloud cover is the blocker right now',
+    items: [
+      'More skin exposure will not add IU until effective UV rises',
+      'Use the forecast window when clouds clear',
+    ],
+    details:
+      'Raw UV is high, but cloud-adjusted UV is below the vitamin D threshold right now.',
+  },
+};
+
+function getDisplayedRecommendations(
+  recommendations: Recommendation[],
+  isCurrentCloudBlocked: boolean,
+  isPremium: boolean,
+): Recommendation[] {
+  const visibleRecommendations = recommendations.filter((rec) => {
+    if (!isPremium && rec.content.headline?.toLowerCase().includes('tomorrow')) {
+      return false;
+    }
+
+    if (
+      isCurrentCloudBlocked &&
+      rec.type === 'action' &&
+      (rec.content.headline === LOW_EXPOSURE_ACTION_HEADLINE ||
+        rec.content.headline === LOW_UV_ACTION_HEADLINE)
+    ) {
+      return false;
+    }
+
+    return true;
+  });
+
+  if (!isCurrentCloudBlocked) {
+    return visibleRecommendations.sort((a, b) => a.priority - b.priority);
+  }
+
+  return [
+    CURRENT_CLOUD_BLOCKED_RECOMMENDATION,
+    ...visibleRecommendations,
+  ].sort((a, b) => a.priority - b.priority);
+}
+
 export default function DWindowForecastCard({
   forecast,
   onRefresh,
@@ -244,6 +293,11 @@ export default function DWindowForecastCard({
   // Active dot reflects when D synthesis is possible under current conditions.
   const isWindowActive =
     !isCurrentCloudBlocked && isInSynthesisWindow(forecast.todaySynthesis, now);
+  const displayedRecommendations = getDisplayedRecommendations(
+    forecast.recommendations,
+    isCurrentCloudBlocked,
+    isPremium,
+  );
 
   return (
     <div id='dwindow-forecast' className='w-full'>
@@ -390,27 +444,15 @@ export default function DWindowForecastCard({
         </div>
 
         {/* Recommendations */}
-        {forecast.recommendations.length > 0 && (
+        {displayedRecommendations.length > 0 && (
           <div className='mt-4 pt-4 border-t border-black/5'>
             <p className='text-xs font-semibold uppercase tracking-wider text-text-muted mb-3'>
               Recommendations
             </p>
             <div className='space-y-2.5'>
-              {forecast.recommendations
-                .filter((rec) => {
-                  // Filter out tomorrow-related recommendations for free users
-                  if (
-                    !isPremium &&
-                    rec.content.headline?.toLowerCase().includes('tomorrow')
-                  ) {
-                    return false;
-                  }
-                  return true;
-                })
-                .sort((a, b) => a.priority - b.priority)
-                .map((rec, index) => (
-                  <RecommendationCard key={index} rec={rec} />
-                ))}
+              {displayedRecommendations.map((rec, index) => (
+                <RecommendationCard key={index} rec={rec} />
+              ))}
             </div>
           </div>
         )}
@@ -543,7 +585,7 @@ function WindowDisplay({
   now: Date;
 }) {
   const synthesisMessage = isCurrentCloudBlocked
-    ? `Clouds are blocking vitamin D right now · Best window at ${window.windowStartTime}`
+    ? `Clouds are blocking vitamin D right now · Forecasted best window: ${window.windowStartTime} - ${window.windowEndTime}`
     : synthesis
     ? getSynthesisSecondaryMessage(synthesis, window, now)
     : null;

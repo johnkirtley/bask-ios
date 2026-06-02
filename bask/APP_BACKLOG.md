@@ -88,7 +88,7 @@ Completed: 2026-06-02
 Priority: High  
 Risk: Low
 
-Aligned the D-window card and active-session UI when raw UV is high but cloud-adjusted UV is below the vitamin D threshold. The D-window card no longer says vitamin D is available now during cloud-blocked conditions, and the active-session view now shows a prominent cloud-blocking notice instead of only a tiny `D-rays` caption. Validated with `npx tsc --noEmit --incremental false` and `npm run lint`.
+Aligned the D-window card and active-session UI when raw UV is high but cloud-adjusted UV is below the vitamin D threshold. The D-window card no longer says vitamin D is available now during cloud-blocked conditions, replaces misleading low-exposure recommendation copy with cloud-blocked guidance, and the active-session view now shows a prominent cloud-blocking notice instead of only a tiny `D-rays` caption. Validated with `npx tsc --noEmit --incremental false` and `npm run lint`.
 
 ### Replace Onboarding Review Prompt With Value-Based Review System
 
