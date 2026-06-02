@@ -260,35 +260,6 @@ export default function DWindowForecastCard({
 }: DWindowForecastCardProps) {
   const { presentPaywall } = useSubscription();
   const now = useMinuteTick();
-  const getEfficiencyColor = (efficiency: string) => {
-    switch (efficiency) {
-      case 'excellent':
-        return 'text-grove-green-dark';
-      case 'good':
-        return 'text-solar-flare';
-      case 'moderate':
-        return 'text-amber-500';
-      case 'poor':
-        return 'text-red-500';
-      default:
-        return 'text-text-secondary';
-    }
-  };
-
-  const getEfficiencyLabel = (efficiency: string) => {
-    switch (efficiency) {
-      case 'excellent':
-        return 'Excellent Conditions';
-      case 'good':
-        return 'Good Conditions';
-      case 'moderate':
-        return 'Moderate Conditions';
-      case 'poor':
-        return 'Poor Conditions';
-      default:
-        return 'Unknown';
-    }
-  };
 
   // Active dot reflects when D synthesis is possible under current conditions.
   const isWindowActive =
@@ -309,43 +280,6 @@ export default function DWindowForecastCard({
               <h3 className='text-[11px] font-extrabold uppercase tracking-[0.12em] text-text-secondary'>
                 D-Window Forecast
               </h3>
-            </div>
-            <div className='flex items-center gap-2'>
-              <span
-                className={`text-xs font-medium ${getEfficiencyColor(
-                  forecast.efficiency,
-                )}`}>
-                {getEfficiencyLabel(forecast.efficiency).replace(
-                  ' Conditions',
-                  '',
-                )}
-              </span>
-              {/* {onRefresh && (
-                <button
-                  onClick={onRefresh}
-                  disabled={isRefreshing}
-                  className={`text-text-secondary hover:text-text-primary active:scale-[0.98] transition-all p-3 min-w-[44px] min-h-[44px] flex items-center justify-center ${
-                    isRefreshing ? 'opacity-50 pointer-events-none' : ''
-                  }`}
-                  aria-label='Refresh forecast'>
-                  <svg
-                    xmlns='http://www.w3.org/2000/svg'
-                    fill='none'
-                    viewBox='0 0 24 24'
-                    strokeWidth={2}
-                    stroke='currentColor'
-                    className={`w-4 h-4 ${
-                      isRefreshing ? 'motion-safe:animate-spin' : ''
-                    }`}
-                    aria-hidden='true'>
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      d='M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99'
-                    />
-                  </svg>
-                </button>
-              )} */}
             </div>
           </div>
           {/* <p className="text-xs text-text-secondary">{isPremium ? 'Next 48 Hours' : 'Your D-Windows'}</p> */}
