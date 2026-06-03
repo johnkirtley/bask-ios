@@ -1,6 +1,6 @@
 # Bask App Backlog
 
-Last updated: 2026-06-02
+Last updated: 2026-06-03
 
 Use this as the running list for app fixes and feature work. Higher-priority open items stay higher in the list. When an item ships, move it to `Completed` with the completion date and a short note about what changed.
 
@@ -81,6 +81,14 @@ Reason for deferral:
 - The previous UTC/local-day concern is much less important for streak-only ranking.
 
 ## Completed
+
+### Soften Forecast And Time-To-Goal Copy
+
+Completed: 2026-06-03  
+Priority: Low  
+Risk: Low
+
+Changed the Today D-window empty state from an all-day-sounding message to `No window right now`, with reason-specific subtext that notes current UV/cloud conditions and asks the user to check back later because forecasts can change. Also shortened the low-UV Time to Goal subtext by removing the midday aside. Forecast eligibility logic was unchanged. Validated with `npx tsc --noEmit --incremental false` and `npm run lint` (warnings only).
 
 ### Clarify Cloud-Blocked Vitamin D States
 

@@ -311,16 +311,16 @@ export default function DWindowForecastCard({
             ) : (
               <div className='rounded-xl p-3 bg-solar-flare/[0.06] border border-solar-warm/[0.15] text-center'>
                 <p className='text-sm font-medium text-text-primary'>
-                  No D-Window today
+                  No window right now
                 </p>
                 <p className='text-xs text-text-secondary mt-0.5'>
                   {forecast.todayNoWindowReason === 'clouds-blocking'
-                    ? 'Cloud cover is blocking UV'
+                    ? 'Clouds are blocking UV right now. Forecasts can change; check back later.'
                     : forecast.todayNoWindowReason === 'low-exposure'
-                    ? 'UV available · exposure may be limiting'
+                    ? 'Conditions are not enough for your D-window right now. Check back later.'
                     : forecast.todayNoWindowReason === 'uv-too-low'
-                    ? 'UV levels too low'
-                    : 'Forecast still updating'}
+                    ? 'UV is too low right now. Forecasts can change; check back later.'
+                    : 'Forecast still updating. Check back later.'}
                 </p>
               </div>
             )}

@@ -474,7 +474,7 @@ export default function Home() {
       // Raw UV is strong but clouds are cutting it below the synthesis threshold.
       return sunData.uvIndex >= 3
         ? 'Clouds are blocking vitamin D right now.'
-        : 'UV is too low for vitamin D right now — usually peaks around midday.';
+        : 'UV is too low for vitamin D right now.';
     }
 
     if (isFinite(timeToGoal) && timeToGoal > 120) {
