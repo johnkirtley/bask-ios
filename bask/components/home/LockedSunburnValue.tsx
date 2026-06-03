@@ -30,7 +30,7 @@ export default function LockedSunburnValue({
 
       <div className='absolute inset-0 z-10 bg-white/90 backdrop-blur-xl pointer-events-none' />
 
-      <div className='absolute inset-0 z-20 flex flex-col items-center justify-center gap-1.5 px-2 text-center pointer-events-none'>
+      <div className='absolute inset-0 z-20 flex flex-col items-start justify-center gap-1.5 px-3 text-left pointer-events-none'>
         <ProBadge variant='compact' interactive={false} />
         <p className='text-[11px] font-semibold leading-tight text-text-primary'>
           {label}

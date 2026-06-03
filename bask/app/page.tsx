@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { IonAlert, IonToast } from '@ionic/react';
+import { IonToast } from '@ionic/react';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
@@ -75,6 +75,7 @@ import StreakCard from '../components/home/StreakCard';
 import TrialOfferCard from '../components/home/TrialOfferCard';
 import StreakDetailSheet from '../components/streaks/StreakDetailSheet';
 import StreakMilestoneOverlay from '../components/streaks/StreakMilestoneOverlay';
+import ReviewFeedbackModal from '../components/ui/ReviewFeedbackModal';
 import ReviewPromptModal from '../components/ui/ReviewPromptModal';
 
 /**
@@ -878,23 +879,10 @@ export default function Home() {
         onNegative={() => void handleNegativeReviewFeedback()}
       />
 
-      <IonAlert
+      <ReviewFeedbackModal
         isOpen={showReviewFeedbackPrompt}
-        header='Want to tell us what happened?'
-        message='You can send feedback, or keep going with your plan.'
-        buttons={[
-          {
-            text: 'No thanks',
-            role: 'cancel',
-          },
-          {
-            text: 'Send feedback',
-            handler: () => {
-              void handleOpenReviewFeedbackForm();
-            },
-          },
-        ]}
-        onDidDismiss={() => setShowReviewFeedbackPrompt(false)}
+        onClose={() => setShowReviewFeedbackPrompt(false)}
+        onSendFeedback={() => void handleOpenReviewFeedbackForm()}
       />
     </>
   );

@@ -25,7 +25,7 @@ Use this as a manual simulator checklist. Mark items off as tested.
 - [x] Confirm the custom `Happy with Bask?` prompt appears after the plan is generated.
 - [x] Tap the heart button and confirm the app requests the native App Store review prompt. Apple may suppress the visible native prompt in simulator.
 - [x] After tapping `Yes`, confirm future `Enjoying Bask?` prompts are suppressed after app relaunch.
-- [ ] Repeat from clean state, tap the unhappy button, and confirm the feedback confirmation appears.
+- [ ] Repeat from clean state, tap the unhappy button, and confirm the feedback confirmation appears with the same dark custom modal style.
 - [ ] Tap `No thanks` and confirm the app stays on the plan screen without opening the Tally feedback form.
 - [ ] Repeat from clean state, tap `Not really`, then `Send feedback`, and confirm the Tally feedback form opens to `https://tally.so/r/9qMbjE`.
 - [ ] After tapping `Not really`, confirm future `Enjoying Bask?` prompts are suppressed after app relaunch.
@@ -75,13 +75,13 @@ Use this as a manual simulator checklist. Mark items off as tested.
 - [ ] Confirm the Home prompt does not appear during an active or paused sun session.
 - [ ] Confirm the Home prompt does not appear within 24 hours of dismissing a paywall.
 - [ ] Confirm tapping the heart button requests native review and suppresses future review prompts.
-- [ ] Confirm tapping the unhappy button shows the feedback confirmation and suppresses future review prompts.
+- [ ] Confirm tapping the unhappy button shows the same dark custom feedback confirmation and suppresses future review prompts.
 - [ ] Confirm `No thanks` keeps the user in the app.
 - [ ] Confirm `Send feedback` opens the Tally feedback form at `https://tally.so/r/9qMbjE`.
 
 ## Home Trial Offer
 
-- [ ] As a free user, confirm the free trial offer card appears directly below `Daily Goal Streak`.
+- [ ] As a free user, confirm the free trial offer card appears directly below `Daily Goal Streak` with the warm solar-gradient CTA styling.
 - [ ] Tap the free trial offer card and confirm the RevenueCat paywall opens.
 - [ ] Dismiss the paywall and confirm Home remains usable.
 - [ ] As a premium user, confirm the free trial offer card is hidden.
@@ -105,17 +105,20 @@ Use this as a manual simulator checklist. Mark items off as tested.
 ## Sunburn Risk Pro Gate
 
 - [ ] As a new free user after `SUNBURN_RISK_PRO_GATE_CUTOFF_ISO`, confirm Home still shows the `Sunburn Risk` label but the dynamic value is replaced by the Pro lock treatment.
+- [ ] Confirm the locked Home Pro badge and `Unlock Sunburn Risk` label are left-aligned under the `Sunburn Risk` heading.
 - [ ] Confirm the locked Home sunburn value does not reveal the real risk label or time behind the lock.
 - [ ] Tap the locked Home sunburn value and confirm the RevenueCat paywall opens.
 - [ ] Dismiss the paywall and confirm Home remains usable.
 - [ ] Start a live sun session as a locked free user.
 - [ ] Confirm the live-session `Sunburn Risk In` tile still shows its label and pink accent, but the countdown value is replaced by the Pro lock treatment.
+- [ ] Confirm the locked live-session Pro badge and `Unlock Sunburn Risk` label are left-aligned inside the tile.
 - [ ] Confirm the locked live-session value does not reveal the real countdown behind the lock.
 - [ ] Tap the locked live-session value and dismiss the RevenueCat paywall.
 - [ ] Confirm the live session remains active, the elapsed timer continues, IU tracking continues, and Pause/Stop still work.
 - [ ] If testing purchase or restore, complete it from the live-session paywall and confirm the session stays active while the sunburn countdown unlocks.
 - [ ] If Live Activities are available in the simulator/device build, confirm the Lock Screen/Dynamic Island does not show the real burn timing for locked free users.
 - [ ] Confirm an existing/grandfathered free install with a profile created before `SUNBURN_RISK_PRO_GATE_CUTOFF_ISO` still sees the real Home and live-session sunburn values.
+- [ ] On a real phone that previously downloaded Bask, confirm visible Sunburn Risk is expected only when the local profile `created_at` predates `SUNBURN_RISK_PRO_GATE_CUTOFF_ISO`.
 
 ## Settings And Feedback
 

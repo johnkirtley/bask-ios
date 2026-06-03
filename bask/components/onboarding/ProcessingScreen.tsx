@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { IonAlert } from '@ionic/react';
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
@@ -19,6 +18,7 @@ import {
   shouldSuppressReviewPrompts,
 } from '../../lib/services/inAppReviewService';
 import Mascot from '../ui/Mascot';
+import ReviewFeedbackModal from '../ui/ReviewFeedbackModal';
 import ReviewPromptModal from '../ui/ReviewPromptModal';
 import {
   WARM,
@@ -334,23 +334,10 @@ export default function ProcessingScreen({ answers, onComplete }: ProcessingScre
         onNegative={() => void handleNegativeReviewFeedback()}
       />
 
-      <IonAlert
+      <ReviewFeedbackModal
         isOpen={showFeedbackPrompt}
-        header='Want to tell us what happened?'
-        message='You can send feedback, or keep going with your plan.'
-        buttons={[
-          {
-            text: 'No thanks',
-            role: 'cancel',
-          },
-          {
-            text: 'Send feedback',
-            handler: () => {
-              void handleOpenFeedbackForm();
-            },
-          },
-        ]}
-        onDidDismiss={() => setShowFeedbackPrompt(false)}
+        onClose={() => setShowFeedbackPrompt(false)}
+        onSendFeedback={() => void handleOpenFeedbackForm()}
       />
     </WarmBody>
   );

@@ -256,7 +256,7 @@ export default function ActiveSessionView({
                 </div>
               ) : (
                 <LockedSunburnValue
-                  label='Unlock burn timing'
+                  label='Unlock Sunburn Risk'
                   onUnlock={onUnlockSunburnRisk}
                   className='mt-1'
                 />

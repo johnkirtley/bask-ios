@@ -88,7 +88,7 @@ Completed: 2026-06-03
 Priority: High
 Risk: Medium
 
-Added an onboarding daily Vitamin D goal choice with a 2,000 IU default, NIH baseline guidance, and healthcare-provider copy, then persisted the selected goal into the local profile for new onboarding completions without migrating existing saved users. Added a Home free-trial offer card for non-premium users that opens the existing RevenueCat paywall, a Settings share card for the Bask App Store link, and a shared custom review prompt modal for both onboarding and Home value prompts while preserving the existing positive review and negative feedback flows. Automated validation was not run because project instructions say not to run tests unless requested.
+Added an onboarding daily Vitamin D goal choice with a 2,000 IU default, NIH baseline guidance, and healthcare-provider copy, then persisted the selected goal into the local profile for new onboarding completions without migrating existing saved users. Added a Home free-trial offer card for non-premium users that opens the existing RevenueCat paywall, a Settings share card for the Bask App Store link, and shared custom review and feedback confirmation modals for both onboarding and Home value prompts while preserving the existing positive review and negative feedback flows. Restyled the Home trial offer card on 2026-06-03 with a warmer solar-gradient CTA treatment so it stands out below the streak card. Automated validation was not run because project instructions say not to run tests unless requested.
 
 ### Gate Sunburn Risk Timing For New Free Users
 
@@ -96,7 +96,7 @@ Completed: 2026-06-03
 Priority: Medium
 Risk: Medium
 
-Made sunburn-risk timing a Pro feature for new free users while grandfathering existing local installs by profile creation date. The Home sunburn metric, in-app live-session countdown, and iOS Live Activity now use generic Pro placeholders for locked users instead of rendering real burn timing behind the lock. Locked in-app values open the existing RevenueCat paywall without touching live-session pause/end state. Added simulator QA checks for the locked Home value, live-session paywall flow, Live Activity leakage, and grandfathered-user behavior. Automated validation was not run because project instructions say not to run tests unless requested.
+Made sunburn-risk timing a Pro feature for new free users while grandfathering existing local installs by profile creation date. The Home sunburn metric, in-app live-session countdown, and iOS Live Activity now use generic Pro placeholders for locked users instead of rendering real burn timing behind the lock. Locked in-app values open the existing RevenueCat paywall without touching live-session pause/end state. Added simulator QA checks for the locked Home value, live-session paywall flow, Live Activity leakage, and grandfathered-user behavior. Refined the locked Home and live-session placeholder on 2026-06-03 so the Pro badge and unlock label are left-aligned under the Sunburn Risk heading. Automated validation was not run because project instructions say not to run tests unless requested.
 
 ### Add After-Sunset No-Window Copy
 

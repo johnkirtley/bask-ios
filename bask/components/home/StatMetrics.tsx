@@ -95,7 +95,7 @@ export default function StatMetrics({
           ) : (
             <div className='max-w-[190px]'>
               <LockedSunburnValue
-                label='Unlock burn timing'
+                label='Unlock Sunburn Risk'
                 onUnlock={onUnlockSunburnRisk}
               />
             </div>
