@@ -78,8 +78,8 @@ export const REVIEW_MILESTONES = {
   },
 } as const;
 
-// Feedback Email
-export const FEEDBACK_EMAIL = 'support@getbask.app';
+// Feedback
+export const REVIEW_FEEDBACK_FORM_URL = 'https://tally.so/r/9qMbjE';
 
 // Leaderboard Settings Keys (stored in local SQLite `settings` table)
 export const LEADERBOARD_SETTINGS = {

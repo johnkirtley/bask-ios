@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { IonAlert, IonToast } from '@ionic/react';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { useSunData } from '../hooks/useSunData';
 import { useOnboardingContext } from '../contexts/OnboardingContext';
@@ -49,7 +50,7 @@ import type { HourlyForecastItem } from '../lib/plugins/baskWeather';
 import { getRepresentativeUvForPassiveSync } from '../lib/healthKitUvUtils';
 import { handleLocationPermissionAction } from '../lib/locationPermissionUtils';
 import { capture, ANALYTICS_EVENTS } from '../lib/analytics';
-import { FEEDBACK_EMAIL } from '../lib/constants';
+import { REVIEW_FEEDBACK_FORM_URL } from '../lib/constants';
 import { canAccessSunburnRisk } from '../lib/sunburnRiskAccess';
 import {
   getReviewEligibility,
@@ -578,14 +579,20 @@ export default function Home() {
     setReviewPromptMetrics(null);
   };
 
-  const handleOpenReviewFeedbackEmail = () => {
+  const handleOpenReviewFeedbackForm = async () => {
     setShowReviewFeedbackPrompt(false);
     capture(ANALYTICS_EVENTS.reviewFeedbackOpened, {
       source: 'value_prompt',
     });
-    window.location.href = `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(
-      'App Feedback',
-    )}`;
+    try {
+      if (Capacitor.isNativePlatform()) {
+        await Browser.open({ url: REVIEW_FEEDBACK_FORM_URL });
+      } else {
+        window.open(REVIEW_FEEDBACK_FORM_URL, '_blank');
+      }
+    } catch {
+      window.open(REVIEW_FEEDBACK_FORM_URL, '_blank');
+    }
   };
 
   // If session is active or paused, show active session view
@@ -885,7 +892,9 @@ export default function Home() {
           },
           {
             text: 'Send feedback',
-            handler: handleOpenReviewFeedbackEmail,
+            handler: () => {
+              void handleOpenReviewFeedbackForm();
+            },
           },
         ]}
         onDidDismiss={() => setShowReviewFeedbackPrompt(false)}

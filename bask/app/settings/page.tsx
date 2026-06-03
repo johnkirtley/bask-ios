@@ -8,7 +8,7 @@ import { Capacitor } from '@capacitor/core';
 import { useSubscription } from '../../hooks/useSubscription';
 import { useOnboardingContext } from '../../contexts/OnboardingContext';
 import { legalContent } from '../../lib/onboardingData';
-import { FEEDBACK_EMAIL } from '../../lib/constants';
+import { REVIEW_FEEDBACK_FORM_URL } from '../../lib/constants';
 import {
   getLocationPermissionState,
   handleLocationPermissionAction,
@@ -362,9 +362,7 @@ export default function SettingsPage() {
     capture(ANALYTICS_EVENTS.reviewFeedbackOpened, {
       source: 'settings',
     });
-    window.location.href = `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(
-      'App Feedback',
-    )}`;
+    void handleOpenLink(REVIEW_FEEDBACK_FORM_URL);
   };
 
   const handleSuggestFeature = () => {

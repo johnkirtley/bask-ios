@@ -20,8 +20,8 @@ Use this as a manual simulator checklist. Mark items off as tested.
 - [ ] Tap `Yes` and confirm the app requests the native App Store review prompt. Apple may suppress the visible native prompt in simulator.
 - [ ] After tapping `Yes`, confirm future `Enjoying Bask?` prompts are suppressed after app relaunch.
 - [ ] Repeat from clean state, tap `Not really`, and confirm the feedback confirmation appears.
-- [ ] Tap `No thanks` and confirm the app stays on the plan screen without opening Mail.
-- [ ] Repeat from clean state, tap `Not really`, then `Send feedback`, and confirm feedback email routing opens.
+- [ ] Tap `No thanks` and confirm the app stays on the plan screen without opening the Tally feedback form.
+- [ ] Repeat from clean state, tap `Not really`, then `Send feedback`, and confirm the Tally feedback form opens to `https://tally.so/r/9qMbjE`.
 - [ ] After tapping `Not really`, confirm future `Enjoying Bask?` prompts are suppressed after app relaunch.
 - [ ] Confirm `See my plan` still works after either prompt response.
 - [ ] Confirm the post-onboarding paywall flow still appears as expected after onboarding completion.
@@ -71,7 +71,7 @@ Use this as a manual simulator checklist. Mark items off as tested.
 - [ ] Confirm a positive response requests native review and suppresses future review prompts.
 - [ ] Confirm a negative response shows the feedback confirmation and suppresses future review prompts.
 - [ ] Confirm `No thanks` keeps the user in the app.
-- [ ] Confirm `Send feedback` opens feedback email.
+- [ ] Confirm `Send feedback` opens the Tally feedback form at `https://tally.so/r/9qMbjE`.
 
 ## Leaderboard And Session Completion Regression
 
@@ -108,7 +108,7 @@ Use this as a manual simulator checklist. Mark items off as tested.
 
 - [ ] Open Settings.
 - [ ] Tap Rate App and confirm it requests the native App Store review prompt on iOS. Apple may suppress the visible prompt in simulator.
-- [ ] Tap Report Issue and confirm feedback email routing opens.
+- [ ] Tap Report Issue and confirm the Tally feedback form opens to `https://tally.so/r/9qMbjE`.
 - [ ] Open premium-gated controls and dismiss the paywall.
 - [ ] Confirm dismissing the paywall does not break Settings interaction.
 

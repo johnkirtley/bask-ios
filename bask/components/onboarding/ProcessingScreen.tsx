@@ -3,12 +3,13 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { IonAlert } from '@ionic/react';
 import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { OnboardingAnswers } from '../../types';
 import { deriveFitzpatrickType, FitzpatrickType } from '../../lib/dEngine';
 import { generateMockSunData } from '../../lib/sunDataUtils';
 import { BaskWeather } from '../../lib/plugins';
-import { FEEDBACK_EMAIL } from '../../lib/constants';
+import { REVIEW_FEEDBACK_FORM_URL } from '../../lib/constants';
 import { capture, ANALYTICS_EVENTS } from '../../lib/analytics';
 import {
   markNativeReviewRequested,
@@ -236,14 +237,20 @@ export default function ProcessingScreen({ answers, onComplete }: ProcessingScre
     setShowReviewPrompt(false);
   };
 
-  const handleOpenFeedbackEmail = () => {
+  const handleOpenFeedbackForm = async () => {
     setShowFeedbackPrompt(false);
     capture(ANALYTICS_EVENTS.reviewFeedbackOpened, {
       source: 'onboarding',
     });
-    window.location.href = `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(
-      'App Feedback',
-    )}`;
+    try {
+      if (Capacitor.isNativePlatform()) {
+        await Browser.open({ url: REVIEW_FEEDBACK_FORM_URL });
+      } else {
+        window.open(REVIEW_FEEDBACK_FORM_URL, '_blank');
+      }
+    } catch {
+      window.open(REVIEW_FEEDBACK_FORM_URL, '_blank');
+    }
   };
 
   const allDone = showResults;
@@ -360,7 +367,9 @@ export default function ProcessingScreen({ answers, onComplete }: ProcessingScre
           },
           {
             text: 'Send feedback',
-            handler: handleOpenFeedbackEmail,
+            handler: () => {
+              void handleOpenFeedbackForm();
+            },
           },
         ]}
         onDidDismiss={() => setShowFeedbackPrompt(false)}
