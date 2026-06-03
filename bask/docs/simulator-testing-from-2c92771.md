@@ -41,6 +41,9 @@ Use this as a manual simulator checklist. Mark items off as tested.
 - [ ] Confirm the app does not recommend starting at the already-passed hour.
 - [ ] Confirm notification scheduling does not produce a past D-window start time.
 - [ ] Confirm tomorrow’s D-window still displays normally.
+- [ ] Before sunset, force or observe a no-window Today state and confirm it still shows `No window right now` with check-back-later copy.
+- [ ] After local sunset, force or observe a no-window Today state and confirm it shows `Sun has set` with `No D-window is available for the rest of today.`
+- [ ] Confirm the after-sunset state does not direct free-tier users toward tomorrow’s locked forecast.
 
 ## Apple Health And Supplements
 
