@@ -19,6 +19,7 @@ import {
   shouldSuppressReviewPrompts,
 } from '../../lib/services/inAppReviewService';
 import Mascot from '../ui/Mascot';
+import ReviewPromptModal from '../ui/ReviewPromptModal';
 import {
   WARM,
   WarmBody,
@@ -102,7 +103,6 @@ export default function ProcessingScreen({ answers, onComplete }: ProcessingScre
   const [showReviewPrompt, setShowReviewPrompt] = useState(false);
   const [showFeedbackPrompt, setShowFeedbackPrompt] = useState(false);
   const reviewPromptCheckedRef = useRef(false);
-  const feedbackPromptPendingRef = useRef(false);
   const usedFallbackRef = useRef(false);
   const isReadyRef = useRef(isReady);
 
@@ -228,13 +228,13 @@ export default function ProcessingScreen({ answers, onComplete }: ProcessingScre
   };
 
   const handleNegativeReviewFeedback = async () => {
-    feedbackPromptPendingRef.current = true;
     capture(ANALYTICS_EVENTS.reviewNegativeResponse, {
       app_open_count: 0,
       value_event_count: 0,
     });
     await markNegativeReviewFeedback();
     setShowReviewPrompt(false);
+    setShowFeedbackPrompt(true);
   };
 
   const handleOpenFeedbackForm = async () => {
@@ -328,32 +328,10 @@ export default function ProcessingScreen({ answers, onComplete }: ProcessingScre
         </div>
       </div>
 
-      <IonAlert
+      <ReviewPromptModal
         isOpen={showReviewPrompt}
-        header='Enjoying Bask?'
-        message='Would you mind leaving a quick App Store review?'
-        buttons={[
-          {
-            text: 'Not really',
-            role: 'cancel',
-            handler: () => {
-              void handleNegativeReviewFeedback();
-            },
-          },
-          {
-            text: 'Yes',
-            handler: () => {
-              void handlePositiveReviewFeedback();
-            },
-          },
-        ]}
-        onDidDismiss={() => {
-          setShowReviewPrompt(false);
-          if (feedbackPromptPendingRef.current) {
-            feedbackPromptPendingRef.current = false;
-            setShowFeedbackPrompt(true);
-          }
-        }}
+        onPositive={() => void handlePositiveReviewFeedback()}
+        onNegative={() => void handleNegativeReviewFeedback()}
       />
 
       <IonAlert

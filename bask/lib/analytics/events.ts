@@ -63,13 +63,14 @@ export const ONBOARDING_STEP_NAMES = [
   'sunscreen_frequency', // 7
   'sunscreen_reflection', // 8
   'supplementation', // 9
-  'biological_profile', // 10
-  'medical_disclaimer', // 11
-  'location_permission', // 12
-  'notification_permission', // 13
-  'healthkit_permission', // 14
-  'generating', // 15
-  'plan_ready', // 16
+  'daily_goal', // 10
+  'biological_profile', // 11
+  'medical_disclaimer', // 12
+  'location_permission', // 13
+  'notification_permission', // 14
+  'healthkit_permission', // 15
+  'generating', // 16
+  'plan_ready', // 17
 ] as const;
 
 export function getOnboardingStepName(index: number): string {

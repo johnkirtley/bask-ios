@@ -82,6 +82,14 @@ Reason for deferral:
 
 ## Completed
 
+### Add Onboarding Goal Choice, Trial Offer, Sharing, And Review Prompt Polish
+
+Completed: 2026-06-03
+Priority: High
+Risk: Medium
+
+Added an onboarding daily Vitamin D goal choice with a 2,000 IU default, NIH baseline guidance, and healthcare-provider copy, then persisted the selected goal into the local profile for new onboarding completions without migrating existing saved users. Added a Home free-trial offer card for non-premium users that opens the existing RevenueCat paywall, a Settings share card for the Bask App Store link, and a shared custom review prompt modal for both onboarding and Home value prompts while preserving the existing positive review and negative feedback flows. Automated validation was not run because project instructions say not to run tests unless requested.
+
 ### Gate Sunburn Risk Timing For New Free Users
 
 Completed: 2026-06-03

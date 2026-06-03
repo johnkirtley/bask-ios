@@ -1,5 +1,7 @@
 // Mock data for Bask sun tracking app
 
+import { DEFAULT_DAILY_GOAL_IU } from './constants';
+
 export type UVLevel = 'Low' | 'Moderate' | 'High' | 'Very High' | 'Extreme';
 
 export interface UVDataPoint {
@@ -113,8 +115,8 @@ export function generateMockSunData(): SunData {
     timeToBurnMinutes,
     maxSunTimeMinutes: 120, // Suggested sun exposure time
     vitaminDProgress,
-    vitaminDGoal: 5000, // Suggested goal (IU) - consult your healthcare provider
-    vitaminDCurrent: Math.round((vitaminDProgress / 100) * 5000),
+    vitaminDGoal: DEFAULT_DAILY_GOAL_IU,
+    vitaminDCurrent: Math.round((vitaminDProgress / 100) * DEFAULT_DAILY_GOAL_IU),
     sunriseTime: '6:32 AM',
     solarNoonTime: '12:00 PM',
     sunsetTime: '7:45 PM',

@@ -72,8 +72,10 @@ import SupplementCard from '../components/home/SupplementCard';
 import CofactorCard from '../components/home/CofactorCard';
 import DWindowForecastCard from '../components/home/DWindowForecastCard';
 import StreakCard from '../components/home/StreakCard';
+import TrialOfferCard from '../components/home/TrialOfferCard';
 import StreakDetailSheet from '../components/streaks/StreakDetailSheet';
 import StreakMilestoneOverlay from '../components/streaks/StreakMilestoneOverlay';
+import ReviewPromptModal from '../components/ui/ReviewPromptModal';
 
 /**
  * Format time to goal for the home stat (shows actual duration when achievable).
@@ -152,7 +154,6 @@ export default function Home() {
   } | null>(null);
   const [showReviewFeedbackPrompt, setShowReviewFeedbackPrompt] = useState(false);
   const refreshReasonRef = useRef<StreakTransitionReason>('app_open');
-  const reviewFeedbackPromptPendingRef = useRef(false);
 
   useEffect(() => {
     userProfileRepository
@@ -552,6 +553,18 @@ export default function Home() {
     }
   }, [presentPaywall, session.isActive, session.isPaused]);
 
+  const handleOpenTrialOfferPaywall = useCallback(async () => {
+    capture(ANALYTICS_EVENTS.paywallPresented, {
+      source: 'home_trial_offer',
+    });
+
+    try {
+      await presentPaywall();
+    } finally {
+      await recordPaywallDismissedForReview();
+    }
+  }, [presentPaywall]);
+
   const handlePositiveReviewFeedback = async () => {
     if (!reviewPromptMetrics) return;
 
@@ -570,13 +583,13 @@ export default function Home() {
   const handleNegativeReviewFeedback = async () => {
     if (!reviewPromptMetrics) return;
 
-    reviewFeedbackPromptPendingRef.current = true;
     capture(ANALYTICS_EVENTS.reviewNegativeResponse, {
       app_open_count: reviewPromptMetrics.appOpenCount,
       value_event_count: reviewPromptMetrics.valueEventCount,
     });
     await markNegativeReviewFeedback();
     setReviewPromptMetrics(null);
+    setShowReviewFeedbackPrompt(true);
   };
 
   const handleOpenReviewFeedbackForm = async () => {
@@ -718,6 +731,12 @@ export default function Home() {
             />
           </div>
 
+          {!isPremium && (
+            <div className='px-6 mt-3'>
+              <TrialOfferCard onPress={handleOpenTrialOfferPaywall} />
+            </div>
+          )}
+
           {/* Stat Metrics */}
           <div className='px-6 mt-6'>
             <StatMetrics
@@ -853,32 +872,10 @@ export default function Home() {
         cssClass='toast-safe-top'
       />
 
-      <IonAlert
+      <ReviewPromptModal
         isOpen={!!reviewPromptMetrics}
-        header='Enjoying Bask?'
-        message='Would you mind leaving a quick App Store review?'
-        buttons={[
-          {
-            text: 'Not really',
-            role: 'cancel',
-            handler: () => {
-              void handleNegativeReviewFeedback();
-            },
-          },
-          {
-            text: 'Yes',
-            handler: () => {
-              void handlePositiveReviewFeedback();
-            },
-          },
-        ]}
-        onDidDismiss={() => {
-          setReviewPromptMetrics(null);
-          if (reviewFeedbackPromptPendingRef.current) {
-            reviewFeedbackPromptPendingRef.current = false;
-            setShowReviewFeedbackPrompt(true);
-          }
-        }}
+        onPositive={() => void handlePositiveReviewFeedback()}
+        onNegative={() => void handleNegativeReviewFeedback()}
       />
 
       <IonAlert

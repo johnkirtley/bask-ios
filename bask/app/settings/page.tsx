@@ -5,10 +5,11 @@ import { IonAlert, IonToggle, IonToast, IonModal } from '@ionic/react';
 import { Browser } from '@capacitor/browser';
 import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
+import { Share } from '@capacitor/share';
 import { useSubscription } from '../../hooks/useSubscription';
 import { useOnboardingContext } from '../../contexts/OnboardingContext';
 import { legalContent } from '../../lib/onboardingData';
-import { REVIEW_FEEDBACK_FORM_URL } from '../../lib/constants';
+import { BASK_APP_STORE_URL, REVIEW_FEEDBACK_FORM_URL } from '../../lib/constants';
 import {
   getLocationPermissionState,
   handleLocationPermissionAction,
@@ -192,6 +193,21 @@ const BeakerIcon = () => (
   </svg>
 );
 
+const ShareIcon = () => (
+  <svg
+    xmlns='http://www.w3.org/2000/svg'
+    viewBox='0 0 24 24'
+    fill='none'
+    stroke='currentColor'
+    strokeWidth='2'
+    className='w-5 h-5'>
+    <circle cx='18' cy='5' r='3' />
+    <circle cx='6' cy='12' r='3' />
+    <circle cx='18' cy='19' r='3' />
+    <path d='M8.6 13.5l6.8 4M15.4 6.5l-6.8 4' />
+  </svg>
+);
+
 export default function SettingsPage() {
   const { isPremium, restore, isLoading, presentPaywall } = useSubscription();
 
@@ -355,6 +371,36 @@ export default function SettingsPage() {
       await Browser.open({ url });
     } else {
       window.open(url, '_blank');
+    }
+  };
+
+  const handleShareBask = async () => {
+    try {
+      if (Capacitor.isNativePlatform()) {
+        await Share.share({
+          title: 'Bask',
+          text: 'Track Vitamin D from sunlight with Bask.',
+          url: BASK_APP_STORE_URL,
+          dialogTitle: 'Share Bask',
+        });
+        return;
+      }
+
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Bask',
+          text: 'Track Vitamin D from sunlight with Bask.',
+          url: BASK_APP_STORE_URL,
+        });
+        return;
+      }
+
+      await handleOpenLink(BASK_APP_STORE_URL);
+    } catch (error) {
+      console.warn('Failed to share Bask link:', error);
+      if (!Capacitor.isNativePlatform()) {
+        await handleOpenLink(BASK_APP_STORE_URL);
+      }
     }
   };
 
@@ -703,6 +749,24 @@ export default function SettingsPage() {
             <h2 className='text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em] mb-3 px-1'>
               Community
             </h2>
+            <div className='backdrop-blur-xl bg-white/70 border border-black/5 shadow-sm rounded-xl overflow-hidden mb-3'>
+              <button
+                onClick={handleShareBask}
+                className='w-full p-4 flex items-center gap-3 text-left active:bg-black/5 transition-all'>
+                <span className='text-text-secondary'>
+                  <ShareIcon />
+                </span>
+                <div className='flex-1'>
+                  <span className='text-text-primary'>Share a Link to Bask</span>
+                  <p className='text-xs text-text-secondary'>
+                    Send the App Store link
+                  </p>
+                </div>
+                <span className='text-text-primary/40'>
+                  <ChevronRightIcon />
+                </span>
+              </button>
+            </div>
             <LeaderboardSettings />
           </section>
 

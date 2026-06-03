@@ -18,6 +18,7 @@ import {
   sunscreenFrequencyOptions,
   supplementationOptions,
 } from '../../lib/onboardingData';
+import { DEFAULT_DAILY_GOAL_IU } from '../../lib/constants';
 import {
   getSkinReflection,
   getOutdoorReflection,
@@ -37,6 +38,7 @@ import LocationPermissionScreen from './LocationPermissionScreen';
 import NotificationPermissionScreen from './NotificationPermissionScreen';
 import HealthKitPermissionScreen from './HealthKitPermissionScreen';
 import PlanReadyScreen from './PlanReadyScreen';
+import VitaminDGoalScreen from './VitaminDGoalScreen';
 
 const DEFAULT_ANSWERS: OnboardingAnswers = {
   symptoms: [],
@@ -46,6 +48,7 @@ const DEFAULT_ANSWERS: OnboardingAnswers = {
   outdoorTime: null,
   sunscreenFrequency: null,
   vitaminDSupplementation: null,
+  dailyGoalIU: DEFAULT_DAILY_GOAL_IU,
   age: null,
   weight: null,
   weightUnit: 'lbs',
@@ -250,8 +253,18 @@ export default function OnboardingFlow() {
           />
         );
 
-      // Screen 10: Biological Profile
+      // Screen 10: Daily Goal
       case 10:
+        return (
+          <VitaminDGoalScreen
+            selectedGoal={answers.dailyGoalIU ?? DEFAULT_DAILY_GOAL_IU}
+            onSelect={(dailyGoalIU) => handleMultipleUpdates({ dailyGoalIU })}
+            onContinue={handleContinue}
+          />
+        );
+
+      // Screen 11: Biological Profile
+      case 11:
         return (
           <BiologicalProfileScreen
             age={answers.age}
@@ -264,8 +277,8 @@ export default function OnboardingFlow() {
           />
         );
 
-      // Screen 11: Medical Disclaimer
-      case 11:
+      // Screen 12: Medical Disclaimer
+      case 12:
         return (
           <MedicalDisclaimerScreen
             onAccept={() => {
@@ -275,8 +288,8 @@ export default function OnboardingFlow() {
           />
         );
 
-      // Screen 12: Location Permission
-      case 12:
+      // Screen 13: Location Permission
+      case 13:
         return (
           <LocationPermissionScreen
             onPermissionResult={(result: PermissionResult) => {
@@ -288,8 +301,8 @@ export default function OnboardingFlow() {
           />
         );
 
-      // Screen 13: Notification Permission
-      case 13:
+      // Screen 14: Notification Permission
+      case 14:
         return (
           <NotificationPermissionScreen
             onPermissionResult={(result: PermissionResult) => {
@@ -301,8 +314,8 @@ export default function OnboardingFlow() {
           />
         );
 
-      // Screen 14: HealthKit Permission
-      case 14:
+      // Screen 15: HealthKit Permission
+      case 15:
         return (
           <HealthKitPermissionScreen
             onPermissionResult={async (result: PermissionResult) => {
@@ -327,8 +340,8 @@ export default function OnboardingFlow() {
           />
         );
 
-      // Screen 15: Generating
-      case 15:
+      // Screen 16: Generating
+      case 16:
         return (
           <ProcessingScreen
             answers={answers}
@@ -336,8 +349,8 @@ export default function OnboardingFlow() {
           />
         );
 
-      // Screen 16: Plan ready
-      case 16:
+      // Screen 17: Plan ready
+      case 17:
         return <PlanReadyScreen onComplete={handleProcessingComplete} />;
 
       default:
@@ -345,10 +358,10 @@ export default function OnboardingFlow() {
     }
   };
 
-  // Chrome (back + progress) shows only on the 14 question screens (1 to 14).
-  const showChrome = currentScreen >= 1 && currentScreen <= 14;
+  // Chrome (back + progress) shows only on the question screens.
+  const showChrome = currentScreen >= 1 && currentScreen <= 15;
   const heroBg = currentScreen === 0 || currentScreen >= TOTAL_ONBOARDING_SCREENS - 2;
-  const frac = currentScreen / 14;
+  const frac = currentScreen / 15;
 
   return (
     <div className="fixed inset-0 flex flex-col pt-safe pb-safe">

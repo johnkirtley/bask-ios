@@ -23,6 +23,7 @@ const DEFAULT_ONBOARDING: OnboardingState = {
     outdoorTime: null,
     sunscreenFrequency: null,
     vitaminDSupplementation: null,
+    dailyGoalIU: null,
     age: null,
     weight: null,
     weightUnit: 'lbs',
@@ -74,6 +75,7 @@ function normalizeOnboardingState(state: OnboardingState): OnboardingState {
       ...raw,
       symptoms,
       sunscreenFrequency: raw.sunscreenFrequency ?? null,
+      dailyGoalIU: raw.dailyGoalIU ?? null,
     },
   };
 }

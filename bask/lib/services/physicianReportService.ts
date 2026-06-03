@@ -13,6 +13,7 @@ import {
   resolveFitzpatrickType,
   resolveWeight,
 } from '../profileUtils';
+import { DEFAULT_DAILY_GOAL_IU } from '../constants';
 import { OnboardingAnswers } from '../../types';
 
 export type ReportPeriod = '30' | '90' | 'all';
@@ -203,7 +204,7 @@ const EMPTY_REPORT_DATA: ReportData = {
     weight: null,
     weightUnit: null,
     fitzpatrickType: 2,
-    dailyGoal: 5000,
+    dailyGoal: DEFAULT_DAILY_GOAL_IU,
     bloodTestValue: null,
     bloodTestUnit: null,
     bloodTestDate: null,

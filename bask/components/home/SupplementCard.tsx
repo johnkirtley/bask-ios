@@ -8,6 +8,7 @@ import { supplementsRepository, cofactorsRepository } from '../../lib/database';
 import { BaskHealth } from '../../lib/plugins/baskHealth';
 import { capture, ANALYTICS_EVENTS } from '../../lib/analytics';
 import { recordReviewValueEvent } from '../../lib/services/inAppReviewService';
+import { DEFAULT_DAILY_GOAL_IU } from '../../lib/constants';
 import GlassCardWrapper from './GlassCardWrapper';
 import { BloodTestCalibration } from '../../lib/bloodTestUtils';
 
@@ -38,7 +39,7 @@ export default function SupplementCard({
   todaySunIU = 0,
   uvIndex,
   synthesisActiveNow,
-  vitaminDGoal = 5000,
+  vitaminDGoal = DEFAULT_DAILY_GOAL_IU,
   bloodTestCalibration = null,
 }: SupplementCardProps) {
   const [todayTotalIU, setTodayTotalIU] = useState(0);

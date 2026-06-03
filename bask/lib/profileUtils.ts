@@ -64,6 +64,10 @@ export function buildProfileUpdateFromOnboarding(
   update.weight = answers.weight;
   update.weight_unit = answers.weightUnit;
 
+  if (answers.dailyGoalIU != null && answers.dailyGoalIU > 0) {
+    update.daily_goal = answers.dailyGoalIU;
+  }
+
   if (agreedToTermsAt) {
     update.disclaimer_accepted_at = agreedToTermsAt;
   }

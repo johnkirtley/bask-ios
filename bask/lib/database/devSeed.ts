@@ -69,7 +69,7 @@ interface SeedData {
 }
 
 const SEED_DAYS = 30;
-const SEED_GOAL_IU = 5000;
+const SEED_GOAL_IU = 2000;
 const PRESET_ID = 't-shirt-shorts';
 
 function startOfDay(d: Date): Date {

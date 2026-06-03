@@ -1,5 +1,12 @@
 /** Default daily vitamin D goal (IU) when user has not set a custom goal */
-export const DEFAULT_DAILY_GOAL_IU = 5000;
+export const DEFAULT_DAILY_GOAL_IU = 2000;
+
+/** Conservative NIH baseline shown during onboarding for general education. */
+export const NIH_BASELINE_DAILY_GOAL_IU = 600;
+
+/** Public App Store URL used by Settings sharing. */
+export const BASK_APP_STORE_URL =
+  'https://apps.apple.com/us/app/bask-vitamin-d-sun-tracker/id6758405235';
 
 // Database Configuration
 export const DB_CONFIG = {

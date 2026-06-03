@@ -3,7 +3,7 @@
 import { Capacitor } from '@capacitor/core';
 import { notificationService } from '../../services/notificationService';
 import { databaseService } from '../connection';
-import { STORAGE_KEYS } from '@/lib/constants';
+import { DEFAULT_DAILY_GOAL_IU, STORAGE_KEYS } from '@/lib/constants';
 import { streakStateRepository } from './streakStateRepository';
 import { leaderboardService } from '../../supabase/leaderboardService';
 
@@ -43,7 +43,7 @@ export const resetRepository = {
           SET
             fitzpatrick_type = 2,
             base_d_level = 0,
-            daily_goal = 5000,
+            daily_goal = ${DEFAULT_DAILY_GOAL_IU},
             age = NULL,
             weight = NULL,
             weight_unit = NULL,

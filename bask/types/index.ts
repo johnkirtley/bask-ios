@@ -24,6 +24,7 @@ export interface OnboardingAnswers {
 
   // Supplementation
   vitaminDSupplementation: string | null;
+  dailyGoalIU: number | null;
 
   // Screen 7: Biological Profile
   age: number | null;

@@ -14,6 +14,7 @@ import { userProfileRepository } from '../lib/database/repositories/userProfileR
 import { calculateTimeToBurn, FitzpatrickType } from '../lib/dEngine';
 import { resolveDailyGoal, resolveFitzpatrickType } from '../lib/profileUtils';
 import { useOnboardingContext } from '../contexts/OnboardingContext';
+import { DEFAULT_DAILY_GOAL_IU } from '../lib/constants';
 
 /**
  * Creates an empty sun data object for when real data is unavailable
@@ -25,7 +26,7 @@ function createEmptySunData(): SunData {
     timeToBurnMinutes: 0,
     maxSunTimeMinutes: 0,
     vitaminDProgress: 0,
-    vitaminDGoal: 5000, // Default - user can edit
+    vitaminDGoal: DEFAULT_DAILY_GOAL_IU,
     vitaminDCurrent: 0,
     sunriseTime: '--',
     solarNoonTime: '--',
@@ -54,7 +55,7 @@ export function useSunData(): SunData & { isLive: boolean; locationDenied: boole
   const [isLoading, setIsLoading] = useState(true);
   const [locationCity, setLocationCity] = useState<string | undefined>(undefined);
   const [locationState, setLocationState] = useState<string | undefined>(undefined);
-  const [userGoal, setUserGoal] = useState<number>(5000); // Default, will be fetched from DB
+  const [userGoal, setUserGoal] = useState<number>(DEFAULT_DAILY_GOAL_IU);
   const [goalRefreshTrigger, setGoalRefreshTrigger] = useState(0);
 
   // Function to manually trigger goal refresh

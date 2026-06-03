@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { IonAlert } from '@ionic/react';
 import { userProfileRepository } from '@/lib/database/repositories/userProfileRepository';
 import { capture, ANALYTICS_EVENTS } from '@/lib/analytics';
+import { DEFAULT_DAILY_GOAL_IU } from '@/lib/constants';
 import Mascot from '../ui/Mascot';
 import { getMascotMood } from '@/lib/mascotUtils';
 
@@ -27,7 +28,7 @@ export default function BaskRing({
   const [showGoalAlert, setShowGoalAlert] = useState(false);
   const [displayedGoal, setDisplayedGoal] = useState<number | null>(null);
 
-  // Load goal from DB on mount to avoid showing default 5000
+  // Load goal from DB on mount to avoid showing a fallback goal.
   useEffect(() => {
     userProfileRepository.get().then(profile => {
       if (profile?.daily_goal) {
@@ -38,9 +39,9 @@ export default function BaskRing({
     });
   }, []);
 
-  // Sync from prop when it changes (ignore the initial 5000 default)
+  // Sync from prop when it changes.
   useEffect(() => {
-    if (vitaminDGoal && vitaminDGoal !== 5000) {
+    if (vitaminDGoal) {
       setDisplayedGoal(vitaminDGoal);
     }
   }, [vitaminDGoal]);
@@ -179,7 +180,7 @@ export default function BaskRing({
           {
             name: 'goal',
             type: 'number',
-            placeholder: 'e.g., 5000',
+            placeholder: `e.g., ${DEFAULT_DAILY_GOAL_IU}`,
             value: displayedGoal ?? vitaminDGoal,
             min: 0,
             max: 50000,

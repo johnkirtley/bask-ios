@@ -1,5 +1,6 @@
 'use client';
 
+import { DEFAULT_DAILY_GOAL_IU } from '../constants';
 import { databaseService } from './connection';
 
 interface Migration {
@@ -27,7 +28,7 @@ const migrations: Migration[] = [
         id INTEGER PRIMARY KEY CHECK (id = 1),
         fitzpatrick_type INTEGER NOT NULL DEFAULT 2,
         base_d_level INTEGER NOT NULL DEFAULT 0,
-        daily_goal INTEGER NOT NULL DEFAULT 5000,
+        daily_goal INTEGER NOT NULL DEFAULT ${DEFAULT_DAILY_GOAL_IU},
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
       )`,
