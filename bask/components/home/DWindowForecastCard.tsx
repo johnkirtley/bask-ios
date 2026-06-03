@@ -20,6 +20,7 @@ interface DWindowForecastCardProps {
   isRefreshing?: boolean;
   isPremium?: boolean;
   isCurrentCloudBlocked?: boolean;
+  sunsetTime?: string;
 }
 
 /** Re-render every minute so synthesis countdown stays current. */
@@ -30,6 +31,48 @@ function useMinuteTick(): Date {
     return () => clearInterval(id);
   }, []);
   return now;
+}
+
+function parseClockTimeToDate(timeStr: string | undefined, baseDate: Date) {
+  if (!timeStr || timeStr === '--') return null;
+
+  const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return null;
+
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const period = match[3].toUpperCase();
+
+  if (period === 'PM' && hours !== 12) hours += 12;
+  if (period === 'AM' && hours === 12) hours = 0;
+
+  const date = new Date(baseDate);
+  date.setHours(hours, minutes, 0, 0);
+  return date;
+}
+
+function getTodayNoWindowCopy(
+  reason: DWindowForecast['todayNoWindowReason'],
+  isAfterSunset: boolean,
+) {
+  if (isAfterSunset) {
+    return {
+      headline: 'Sun has set',
+      subtext: 'No D-window is available for the rest of today.',
+    };
+  }
+
+  return {
+    headline: 'No window right now',
+    subtext:
+      reason === 'clouds-blocking'
+        ? 'Clouds are blocking UV right now. Forecasts can change; check back later.'
+        : reason === 'low-exposure'
+        ? 'Conditions are not enough for your D-window right now. Check back later.'
+        : reason === 'uv-too-low'
+        ? 'UV is too low right now. Forecasts can change; check back later.'
+        : 'Forecast still updating. Check back later.',
+  };
 }
 
 function RecommendationCard({ rec }: { rec: Recommendation }) {
@@ -257,9 +300,15 @@ export default function DWindowForecastCard({
   isRefreshing = false,
   isPremium = false,
   isCurrentCloudBlocked = false,
+  sunsetTime,
 }: DWindowForecastCardProps) {
   const { presentPaywall } = useSubscription();
   const now = useMinuteTick();
+  const sunsetAt = parseClockTimeToDate(sunsetTime, now);
+  const todayNoWindowCopy = getTodayNoWindowCopy(
+    forecast.todayNoWindowReason,
+    sunsetAt !== null && now >= sunsetAt,
+  );
 
   // Active dot reflects when D synthesis is possible under current conditions.
   const isWindowActive =
@@ -311,16 +360,10 @@ export default function DWindowForecastCard({
             ) : (
               <div className='rounded-xl p-3 bg-solar-flare/[0.06] border border-solar-warm/[0.15] text-center'>
                 <p className='text-sm font-medium text-text-primary'>
-                  No window right now
+                  {todayNoWindowCopy.headline}
                 </p>
                 <p className='text-xs text-text-secondary mt-0.5'>
-                  {forecast.todayNoWindowReason === 'clouds-blocking'
-                    ? 'Clouds are blocking UV right now. Forecasts can change; check back later.'
-                    : forecast.todayNoWindowReason === 'low-exposure'
-                    ? 'Conditions are not enough for your D-window right now. Check back later.'
-                    : forecast.todayNoWindowReason === 'uv-too-low'
-                    ? 'UV is too low right now. Forecasts can change; check back later.'
-                    : 'Forecast still updating. Check back later.'}
+                  {todayNoWindowCopy.subtext}
                 </p>
               </div>
             )}

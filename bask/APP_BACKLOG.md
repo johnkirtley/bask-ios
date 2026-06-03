@@ -90,6 +90,14 @@ Risk: Medium
 
 Made sunburn-risk timing a Pro feature for new free users while grandfathering existing local installs by profile creation date. The Home sunburn metric, in-app live-session countdown, and iOS Live Activity now use generic Pro placeholders for locked users instead of rendering real burn timing behind the lock. Locked in-app values open the existing RevenueCat paywall without touching live-session pause/end state. Added simulator QA checks for the locked Home value, live-session paywall flow, Live Activity leakage, and grandfathered-user behavior. Automated validation was not run because project instructions say not to run tests unless requested.
 
+### Add After-Sunset No-Window Copy
+
+Completed: 2026-06-03
+Priority: Low
+Risk: Low
+
+Added a dedicated after-sunset Today empty state for the D-window forecast: `Sun has set` with `No D-window is available for the rest of today.` The card uses the existing Home sunset time and keeps pre-sunset no-window copy unchanged. Forecast eligibility logic was unchanged. Validated with `npx tsc --noEmit --incremental false` and `npm run lint` (warnings only).
+
 ### Soften Forecast And Time-To-Goal Copy
 
 Completed: 2026-06-03  

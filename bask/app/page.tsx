@@ -755,6 +755,7 @@ export default function Home() {
                 isRefreshing={isRefreshingForecast}
                 isPremium={isPremium}
                 isCurrentCloudBlocked={isCurrentCloudBlocked}
+                sunsetTime={sunData.sunsetTime}
               />
             </div>
           )}
