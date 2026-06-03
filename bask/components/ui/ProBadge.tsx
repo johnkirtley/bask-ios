@@ -3,20 +3,24 @@
 interface ProBadgeProps {
   onClick?: () => void;
   variant?: 'default' | 'compact';
+  interactive?: boolean;
 }
 
 /**
  * PRO badge for locked premium features
  * Tapping triggers paywall presentation
  */
-export default function ProBadge({ onClick, variant = 'default' }: ProBadgeProps) {
-  return (
-    <button
-      onClick={onClick}
-      className={`inline-flex items-center gap-1 ${
-        variant === 'compact' ? 'px-2 py-1' : 'px-2.5 py-1'
-      } rounded-full bg-gradient-to-r from-solar-flare to-solar-warm text-white font-bold uppercase tracking-wider text-[10px] shadow-sm active:scale-[0.98] transition-transform duration-150`}
-      aria-label="Unlock with Pro">
+export default function ProBadge({
+  onClick,
+  variant = 'default',
+  interactive = true,
+}: ProBadgeProps) {
+  const className = `inline-flex items-center gap-1 ${
+    variant === 'compact' ? 'px-2 py-1' : 'px-2.5 py-1'
+  } rounded-full bg-gradient-to-r from-solar-flare to-solar-warm text-white font-bold uppercase tracking-wider text-[10px] shadow-sm active:scale-[0.98] transition-transform duration-150`;
+
+  const content = (
+    <>
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
@@ -29,6 +33,23 @@ export default function ProBadge({ onClick, variant = 'default' }: ProBadgeProps
         />
       </svg>
       <span>PRO</span>
+    </>
+  );
+
+  if (!interactive) {
+    return (
+      <span className={className} aria-hidden='true'>
+        {content}
+      </span>
+    );
+  }
+
+  return (
+    <button
+      onClick={onClick}
+      className={className}
+      aria-label="Unlock with Pro">
+      {content}
     </button>
   );
 }

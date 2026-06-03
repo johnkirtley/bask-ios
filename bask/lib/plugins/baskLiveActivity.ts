@@ -20,6 +20,7 @@ export interface LiveActivityStartResult {
 export interface StartLiveActivityOptions {
   uvIndex: number;
   timeToBurnMinutes: number;
+  canAccessSunburnRisk: boolean;
   startTimeMs: number; // Date.now() epoch milliseconds
 }
 
@@ -30,6 +31,7 @@ export interface UpdateLiveActivityOptions {
   activityId?: string;
   currentIU: number;
   isPaused: boolean;
+  canAccessSunburnRisk: boolean;
   effectiveStartTimeMs: number; // Adjusted start time for timer calculation
   elapsedSecondsAtPause: number; // Frozen elapsed seconds when paused
 }

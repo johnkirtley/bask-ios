@@ -86,6 +86,21 @@ Use this as a manual simulator checklist. Mark items off as tested.
 - [ ] Confirm the active session UI exits cleanly.
 - [ ] Confirm no removed hold-to-stop behavior is still referenced in the UI.
 
+## Sunburn Risk Pro Gate
+
+- [ ] As a new free user after `SUNBURN_RISK_PRO_GATE_CUTOFF_ISO`, confirm Home still shows the `Sunburn Risk` label but the dynamic value is replaced by the Pro lock treatment.
+- [ ] Confirm the locked Home sunburn value does not reveal the real risk label or time behind the lock.
+- [ ] Tap the locked Home sunburn value and confirm the RevenueCat paywall opens.
+- [ ] Dismiss the paywall and confirm Home remains usable.
+- [ ] Start a live sun session as a locked free user.
+- [ ] Confirm the live-session `Sunburn Risk In` tile still shows its label and pink accent, but the countdown value is replaced by the Pro lock treatment.
+- [ ] Confirm the locked live-session value does not reveal the real countdown behind the lock.
+- [ ] Tap the locked live-session value and dismiss the RevenueCat paywall.
+- [ ] Confirm the live session remains active, the elapsed timer continues, IU tracking continues, and Pause/Stop still work.
+- [ ] If testing purchase or restore, complete it from the live-session paywall and confirm the session stays active while the sunburn countdown unlocks.
+- [ ] If Live Activities are available in the simulator/device build, confirm the Lock Screen/Dynamic Island does not show the real burn timing for locked free users.
+- [ ] Confirm an existing/grandfathered free install with a profile created before `SUNBURN_RISK_PRO_GATE_CUTOFF_ISO` still sees the real Home and live-session sunburn values.
+
 ## Settings And Feedback
 
 - [ ] Open Settings.
@@ -96,5 +111,5 @@ Use this as a manual simulator checklist. Mark items off as tested.
 
 ## Backlog Status
 
-- [ ] Confirm `APP_BACKLOG.md` shows completed items for HealthKit dietary writes, D-window timing, and value-based review prompts.
+- [ ] Confirm `APP_BACKLOG.md` shows completed items for HealthKit dietary writes, D-window timing, value-based review prompts, and the sunburn risk Pro gate.
 - [ ] Confirm the next open backlog item is `Add UV Data Confidence Labels To Add Session`.

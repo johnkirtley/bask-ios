@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import GlassCardWrapper from './GlassCardWrapper';
+import LockedSunburnValue from './LockedSunburnValue';
 
 interface StatMetricsProps {
   timeToGoal: string;
@@ -10,6 +11,8 @@ interface StatMetricsProps {
   isLoading?: boolean;
   burnRisk: string;
   burnRiskSubtext?: string;
+  canAccessSunburnRisk?: boolean;
+  onUnlockSunburnRisk?: () => void;
   dailyDecay: number;
   decaySubtext: string;
   decayInfoText: string;
@@ -27,6 +30,8 @@ export default function StatMetrics({
   isLoading,
   burnRisk,
   burnRiskSubtext,
+  canAccessSunburnRisk = true,
+  onUnlockSunburnRisk,
   dailyDecay,
   decaySubtext,
   decayInfoText,
@@ -76,12 +81,23 @@ export default function StatMetrics({
           <div className='text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em] mb-1'>
             Sunburn Risk
           </div>
-          <div className='text-[24px] font-black text-text-primary tabular-nums tracking-[-0.02em]'>
-            {burnRisk}
-          </div>
-          {burnRiskSubtext && (
-            <div className='text-[11px] text-text-muted mt-0.5'>
-              {burnRiskSubtext}
+          {canAccessSunburnRisk ? (
+            <>
+              <div className='text-[24px] font-black text-text-primary tabular-nums tracking-[-0.02em]'>
+                {burnRisk}
+              </div>
+              {burnRiskSubtext && (
+                <div className='text-[11px] text-text-muted mt-0.5'>
+                  {burnRiskSubtext}
+                </div>
+              )}
+            </>
+          ) : (
+            <div className='max-w-[190px]'>
+              <LockedSunburnValue
+                label='Unlock burn timing'
+                onUnlock={onUnlockSunburnRisk}
+              />
             </div>
           )}
         </div>

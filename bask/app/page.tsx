@@ -50,11 +50,13 @@ import { getRepresentativeUvForPassiveSync } from '../lib/healthKitUvUtils';
 import { handleLocationPermissionAction } from '../lib/locationPermissionUtils';
 import { capture, ANALYTICS_EVENTS } from '../lib/analytics';
 import { FEEDBACK_EMAIL } from '../lib/constants';
+import { canAccessSunburnRisk } from '../lib/sunburnRiskAccess';
 import {
   getReviewEligibility,
   markNativeReviewRequested,
   markNegativeReviewFeedback,
   markReviewPromptShown,
+  recordPaywallDismissedForReview,
   recordReviewAppOpen,
   requestAppReview,
 } from '../lib/services/inAppReviewService';
@@ -126,7 +128,7 @@ export default function Home() {
   const { answers } = useOnboardingContext();
   const timeOfDay = useTimeOfDay();
   const { setSessionActive } = useModal();
-  const { isPremium } = useSubscription();
+  const { isPremium, presentPaywall } = useSubscription();
 
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
@@ -168,13 +170,23 @@ export default function Home() {
     [userProfile],
   );
 
+  const hasSunburnRiskAccess = useMemo(
+    () => canAccessSunburnRisk({ isPremium, userProfile }),
+    [isPremium, userProfile],
+  );
+
   // Session tracking — pass sun data from parent to avoid duplicate WeatherKit polling
   const sessionSunData = useMemo(() => {
     const rawUvIndex = sunData.uvIndex;
     const effective = effectiveUv(rawUvIndex, sunData.cloudCover);
     return { rawUvIndex, effectiveUV: effective };
   }, [sunData.uvIndex, sunData.cloudCover]);
-  const session = useBaskSession(fitzpatrickType, answers.age, sessionSunData);
+  const session = useBaskSession(
+    fitzpatrickType,
+    answers.age,
+    sessionSunData,
+    hasSunburnRiskAccess,
+  );
 
   // HealthKit sync (passive daylight tracking) - premium only
   const healthKitSync = useHealthKitSync(
@@ -525,6 +537,20 @@ export default function Home() {
     );
   };
 
+  const handleOpenSunburnRiskPaywall = useCallback(async () => {
+    capture(ANALYTICS_EVENTS.paywallPresented, {
+      source: session.isActive || session.isPaused
+        ? 'live_session_sunburn_risk'
+        : 'home_sunburn_risk',
+    });
+
+    try {
+      await presentPaywall();
+    } finally {
+      await recordPaywallDismissedForReview();
+    }
+  }, [presentPaywall, session.isActive, session.isPaused]);
+
   const handlePositiveReviewFeedback = async () => {
     if (!reviewPromptMetrics) return;
 
@@ -568,8 +594,12 @@ export default function Home() {
       <ActiveSessionView
         formattedTime={session.formattedTime}
         currentIU={session.currentIU}
-        sunburnCountdown={session.formattedSunburnCountdown}
-        remainingSunburnSeconds={session.remainingSunburnSeconds}
+        sunburnCountdown={
+          hasSunburnRiskAccess ? session.formattedSunburnCountdown : ''
+        }
+        remainingSunburnSeconds={
+          hasSunburnRiskAccess ? session.remainingSunburnSeconds : 0
+        }
         isPaused={session.isPaused}
         onPause={session.pauseSession}
         onResume={session.resumeSession}
@@ -578,6 +608,8 @@ export default function Home() {
         uvIndex={sunData.uvIndex}
         cloudCover={sunData.cloudCover}
         exposurePercent={exposurePercent}
+        canAccessSunburnRisk={hasSunburnRiskAccess}
+        onUnlockSunburnRisk={handleOpenSunburnRiskPaywall}
         dailyGoalIU={sunData.vitaminDGoal}
         baselineTodayIU={todayTotal}
       />
@@ -694,12 +726,14 @@ export default function Home() {
               }
               timeToGoalLabHint={!isLoading ? labGuidanceHint : null}
               isLoading={isLoading}
-              burnRisk={burnRisk}
+              burnRisk={hasSunburnRiskAccess ? burnRisk : ''}
               burnRiskSubtext={
-                !isLoading && effectiveUV >= 3
+                hasSunburnRiskAccess && !isLoading && effectiveUV >= 3
                   ? 'Estimated time to skin redness at current UV'
                   : undefined
               }
+              canAccessSunburnRisk={hasSunburnRiskAccess}
+              onUnlockSunburnRisk={handleOpenSunburnRiskPaywall}
               dailyDecay={dailyDecay}
               decaySubtext={(() => {
                 const remaining = dailyDecay - todayTotal;

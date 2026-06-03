@@ -50,6 +50,7 @@ public class BaskLiveActivityPlugin: CAPPlugin {
         }
 
         let timeToBurnMinutes = Int(timeToBurnMinutesDouble)
+        let canAccessSunburnRisk = call.getBool("canAccessSunburnRisk") ?? true
 
         let startDate = Date(timeIntervalSince1970: startTimeMs / 1000.0)
 
@@ -62,6 +63,7 @@ public class BaskLiveActivityPlugin: CAPPlugin {
         let initialState = BaskSessionAttributes.ContentState(
             currentIU: 0,
             isPaused: false,
+            canAccessSunburnRisk: canAccessSunburnRisk,
             effectiveStartDate: startDate,
             elapsedSecondsAtPause: 0
         )
@@ -106,12 +108,14 @@ public class BaskLiveActivityPlugin: CAPPlugin {
 
         let currentIU = Int(currentIUDouble)
         let elapsedSecondsAtPause = Int(elapsedSecondsAtPauseDouble)
+        let canAccessSunburnRisk = call.getBool("canAccessSunburnRisk") ?? true
 
         let effectiveStartDate = Date(timeIntervalSince1970: effectiveStartTimeMs / 1000.0)
 
         let updatedState = BaskSessionAttributes.ContentState(
             currentIU: currentIU,
             isPaused: isPaused,
+            canAccessSunburnRisk: canAccessSunburnRisk,
             effectiveStartDate: effectiveStartDate,
             elapsedSecondsAtPause: elapsedSecondsAtPause
         )
@@ -147,6 +151,7 @@ public class BaskLiveActivityPlugin: CAPPlugin {
         let finalState = BaskSessionAttributes.ContentState(
             currentIU: finalIU,
             isPaused: true,
+            canAccessSunburnRisk: true,
             effectiveStartDate: Date(),
             elapsedSecondsAtPause: 0
         )
@@ -185,6 +190,7 @@ public class BaskLiveActivityPlugin: CAPPlugin {
         let finalState = BaskSessionAttributes.ContentState(
             currentIU: 0,
             isPaused: true,
+            canAccessSunburnRisk: true,
             effectiveStartDate: Date(),
             elapsedSecondsAtPause: 0
         )

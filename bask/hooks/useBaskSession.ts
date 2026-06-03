@@ -68,20 +68,29 @@ export function useBaskSession(
   fitzpatrickType: FitzpatrickType = 2,
   age: number | null = null,
   sunData: SessionSunData = { rawUvIndex: 0, effectiveUV: 0 },
+  canAccessSunburnRisk = true,
 ) {
   const [state, setState] = useState<BaskSessionState>(INITIAL_STATE);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const currentIURef = useRef(state.currentIU);
   const startTimeRef = useRef(state.startTime);
+  const statusRef = useRef(state.status);
+  const elapsedSecondsRef = useRef(state.elapsedSeconds);
   const sunDataRef = useRef(sunData);
+  const canAccessSunburnRiskRef = useRef(canAccessSunburnRisk);
 
   useEffect(() => {
     sunDataRef.current = sunData;
   }, [sunData.rawUvIndex, sunData.effectiveUV]);
+  useEffect(() => {
+    canAccessSunburnRiskRef.current = canAccessSunburnRisk;
+  }, [canAccessSunburnRisk]);
 
   // Keep refs in sync with state for use in interval callbacks
   useEffect(() => { currentIURef.current = state.currentIU; }, [state.currentIU]);
   useEffect(() => { startTimeRef.current = state.startTime; }, [state.startTime]);
+  useEffect(() => { statusRef.current = state.status; }, [state.status]);
+  useEffect(() => { elapsedSecondsRef.current = state.elapsedSeconds; }, [state.elapsedSeconds]);
 
   /**
    * Clean up any orphaned Live Activities on mount
@@ -127,6 +136,7 @@ export function useBaskSession(
               const result = await BaskLiveActivity.startActivity({
                 uvIndex: rawUV,
                 timeToBurnMinutes: calculateTimeToBurn(rawUV, fitzpatrickType),
+                canAccessSunburnRisk: canAccessSunburnRiskRef.current,
                 startTimeMs: now.getTime(),
               });
               liveActivityId = result.activityId;
@@ -220,6 +230,7 @@ export function useBaskSession(
           activityId: state.liveActivityId!,
           currentIU: currentIURef.current,
           isPaused: false,
+          canAccessSunburnRisk: canAccessSunburnRiskRef.current,
           effectiveStartTimeMs: startTimeRef.current?.getTime() ?? Date.now(),
           elapsedSecondsAtPause: 0,
         });
@@ -230,6 +241,25 @@ export function useBaskSession(
 
     return () => clearInterval(interval);
   }, [state.status, state.liveActivityId]);
+
+  /**
+   * If a user unlocks Pro mid-session, update the Live Activity display without
+   * touching the in-app session timer/state.
+   */
+  useEffect(() => {
+    if (!state.liveActivityId) return;
+    if (!Capacitor.isNativePlatform()) return;
+
+    BaskLiveActivity.updateActivity({
+      activityId: state.liveActivityId,
+      currentIU: currentIURef.current,
+      isPaused: statusRef.current === 'paused',
+      canAccessSunburnRisk,
+      effectiveStartTimeMs: startTimeRef.current?.getTime() ?? Date.now(),
+      elapsedSecondsAtPause:
+        statusRef.current === 'paused' ? elapsedSecondsRef.current : 0,
+    }).catch(e => console.error('Failed to update Live Activity access:', e));
+  }, [canAccessSunburnRisk, state.liveActivityId]);
 
   /**
    * App state change listener - reconciles time when returning from background
@@ -264,6 +294,7 @@ export function useBaskSession(
                   activityId: prev.liveActivityId,
                   currentIU: newIU,
                   isPaused: false,
+                  canAccessSunburnRisk: canAccessSunburnRiskRef.current,
                   effectiveStartTimeMs: prev.startTime?.getTime() ?? Date.now(),
                   elapsedSecondsAtPause: 0,
                 }).catch(e => console.error('Failed to update Live Activity on foreground:', e));
@@ -304,6 +335,7 @@ export function useBaskSession(
           activityId: prev.liveActivityId,
           currentIU: prev.currentIU,
           isPaused: true,
+          canAccessSunburnRisk: canAccessSunburnRiskRef.current,
           effectiveStartTimeMs: prev.startTime?.getTime() ?? Date.now(),
           elapsedSecondsAtPause: prev.elapsedSeconds,
         }).catch(e => console.error('Failed to update Live Activity on pause:', e));
@@ -346,6 +378,7 @@ export function useBaskSession(
           activityId: prev.liveActivityId,
           currentIU: prev.currentIU,
           isPaused: false,
+          canAccessSunburnRisk: canAccessSunburnRiskRef.current,
           effectiveStartTimeMs: adjustedStartTime?.getTime() ?? Date.now(),
           elapsedSecondsAtPause: 0,
         }).catch(e => console.error('Failed to update Live Activity on resume:', e));

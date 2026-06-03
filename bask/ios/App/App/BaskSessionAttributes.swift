@@ -16,6 +16,7 @@ struct BaskSessionAttributes: ActivityAttributes {
         // Dynamic state - can be updated throughout the session
         var currentIU: Int              // Vitamin D IU accumulated so far
         var isPaused: Bool              // Whether session is paused
+        var canAccessSunburnRisk: Bool  // Whether burn timing can be displayed
         var effectiveStartDate: Date    // Adjusted start time (shifts forward on resume to account for pause duration)
         var elapsedSecondsAtPause: Int  // Frozen elapsed time when paused (0 when active)
     }

@@ -82,6 +82,14 @@ Reason for deferral:
 
 ## Completed
 
+### Gate Sunburn Risk Timing For New Free Users
+
+Completed: 2026-06-03
+Priority: Medium
+Risk: Medium
+
+Made sunburn-risk timing a Pro feature for new free users while grandfathering existing local installs by profile creation date. The Home sunburn metric, in-app live-session countdown, and iOS Live Activity now use generic Pro placeholders for locked users instead of rendering real burn timing behind the lock. Locked in-app values open the existing RevenueCat paywall without touching live-session pause/end state. Added simulator QA checks for the locked Home value, live-session paywall flow, Live Activity leakage, and grandfathered-user behavior. Automated validation was not run because project instructions say not to run tests unless requested.
+
 ### Soften Forecast And Time-To-Goal Copy
 
 Completed: 2026-06-03  

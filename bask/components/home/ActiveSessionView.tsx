@@ -5,6 +5,7 @@ import { Haptics, NotificationType } from '@capacitor/haptics';
 import AtmosphericBackground from './AtmosphericBackground';
 import WhyZeroIUTooltip from './WhyZeroIUTooltip';
 import Mascot from '../ui/Mascot';
+import LockedSunburnValue from './LockedSunburnValue';
 import { effectiveUv, formatEstimatedIU } from '../../lib/dEngine';
 import type { SunData } from '../../lib/sunDataUtils';
 
@@ -21,6 +22,8 @@ interface ActiveSessionViewProps {
   uvIndex: number;
   cloudCover?: number;
   exposurePercent: number;
+  canAccessSunburnRisk?: boolean;
+  onUnlockSunburnRisk?: () => void;
   dailyGoalIU: number;
   baselineTodayIU: number;
 }
@@ -41,6 +44,8 @@ export default function ActiveSessionView({
   uvIndex,
   cloudCover,
   exposurePercent,
+  canAccessSunburnRisk = true,
+  onUnlockSunburnRisk,
   dailyGoalIU,
   baselineTodayIU,
 }: ActiveSessionViewProps) {
@@ -240,14 +245,22 @@ export default function ActiveSessionView({
               <span className='text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em]'>
                 Sunburn Risk In
               </span>
-              <div
-                className={`text-[24px] font-black tabular-nums tracking-[-0.02em] mt-1 ${
-                  remainingSunburnSeconds <= 120
-                    ? 'text-ember-alert'
-                    : 'text-text-primary'
-                }`}>
-                {sunburnCountdown}
-              </div>
+              {canAccessSunburnRisk ? (
+                <div
+                  className={`text-[24px] font-black tabular-nums tracking-[-0.02em] mt-1 ${
+                    remainingSunburnSeconds <= 120
+                      ? 'text-ember-alert'
+                      : 'text-text-primary'
+                  }`}>
+                  {sunburnCountdown}
+                </div>
+              ) : (
+                <LockedSunburnValue
+                  label='Unlock burn timing'
+                  onUnlock={onUnlockSunburnRisk}
+                  className='mt-1'
+                />
+              )}
             </div>
           </div>
 

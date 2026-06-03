@@ -19,6 +19,18 @@ private func formatBurnTime(_ minutes: Int) -> String {
     return "\(minutes)m"
 }
 
+private func burnTimingText(_ context: ActivityViewContext<BaskSessionAttributes>) -> String {
+    return context.state.canAccessSunburnRisk
+        ? "\(formatBurnTime(context.attributes.timeToBurnMinutes)) to burn"
+        : "Burn timing Pro"
+}
+
+private func burnTimingBottomText(_ context: ActivityViewContext<BaskSessionAttributes>) -> String {
+    return context.state.canAccessSunburnRisk
+        ? "\(formatBurnTime(context.attributes.timeToBurnMinutes)) before sunburn"
+        : "Burn timing unlocks with Pro"
+}
+
 @available(iOS 16.1, *)
 struct BaskLiveActivityView: View {
     let context: ActivityViewContext<BaskSessionAttributes>
@@ -75,7 +87,7 @@ struct BaskLiveActivityView: View {
                     .foregroundColor(.orange)
 
                 // UV index and burn time
-                Text("UV \(String(format: "%.1f", context.attributes.uvIndex)) · \(formatBurnTime(context.attributes.timeToBurnMinutes)) to burn")
+                Text("UV \(String(format: "%.1f", context.attributes.uvIndex)) · \(burnTimingText(context))")
                     .font(.caption2)
                     .foregroundColor(.secondary)
                     .lineLimit(1)
@@ -141,7 +153,7 @@ struct BaskLiveActivity: Widget {
                 }
 
                 DynamicIslandExpandedRegion(.bottom) {
-                    Text("\(formatBurnTime(context.attributes.timeToBurnMinutes)) before sunburn")
+                    Text(burnTimingBottomText(context))
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .frame(maxWidth: .infinity, alignment: .center)

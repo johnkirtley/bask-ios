@@ -351,7 +351,7 @@ export default function DWindowForecastCard({
                   <div className='absolute inset-0 z-10 bg-white/90 backdrop-blur-xl pointer-events-none' />
 
                   <div className='absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 pointer-events-none'>
-                    <ProBadge />
+                    <ProBadge interactive={false} />
                     <p className='text-sm font-semibold text-text-primary'>
                       Unlock tomorrow&apos;s D-Window
                     </p>
