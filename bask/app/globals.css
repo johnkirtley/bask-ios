@@ -699,67 +699,8 @@ ion-app {
 }
 
 /* ========================================
-   CALENDAR HEATMAP ANIMATIONS
+   STREAK FLAME ANIMATION
    ======================================== */
-
-/* Stagger fade-in for calendar days */
-@keyframes calendar-day-in {
-  from {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.calendar-day {
-  animation: calendar-day-in 0.3s ease-out forwards;
-  opacity: 0;
-}
-
-/* Today ring pulse animation */
-@keyframes today-ring-pulse {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(255, 201, 60, 0.5);
-  }
-  50% {
-    box-shadow: 0 0 0 6px rgba(255, 201, 60, 0);
-  }
-}
-
-.today-ring-pulse {
-  animation: today-ring-pulse 2.5s ease-in-out infinite;
-}
-
-/* Active day heat breathe animation */
-@keyframes heat-breathe {
-  0%, 100% {
-    filter: brightness(1);
-  }
-  50% {
-    filter: brightness(1.1);
-  }
-}
-
-.heat-breathe {
-  animation: heat-breathe 3s ease-in-out infinite;
-}
-
-/* Streak stat glow pulse */
-@keyframes streak-glow {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(255, 201, 60, 0.15);
-  }
-  50% {
-    box-shadow: 0 0 30px rgba(255, 201, 60, 0.25);
-  }
-}
-
-.streak-glow {
-  animation: streak-glow 2s ease-in-out infinite;
-}
 
 /* Flame icon scale pulse */
 @keyframes flame-pulse {
@@ -775,15 +716,10 @@ ion-app {
   animation: flame-pulse 2s ease-in-out infinite;
 }
 
-/* Respect reduced motion for calendar animations */
+/* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .calendar-day,
-  .today-ring-pulse,
-  .heat-breathe,
-  .streak-glow,
   .flame-pulse {
     animation: none;
-    opacity: 1;
   }
 }
 

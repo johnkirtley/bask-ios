@@ -40,9 +40,9 @@ function getHeatStyles(intensity: 'none' | 'light' | 'warm' | 'hot' | 'blazing')
     case 'warm':
       return 'bg-gradient-to-br from-solar-flare/60 to-solar-warm/50 text-white font-semibold shadow-md';
     case 'hot':
-      return 'bg-gradient-to-br from-solar-flare to-solar-warm text-white font-bold shadow-lg heat-breathe';
+      return 'bg-gradient-to-br from-solar-flare to-solar-warm text-white font-bold shadow-lg';
     case 'blazing':
-      return 'bg-gradient-to-br from-solar-warm to-ember-alert text-white font-bold shadow-xl heat-breathe';
+      return 'bg-gradient-to-br from-solar-warm to-ember-alert text-white font-bold shadow-xl';
   }
 }
 
@@ -242,11 +242,11 @@ export default function CalendarStreak({ className = '' }: CalendarStreakProps) 
         {/* Current Streak */}
         <div className="relative backdrop-blur-sm bg-white/70 rounded-xl p-4 border border-black/5 overflow-hidden">
           {currentStreak > 0 && (
-            <div className="absolute -top-4 -right-4 w-24 h-24 bg-solar-flare/10 rounded-full blur-2xl pointer-events-none streak-glow" />
+            <div className="absolute -top-4 -right-4 w-24 h-24 bg-solar-flare/10 rounded-full blur-2xl pointer-events-none" />
           )}
           <div className="relative">
             <div className="flex items-center gap-2 mb-2">
-              <div className={`text-2xl ${currentStreak > 0 ? 'flame-pulse' : ''}`}>
+              <div className="text-2xl">
                 {currentStreak > 0 ? '🔥' : '☀️'}
               </div>
               <div className="text-text-secondary text-[10px] uppercase tracking-wider">Current</div>
@@ -305,13 +305,11 @@ export default function CalendarStreak({ className = '' }: CalendarStreakProps) 
                   className={`
                     relative aspect-square rounded-lg flex items-center justify-center text-sm
                     transition-all cursor-pointer
-                    calendar-day
                     ${!day.isCurrentMonth ? 'opacity-30' : ''}
                     ${heatStyles}
-                    ${isToday ? 'ring-2 ring-solar-flare ring-offset-2 ring-offset-light-bg today-ring-pulse' : ''}
+                    ${isToday ? 'ring-2 ring-solar-flare ring-offset-2 ring-offset-light-bg' : ''}
                     hover:scale-105
                   `}
-                  style={{ animationDelay: `${index * 30}ms` }}
                   title={
                     day.hasActivity
                       ? `${day.iuTotal.toLocaleString()} IU of ${dailyGoal.toLocaleString()} IU goal (${day.sunIU.toLocaleString()} sun + ${day.supplementIU.toLocaleString()} supplement)`
