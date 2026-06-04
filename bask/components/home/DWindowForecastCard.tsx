@@ -588,12 +588,12 @@ function WindowDisplay({
           <p className='text-[10px] font-semibold uppercase tracking-wider text-text-muted mb-1'>
             Best window
           </p>
-          <div className='flex items-baseline gap-2.5'>
-            <span className='text-[#F4A536] text-2xl font-bold tracking-tight whitespace-nowrap bg-gradient-to-br from-[#F4A536] to-[#E8941F] bg-clip-text text-transparent'>
+          <div className='flex items-baseline gap-2.5 max-w-full'>
+            <span className='text-[#F4A536] text-[clamp(1.0625rem,6vw,1.5rem)] leading-none font-bold tracking-tight whitespace-nowrap bg-gradient-to-br from-[#F4A536] to-[#E8941F] bg-clip-text text-transparent'>
               {window.windowStartTime}
             </span>
-            <span className='text-[#F4A536]/60 text-xl font-light'>—</span>
-            <span className='text-[#F4A536] text-2xl font-bold tracking-tight whitespace-nowrap bg-gradient-to-br from-[#F4A536] to-[#E8941F] bg-clip-text text-transparent'>
+            <span className='text-[#F4A536]/60 text-[clamp(0.9375rem,5vw,1.25rem)] font-light'>—</span>
+            <span className='text-[#F4A536] text-[clamp(1.0625rem,6vw,1.5rem)] leading-none font-bold tracking-tight whitespace-nowrap bg-gradient-to-br from-[#F4A536] to-[#E8941F] bg-clip-text text-transparent'>
               {window.windowEndTime}
             </span>
           </div>
