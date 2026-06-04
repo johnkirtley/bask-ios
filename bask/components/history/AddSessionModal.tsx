@@ -29,7 +29,7 @@ const pad = (n: number) => n.toString().padStart(2, '0');
  * because only today's UV curve is available (no historical UV API).
  */
 export default function AddSessionModal({ isOpen, onClose, onSaved }: AddSessionModalProps) {
-  const { uvCurve, cloudCover } = useSunData();
+  const { uvCurve, cloudCover, uvIndex: liveUvIndex, isLive } = useSunData();
   const { answers } = useOnboardingContext();
 
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -73,27 +73,45 @@ export default function AddSessionModal({ isOpen, onClose, onSaved }: AddSession
     return h * 60 + m;
   }, [startTime]);
 
-  // Cloud-adjusted UV averaged (minutes-weighted) across the hours the window spans
-  const effectiveWindowUv = useMemo(() => {
-    if (startMinutes === null || duration <= 0) return 0;
+  // Minutes-weighted average UV across the hours the window spans. For the current
+  // hour we prefer the live instantaneous reading (the same value the Home screen
+  // shows) so an overlapping window stays consistent with Home; earlier hours use
+  // the hourly forecast curve. Returns both the raw average and its cloud-adjusted
+  // (effective) value so callers can distinguish cloud-blocking from low sun angle.
+  const { effectiveWindowUv, avgRawWindowUv } = useMemo(() => {
+    if (startMinutes === null || duration <= 0) {
+      return { effectiveWindowUv: 0, avgRawWindowUv: 0 };
+    }
     const endMinutes = startMinutes + duration;
+    const currentHour = new Date().getHours();
     let weighted = 0;
     let totalOverlap = 0;
     for (let h = Math.floor(startMinutes / 60); h <= Math.floor((endMinutes - 1) / 60); h++) {
       const overlap = Math.min(endMinutes, h * 60 + 60) - Math.max(startMinutes, h * 60);
       if (overlap <= 0) continue;
       const hour = ((h % 24) + 24) % 24;
-      const rawUv = uvCurve.find((p) => p.hour === hour)?.uvIndex ?? 0;
+      const rawUv =
+        isLive && hour === currentHour
+          ? liveUvIndex
+          : uvCurve.find((p) => p.hour === hour)?.uvIndex ?? 0;
       weighted += rawUv * overlap;
       totalOverlap += overlap;
     }
     const avgRawUv = totalOverlap > 0 ? weighted / totalOverlap : 0;
-    return effectiveUv(avgRawUv, cloudCover);
-  }, [startMinutes, duration, uvCurve, cloudCover]);
+    return { effectiveWindowUv: effectiveUv(avgRawUv, cloudCover), avgRawWindowUv: avgRawUv };
+  }, [startMinutes, duration, uvCurve, cloudCover, liveUvIndex, isLive]);
 
   const computedIU = useMemo(
     () => calculateVitaminD(effectiveWindowUv, duration, exposurePercent, fitzpatrickType, age),
     [effectiveWindowUv, duration, exposurePercent, fitzpatrickType, age]
+  );
+
+  // Mirror the Home screen's cloud-blocking predicate (ActiveSessionView): the sun
+  // is high enough (raw UV >= 3) but clouds knocked effective UV below the synthesis
+  // threshold. Lets us explain a 0-IU window the same way Home does.
+  const isWindowCloudBlocked = useMemo(
+    () => avgRawWindowUv >= 3 && effectiveWindowUv < 3,
+    [avgRawWindowUv, effectiveWindowUv]
   );
 
   // Validation
@@ -131,15 +149,37 @@ export default function AddSessionModal({ isOpen, onClose, onSaved }: AddSession
     }
   };
 
+  // Clamp the chosen start to "now" — the native iOS time picker ignores the HTML
+  // `max` attribute, so we enforce it here. Read the clock fresh at event time so
+  // the clamp stays correct even if the modal has been open across a minute boundary.
+  const handleStartTimeChange = (value: string) => {
+    if (!value.includes(':')) {
+      setStartTime(value);
+      return;
+    }
+    const [h, m] = value.split(':').map(Number);
+    if (Number.isNaN(h) || Number.isNaN(m)) {
+      setStartTime(value);
+      return;
+    }
+    const current = new Date();
+    const currentMins = current.getHours() * 60 + current.getMinutes();
+    if (h * 60 + m > currentMins) {
+      setStartTime(`${pad(current.getHours())}:${pad(current.getMinutes())}`);
+      return;
+    }
+    setStartTime(value);
+  };
+
   return (
     <IonModal
       isOpen={isOpen}
       onDidDismiss={onClose}
       initialBreakpoint={0.95}
-      breakpoints={[0, 0.95]}>
+      breakpoints={[0, 0.95, 1]}>
       <div className='bg-light-bg flex flex-col h-full'>
         {/* Scrollable body */}
-        <div className='flex-1 min-h-0 overflow-y-auto px-6 pt-6'>
+        <div className='ion-content-scroll-host flex-1 min-h-0 overflow-y-auto px-6 pt-6'>
         {/* Header */}
         <div className='flex items-center gap-4 mb-4'>
           <div className='w-12 h-12 rounded-full bg-solar-flare/15 flex items-center justify-center'>
@@ -185,7 +225,7 @@ export default function AddSessionModal({ isOpen, onClose, onSaved }: AddSession
             type='time'
             value={startTime}
             max={`${pad(now.getHours())}:${pad(now.getMinutes())}`}
-            onChange={(e) => setStartTime(e.target.value)}
+            onChange={(e) => handleStartTimeChange(e.target.value)}
             className='w-full bg-white border border-black/10 text-text-primary rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-solar-flare'
           />
         </div>
@@ -206,6 +246,15 @@ export default function AddSessionModal({ isOpen, onClose, onSaved }: AddSession
             placeholder='Minutes in the sun'
           />
         </div>
+
+        {endInFuture && startMinutes !== null && (
+          <div className='mb-4 bg-amber-50 border border-amber-200 rounded-xl p-3'>
+            <p className='text-xs text-amber-800'>
+              That window runs into the future. Pick an earlier start time or a shorter
+              duration so the session ends by now.
+            </p>
+          </div>
+        )}
 
         {/* Clothing preset */}
         <div className='mb-4'>
@@ -238,7 +287,13 @@ export default function AddSessionModal({ isOpen, onClose, onSaved }: AddSession
               <span className='text-text-secondary text-sm'>Exposure</span>
               <span className='text-text-primary'>{exposurePercent}%</span>
             </div>
-            {computedIU === 0 && !noUvData && (
+            {computedIU === 0 && !noUvData && isWindowCloudBlocked && (
+              <p className='text-xs text-amber-700 leading-snug'>
+                Clouds are blocking vitamin D for this window — effective UV stayed under 3, so
+                no IU is produced.
+              </p>
+            )}
+            {computedIU === 0 && !noUvData && !isWindowCloudBlocked && (
               <p className='text-xs text-text-secondary leading-snug'>
                 The sun was too low for vitamin D during this window (UV under 3), so no IU is
                 produced.
