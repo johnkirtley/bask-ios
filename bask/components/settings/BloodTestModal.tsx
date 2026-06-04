@@ -92,8 +92,8 @@ export default function BloodTestModal({
       isOpen={isOpen}
       onDidDismiss={onClose}
       initialBreakpoint={0.85}
-      breakpoints={[0, 0.85, 1]}>
-      <div className="bg-light-bg h-full p-6 pb-safe flex flex-col">
+      breakpoints={[0, 0.85]}>
+      <div className="bg-light-bg h-full p-6 pb-safe">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
           <div className="w-12 h-12 rounded-full bg-solar-flare/15 flex items-center justify-center">
@@ -117,75 +117,73 @@ export default function BloodTestModal({
           </div>
         </div>
 
-        {/* Scrollable form area */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="value" className="block text-text-primary text-sm font-medium mb-2">
-                25(OH)D Level
-              </label>
-              <input
-                id="value"
-                type="number"
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                placeholder="Enter value"
-                className="w-full bg-white border border-black/10 rounded-xl p-3 text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-solar-flare"
-              />
-            </div>
-
-            <div>
-              <label className="block text-text-primary text-sm font-medium mb-2">
-                Unit
-              </label>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setUnit('ng/mL')}
-                  className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
-                    unit === 'ng/mL'
-                      ? 'bg-solar-flare text-white'
-                      : 'bg-black/5 text-text-secondary'
-                  }`}>
-                  ng/mL
-                </button>
-                <button
-                  onClick={() => setUnit('nmol/L')}
-                  className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
-                    unit === 'nmol/L'
-                      ? 'bg-solar-flare text-white'
-                      : 'bg-black/5 text-text-secondary'
-                  }`}>
-                  nmol/L
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="date" className="block text-text-primary text-sm font-medium mb-2">
-                Test Date
-              </label>
-              <input
-                id="date"
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full bg-white border border-black/10 rounded-xl p-3 text-text-primary focus:outline-none focus:ring-2 focus:ring-solar-flare"
-              />
-            </div>
-
-            <p className="text-xs text-text-secondary">
-              💡 Many labs use 40–60 ng/mL (100–150 nmol/L) as a reference range
-            </p>
-
-            {canRemove && (
-              <button
-                onClick={handleRemove}
-                disabled={removing || saving}
-                className="w-full py-3 px-4 rounded-xl bg-transparent text-red-500 font-medium hover:bg-red-500/10 transition-colors disabled:opacity-50">
-                {removing ? 'Removing...' : 'Remove blood test'}
-              </button>
-            )}
+        {/* Form fields */}
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="value" className="block text-text-primary text-sm font-medium mb-2">
+              25(OH)D Level
+            </label>
+            <input
+              id="value"
+              type="number"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              placeholder="Enter value"
+              className="w-full bg-white border border-black/10 rounded-xl p-3 text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-solar-flare"
+            />
           </div>
+
+          <div>
+            <label className="block text-text-primary text-sm font-medium mb-2">
+              Unit
+            </label>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setUnit('ng/mL')}
+                className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
+                  unit === 'ng/mL'
+                    ? 'bg-solar-flare text-white'
+                    : 'bg-black/5 text-text-secondary'
+                }`}>
+                ng/mL
+              </button>
+              <button
+                onClick={() => setUnit('nmol/L')}
+                className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
+                  unit === 'nmol/L'
+                    ? 'bg-solar-flare text-white'
+                    : 'bg-black/5 text-text-secondary'
+                }`}>
+                nmol/L
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="date" className="block text-text-primary text-sm font-medium mb-2">
+              Test Date
+            </label>
+            <input
+              id="date"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full bg-white border border-black/10 rounded-xl p-3 text-text-primary focus:outline-none focus:ring-2 focus:ring-solar-flare"
+            />
+          </div>
+
+          <p className="text-xs text-text-secondary">
+            💡 Many labs use 40–60 ng/mL (100–150 nmol/L) as a reference range
+          </p>
+
+          {canRemove && (
+            <button
+              onClick={handleRemove}
+              disabled={removing || saving}
+              className="w-full py-3 px-4 rounded-xl bg-transparent text-red-500 font-medium hover:bg-red-500/10 transition-colors disabled:opacity-50">
+              {removing ? 'Removing...' : 'Remove blood test'}
+            </button>
+          )}
         </div>
 
         {/* Action buttons */}

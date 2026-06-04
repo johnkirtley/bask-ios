@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { IonModal } from '@ionic/react';
+import { IonModal, IonContent } from '@ionic/react';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { sessionsRepository } from '../../lib/database/repositories/sessionsRepository';
 import {
@@ -175,134 +175,137 @@ export default function AddSessionModal({ isOpen, onClose, onSaved }: AddSession
     <IonModal
       isOpen={isOpen}
       onDidDismiss={onClose}
-      initialBreakpoint={0.95}
-      breakpoints={[0, 0.95, 1]}>
-      <div className='bg-light-bg flex flex-col h-full'>
+      initialBreakpoint={0.9}
+      breakpoints={[0, 0.9]}>
+      <div className='h-full flex flex-col bg-light-bg'>
+        {/* Fixed header */}
+        <div className='px-6 pt-6 pb-4'>
+          <div className='flex items-center gap-4'>
+            <div className='w-12 h-12 rounded-full bg-solar-flare/15 flex items-center justify-center'>
+              <svg
+                xmlns='http://www.w3.org/2000/svg'
+                fill='none'
+                viewBox='0 0 24 24'
+                strokeWidth={2}
+                stroke='currentColor'
+                className='w-6 h-6 text-solar-flare'>
+                <path strokeLinecap='round' strokeLinejoin='round' d='M12 4.5v15m7.5-7.5h-15' />
+              </svg>
+            </div>
+            <div>
+              <h2 className='text-xl font-semibold text-text-primary'>Add Session</h2>
+              <p className='text-text-secondary text-sm'>Log time you spent in the sun today</p>
+            </div>
+          </div>
+        </div>
+
         {/* Scrollable body */}
-        <div className='ion-content-scroll-host flex-1 min-h-0 overflow-y-auto px-6 pt-6'>
-        {/* Header */}
-        <div className='flex items-center gap-4 mb-4'>
-          <div className='w-12 h-12 rounded-full bg-solar-flare/15 flex items-center justify-center'>
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              fill='none'
-              viewBox='0 0 24 24'
-              strokeWidth={2}
-              stroke='currentColor'
-              className='w-6 h-6 text-solar-flare'>
-              <path strokeLinecap='round' strokeLinejoin='round' d='M12 4.5v15m7.5-7.5h-15' />
-            </svg>
-          </div>
-          <div>
-            <h2 className='text-xl font-semibold text-text-primary'>Add Session</h2>
-            <p className='text-text-secondary text-sm'>Log time you spent in the sun today</p>
-          </div>
-        </div>
-
-        {/* Today-only notice */}
-        <div className='mb-5 bg-amber-50 border border-amber-200 rounded-xl p-3'>
-          <p className='text-xs text-amber-800'>
-            We can only calculate vitamin D for <span className='font-semibold'>today</span> — past
-            days&apos; UV data isn&apos;t available.
-          </p>
-        </div>
-
-        {endInFuture && startMinutes !== null && (
-          <div className='mb-5 bg-red-500/10 border border-red-500/20 border-l-4 border-l-red-500 rounded-xl p-3'>
-            <p className='text-xs text-red-700'>
-              That window runs into the future. Pick an earlier start time or a shorter
-              duration so the session ends by now.
-            </p>
-          </div>
-        )}
-
-        {noUvData && (
-          <div className='mb-5 bg-black/5 border border-black/10 rounded-xl p-3'>
-            <p className='text-sm text-text-secondary'>
-              UV data is unavailable for today, so a session can&apos;t be calculated right now.
-            </p>
-          </div>
-        )}
-
-        {/* Start time */}
-        <div className='mb-4'>
-          <label htmlFor='start-time' className='block text-text-primary text-sm font-medium mb-2'>
-            Start time (today)
-          </label>
-          <input
-            id='start-time'
-            type='time'
-            value={startTime}
-            max={`${pad(now.getHours())}:${pad(now.getMinutes())}`}
-            onChange={(e) => handleStartTimeChange(e.target.value)}
-            className='w-full bg-white border border-black/10 text-text-primary rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-solar-flare'
-          />
-        </div>
-
-        {/* Duration */}
-        <div className='mb-4'>
-          <label htmlFor='duration' className='block text-text-primary text-sm font-medium mb-2'>
-            Duration (minutes)
-          </label>
-          <input
-            id='duration'
-            type='number'
-            inputMode='numeric'
-            min={1}
-            value={durationMinutes}
-            onChange={(e) => setDurationMinutes(e.target.value)}
-            className='w-full bg-white border border-black/10 text-text-primary rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-solar-flare'
-            placeholder='Minutes in the sun'
-          />
-        </div>
-
-        {/* Clothing preset */}
-        <div className='mb-4'>
-          <label className='block text-text-primary text-sm font-medium mb-2'>Clothing</label>
-          <button
-            type='button'
-            onClick={() => setIsPresetSelectorOpen(true)}
-            className='w-full flex items-center justify-between bg-white border border-black/10 rounded-xl p-3 text-left active:scale-[0.99] transition-transform'>
-            <span className='text-text-primary'>{selectedPreset.name}</span>
-            <span className='text-text-secondary text-sm'>
-              {getExposurePercent(selectedPreset.coveragePercent)}% exposed
-            </span>
-          </button>
-        </div>
-
-        {/* Live IU preview */}
-        <div className='mb-6 backdrop-blur-xl bg-white/70 rounded-xl p-4 border border-black/5 shadow-sm'>
-          <div className='space-y-3'>
-            <div className='flex justify-between items-center'>
-              <span className='text-text-secondary text-sm'>Estimated IU</span>
-              <span className='text-solar-flare font-semibold'>
-                {computedIU.toLocaleString()} IU
-              </span>
-            </div>
-            <div className='flex justify-between items-center'>
-              <span className='text-text-secondary text-sm'>Effective UV</span>
-              <span className='text-text-primary'>{effectiveWindowUv.toFixed(1)}</span>
-            </div>
-            <div className='flex justify-between items-center'>
-              <span className='text-text-secondary text-sm'>Exposure</span>
-              <span className='text-text-primary'>{exposurePercent}%</span>
-            </div>
-            {computedIU === 0 && !noUvData && isWindowCloudBlocked && (
-              <p className='text-xs text-amber-700 leading-snug'>
-                Clouds are blocking vitamin D for this window — effective UV stayed under 3, so
-                no IU is produced.
+        <IonContent style={{ ['--background' as any]: 'transparent' }}>
+          <div className='px-6 pb-6'>
+            {/* Today-only notice */}
+            <div className='mb-5 bg-amber-50 border border-amber-200 rounded-xl p-3'>
+              <p className='text-xs text-amber-800'>
+                We can only calculate vitamin D for <span className='font-semibold'>today</span> —
+                past days&apos; UV data isn&apos;t available.
               </p>
-            )}
-            {computedIU === 0 && !noUvData && !isWindowCloudBlocked && (
-              <p className='text-xs text-text-secondary leading-snug'>
-                The sun was too low for vitamin D during this window (UV under 3), so no IU is
-                produced.
-              </p>
-            )}
-          </div>
-        </div>
+            </div>
 
-        </div>
+            {endInFuture && startMinutes !== null && (
+              <div className='mb-5 bg-red-500/10 border border-red-500/20 border-l-4 border-l-red-500 rounded-xl p-3'>
+                <p className='text-xs text-red-700'>
+                  That window runs into the future. Pick an earlier start time or a shorter
+                  duration so the session ends by now.
+                </p>
+              </div>
+            )}
+
+            {noUvData && (
+              <div className='mb-5 bg-black/5 border border-black/10 rounded-xl p-3'>
+                <p className='text-sm text-text-secondary'>
+                  UV data is unavailable for today, so a session can&apos;t be calculated right now.
+                </p>
+              </div>
+            )}
+
+            {/* Start time */}
+            <div className='mb-4'>
+              <label htmlFor='start-time' className='block text-text-primary text-sm font-medium mb-2'>
+                Start time (today)
+              </label>
+              <input
+                id='start-time'
+                type='time'
+                value={startTime}
+                max={`${pad(now.getHours())}:${pad(now.getMinutes())}`}
+                onChange={(e) => handleStartTimeChange(e.target.value)}
+                className='w-full bg-white border border-black/10 text-text-primary rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-solar-flare'
+              />
+            </div>
+
+            {/* Duration */}
+            <div className='mb-4'>
+              <label htmlFor='duration' className='block text-text-primary text-sm font-medium mb-2'>
+                Duration (minutes)
+              </label>
+              <input
+                id='duration'
+                type='number'
+                inputMode='numeric'
+                min={1}
+                value={durationMinutes}
+                onChange={(e) => setDurationMinutes(e.target.value)}
+                className='w-full bg-white border border-black/10 text-text-primary rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-solar-flare'
+                placeholder='Minutes in the sun'
+              />
+            </div>
+
+            {/* Clothing preset */}
+            <div className='mb-4'>
+              <label className='block text-text-primary text-sm font-medium mb-2'>Clothing</label>
+              <button
+                type='button'
+                onClick={() => setIsPresetSelectorOpen(true)}
+                className='w-full flex items-center justify-between bg-white border border-black/10 rounded-xl p-3 text-left active:scale-[0.99] transition-transform'>
+                <span className='text-text-primary'>{selectedPreset.name}</span>
+                <span className='text-text-secondary text-sm'>
+                  {getExposurePercent(selectedPreset.coveragePercent)}% exposed
+                </span>
+              </button>
+            </div>
+
+            {/* Live IU preview */}
+            <div className='backdrop-blur-xl bg-white/70 rounded-xl p-4 border border-black/5 shadow-sm'>
+              <div className='space-y-3'>
+                <div className='flex justify-between items-center'>
+                  <span className='text-text-secondary text-sm'>Estimated IU</span>
+                  <span className='text-solar-flare font-semibold'>
+                    {computedIU.toLocaleString()} IU
+                  </span>
+                </div>
+                <div className='flex justify-between items-center'>
+                  <span className='text-text-secondary text-sm'>Effective UV</span>
+                  <span className='text-text-primary'>{effectiveWindowUv.toFixed(1)}</span>
+                </div>
+                <div className='flex justify-between items-center'>
+                  <span className='text-text-secondary text-sm'>Exposure</span>
+                  <span className='text-text-primary'>{exposurePercent}%</span>
+                </div>
+                {computedIU === 0 && !noUvData && isWindowCloudBlocked && (
+                  <p className='text-xs text-amber-700 leading-snug'>
+                    Clouds are blocking vitamin D for this window — effective UV stayed under 3, so
+                    no IU is produced.
+                  </p>
+                )}
+                {computedIU === 0 && !noUvData && !isWindowCloudBlocked && (
+                  <p className='text-xs text-text-secondary leading-snug'>
+                    The sun was too low for vitamin D during this window (UV under 3), so no IU is
+                    produced.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </IonContent>
 
         {/* Action buttons — pinned footer, always visible */}
         <div className='flex gap-3 px-6 pt-3 pb-safe border-t border-black/5 bg-light-bg'>
