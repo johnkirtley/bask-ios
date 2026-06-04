@@ -207,6 +207,15 @@ export default function AddSessionModal({ isOpen, onClose, onSaved }: AddSession
           </p>
         </div>
 
+        {endInFuture && startMinutes !== null && (
+          <div className='mb-5 bg-red-500/10 border border-red-500/20 border-l-4 border-l-red-500 rounded-xl p-3'>
+            <p className='text-xs text-red-700'>
+              That window runs into the future. Pick an earlier start time or a shorter
+              duration so the session ends by now.
+            </p>
+          </div>
+        )}
+
         {noUvData && (
           <div className='mb-5 bg-black/5 border border-black/10 rounded-xl p-3'>
             <p className='text-sm text-text-secondary'>
@@ -246,15 +255,6 @@ export default function AddSessionModal({ isOpen, onClose, onSaved }: AddSession
             placeholder='Minutes in the sun'
           />
         </div>
-
-        {endInFuture && startMinutes !== null && (
-          <div className='mb-4 bg-amber-50 border border-amber-200 rounded-xl p-3'>
-            <p className='text-xs text-amber-800'>
-              That window runs into the future. Pick an earlier start time or a shorter
-              duration so the session ends by now.
-            </p>
-          </div>
-        )}
 
         {/* Clothing preset */}
         <div className='mb-4'>
