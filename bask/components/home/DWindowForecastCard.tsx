@@ -551,7 +551,7 @@ function SynthesisOnlyDisplay({
         {isCurrentCloudBlocked
           ? 'Check back when cloud cover clears; IU will stay at 0 while effective UV is below 3.'
           : isWindowClosing
-          ? "Today's window is closing — see tomorrow's window below"
+          ? "Today's window is closing — check back tomorrow"
           : noWindowReason === 'low-exposure'
           ? 'UV is sufficient · exposure may be limiting meaningful IU'
           : 'No optimal session window today'}
