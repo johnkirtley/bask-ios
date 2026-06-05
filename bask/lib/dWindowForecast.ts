@@ -875,7 +875,7 @@ function generateRecommendations(
       content: {
         headline: 'UV too weak for vitamin D synthesis',
         items: [
-          'Consider discussing vitamin D and cofactors with a clinician',
+          'Consider discussing vitamin D and cofactor supplementation with a clinician',
           'Morning light exposure can support circadian rhythm during low-UV periods',
         ],
       },
