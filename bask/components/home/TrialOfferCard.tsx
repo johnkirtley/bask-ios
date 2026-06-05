@@ -51,10 +51,10 @@ export default function TrialOfferCard({ onPress }: TrialOfferCardProps) {
           <GiftIcon />
         </span>
         <span className='min-w-0 flex-1'>
-          <span className='block text-lg font-black tracking-tight text-[#2A2419]'>
+          <span className='block text-base font-black tracking-tight text-[#2A2419]'>
             Bask Pro Trial Offer
           </span>
-          <span className='mt-1 block text-sm font-bold leading-snug text-[#2A2419]/75'>
+          <span className='mt-1 block text-xs font-bold leading-snug text-[#2A2419]/75'>
             Unlock notifications, extended D-Windows, and more
           </span>
         </span>

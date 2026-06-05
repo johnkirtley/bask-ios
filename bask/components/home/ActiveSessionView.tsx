@@ -63,7 +63,6 @@ export default function ActiveSessionView({
   const goalFillRatio = dailyGoalIU > 0 ? projectedTodayIU / dailyGoalIU : 0;
   const goalFillPercent = Math.min(100, goalFillRatio * 100);
   const goalPct = Math.min(100, Math.floor(goalFillRatio * 100));
-  const remainingIU = Math.max(0, dailyGoalIU - projectedTodayIU);
 
   // Fire a success haptic the first time the goal is crossed *during* the session.
   // If the user was already at/over goal when the session started, don't celebrate on mount.
@@ -210,10 +209,6 @@ export default function ActiveSessionView({
               <div className='mt-1 flex items-baseline justify-between text-[10px] font-bold tabular-nums text-text-secondary/70'>
                 <span>0</span>
                 <span>{dailyGoalIU.toLocaleString()} IU</span>
-              </div>
-              {/* Remaining toward goal — stepped (nearest 50) so it doesn't tick */}
-              <div className='mt-1.5 text-center text-[11px] font-bold text-text-secondary'>
-                {formatEstimatedIU(remainingIU)} IU to go
               </div>
             </div>
           )}
