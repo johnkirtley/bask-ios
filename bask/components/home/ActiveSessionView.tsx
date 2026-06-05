@@ -173,6 +173,33 @@ export default function ActiveSessionView({
             {formattedTime}
           </div>
 
+          {/* Daily goal progress — total today vs goal */}
+          {dailyGoalIU > 0 && !goalReached && (
+            <div
+              className='w-full max-w-[280px] mt-5'
+              role='status'
+              aria-live='polite'>
+              <div className='flex items-baseline justify-between mb-1.5'>
+                <span className='text-[11px] font-extrabold uppercase tracking-[0.12em] text-text-secondary'>
+                  {formatEstimatedIU(projectedTodayIU)} of{' '}
+                  {formatEstimatedIU(dailyGoalIU)} IU today
+                </span>
+                <span className='text-[11px] font-bold text-text-secondary'>
+                  {formatEstimatedIU(Math.max(0, dailyGoalIU - projectedTodayIU))}{' '}
+                  to go
+                </span>
+              </div>
+              <div className='h-2 w-full rounded-full bg-white/55 overflow-hidden'>
+                <div
+                  className='h-full rounded-full bg-gradient-to-r from-solar-flare to-solar-warm transition-[width] duration-500 ease-out'
+                  style={{
+                    width: `${Math.min(100, (projectedTodayIU / dailyGoalIU) * 100)}%`,
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Daily goal reached celebration */}
           {goalReached && (
             <div
