@@ -57,6 +57,13 @@ export default function ActiveSessionView({
   // Daily goal: projected total = already-banked today + this session
   const projectedTodayIU = baselineTodayIU + currentIU;
   const goalReached = dailyGoalIU > 0 && projectedTodayIU >= dailyGoalIU;
+  // Exact fill (drives the smooth bar) and a calm floored percentage that never
+  // overshoots the real value. Percentage steps ~every few seconds (1% ≈ goal/100
+  // IU) instead of ticking each second like the hero counter.
+  const goalFillRatio = dailyGoalIU > 0 ? projectedTodayIU / dailyGoalIU : 0;
+  const goalFillPercent = Math.min(100, goalFillRatio * 100);
+  const goalPct = Math.min(100, Math.floor(goalFillRatio * 100));
+  const remainingIU = Math.max(0, dailyGoalIU - projectedTodayIU);
 
   // Fire a success haptic the first time the goal is crossed *during* the session.
   // If the user was already at/over goal when the session started, don't celebrate on mount.
@@ -179,23 +186,34 @@ export default function ActiveSessionView({
               className='w-full max-w-[280px] mt-5'
               role='status'
               aria-live='polite'>
+              {/* Header: label + live percentage (the one calm live number) */}
               <div className='flex items-baseline justify-between mb-1.5'>
                 <span className='text-[11px] font-extrabold uppercase tracking-[0.12em] text-text-secondary'>
-                  {formatEstimatedIU(projectedTodayIU)} of{' '}
-                  {formatEstimatedIU(dailyGoalIU)} IU today
+                  Today&apos;s goal
                 </span>
-                <span className='text-[11px] font-bold text-text-secondary'>
-                  {formatEstimatedIU(Math.max(0, dailyGoalIU - projectedTodayIU))}{' '}
-                  to go
+                <span className='text-sm font-black text-text-primary tabular-nums'>
+                  {goalPct}%
                 </span>
               </div>
+              {/* Smooth-advancing fill: duration matches the 1s update cadence with
+                  linear timing so each step blends into the next (no per-second pulse) */}
               <div className='h-2 w-full rounded-full bg-white/55 overflow-hidden'>
                 <div
-                  className='h-full rounded-full bg-gradient-to-r from-solar-flare to-solar-warm transition-[width] duration-500 ease-out'
+                  className='h-full rounded-full bg-gradient-to-r from-solar-flare to-solar-warm transition-[width] duration-1000 ease-linear'
                   style={{
-                    width: `${Math.min(100, (projectedTodayIU / dailyGoalIU) * 100)}%`,
+                    width: `${goalFillPercent}%`,
+                    willChange: 'width',
                   }}
                 />
+              </div>
+              {/* End markers: static start + goal endpoint */}
+              <div className='mt-1 flex items-baseline justify-between text-[10px] font-bold tabular-nums text-text-secondary/70'>
+                <span>0</span>
+                <span>{dailyGoalIU.toLocaleString()} IU</span>
+              </div>
+              {/* Remaining toward goal — stepped (nearest 50) so it doesn't tick */}
+              <div className='mt-1.5 text-center text-[11px] font-bold text-text-secondary'>
+                {formatEstimatedIU(remainingIU)} IU to go
               </div>
             </div>
           )}
