@@ -241,19 +241,25 @@ export function formatTimeToBurn(minutes: number): string {
 }
 
 /**
- * Format live sunburn countdown for active sessions (M:SS or H:MM:SS).
+ * Format live sunburn countdown for active sessions.
+ *
+ * Shows whole minutes only (no per-second ticking) to keep the live session
+ * screen calm. Minutes are floored — never rounded up — so a burn warning never
+ * overstates how much safe time remains. The "<1m" / "Now" steps keep the final
+ * stretch legible while the screen's red urgency styling (driven separately by
+ * remaining seconds) still kicks in.
  */
 export function formatSunburnCountdown(remainingSeconds: number): string {
   if (remainingSeconds <= 0) return 'Now';
+  if (remainingSeconds < 60) return '<1m';
 
   const hours = Math.floor(remainingSeconds / 3600);
   const mins = Math.floor((remainingSeconds % 3600) / 60);
-  const secs = remainingSeconds % 60;
 
   if (hours > 0) {
-    return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
   }
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
+  return `${mins}m`;
 }
 
 /**
