@@ -27,7 +27,7 @@ function getStatusMessage(
   if (currentStreak > 0) {
     const remaining = summary.remainingTodayIU;
     if (remaining <= 2000) {
-      return `Only ${remaining.toLocaleString()} IU left. A short walk could finish it.`;
+      return `Only ${remaining.toLocaleString()} IU left.`;
     }
     return `${remaining.toLocaleString()} IU left to keep your streak alive`;
   }
