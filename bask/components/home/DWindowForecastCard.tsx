@@ -520,6 +520,16 @@ function SynthesisOnlyDisplay({
     : getSynthesisSecondaryMessage(synthesis, null, now) ??
       `D synthesis possible ${synthesis.startTime} – ${synthesis.endTime}`;
 
+  // Near the end of the synthesis window there isn't enough time left for
+  // findOptimalWindow to recommend a session (it drops the same-day window
+  // once fewer than ~10 min remain: LEAD 5 + MIN_SESSION 5, allowing for :05
+  // rounding). In that closing tail the limiter is the clock, not exposure,
+  // so suppress the "exposure may be limiting" line to avoid misleading copy.
+  const SYNTHESIS_CLOSING_MINUTES = 10;
+  const minutesUntilClose =
+    (synthesis.endsAt.getTime() - now.getTime()) / 60_000;
+  const isWindowClosing = minutesUntilClose <= SYNTHESIS_CLOSING_MINUTES;
+
   return (
     <div className='rounded-xl p-3 bg-black/[0.03] border border-black/5'>
       {isActive && (
@@ -540,6 +550,8 @@ function SynthesisOnlyDisplay({
       <p className='text-xs text-text-secondary'>
         {isCurrentCloudBlocked
           ? 'Check back when cloud cover clears; IU will stay at 0 while effective UV is below 3.'
+          : isWindowClosing
+          ? "Today's window is closing — check back tomorrow"
           : noWindowReason === 'low-exposure'
           ? 'UV is sufficient · exposure may be limiting meaningful IU'
           : 'No optimal session window today'}
