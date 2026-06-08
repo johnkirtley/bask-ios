@@ -9,26 +9,67 @@ import SwiftUI
 import ActivityKit
 import WidgetKit
 
-// Format burn time as hours+minutes when >= 60 minutes
-private func formatBurnTime(_ minutes: Int) -> String {
-    if minutes >= 60 {
-        let hours = minutes / 60
-        let mins = minutes % 60
-        return "\(hours)h \(mins)m"
+// Wall-clock moment the session reaches sunburn risk (1 MED).
+// Derived from effectiveStartDate (which shifts forward on resume) + the
+// constant time-to-burn, so it stays perfectly in sync with the in-app
+// countdown without any push updates.
+private func sunburnTargetDate(_ context: ActivityViewContext<BaskSessionAttributes>) -> Date {
+    return context.state.effectiveStartDate
+        .addingTimeInterval(Double(context.attributes.timeToBurnMinutes * 60))
+}
+
+// Format a frozen remaining duration as the same timer string the native
+// countdown uses: mm:ss, and h:mm:ss once >= 1 hour.
+private func formatCountdown(_ seconds: Int) -> String {
+    let clamped = max(0, seconds)
+    let hours = clamped / 3600
+    let mins = (clamped % 3600) / 60
+    let secs = clamped % 60
+    if hours > 0 {
+        return String(format: "%d:%02d:%02d", hours, mins, secs)
     }
-    return "\(minutes)m"
+    return String(format: "%d:%02d", mins, secs)
 }
 
-private func burnTimingText(_ context: ActivityViewContext<BaskSessionAttributes>) -> String {
-    return context.state.canAccessSunburnRisk
-        ? "\(formatBurnTime(context.attributes.timeToBurnMinutes)) to burn"
-        : "Burn timing Pro"
+// Live "Time Until Sunburn" row. The countdown updates natively on the Lock
+// Screen / Dynamic Island even while the app is suspended. Falls back to a
+// clear upsell message when the user can't access sunburn risk.
+@available(iOS 16.1, *)
+@ViewBuilder
+private func sunburnRow(_ context: ActivityViewContext<BaskSessionAttributes>) -> some View {
+    if !context.state.canAccessSunburnRisk {
+        HStack(spacing: 4) {
+            Image(systemName: "lock.fill")
+            Text("Unlock sunburn timing")
+        }
+    } else {
+        HStack(spacing: 4) {
+            Text("Time Until Sunburn")
+            Text("·")
+            sunburnValue(context)
+                .monospacedDigit()
+        }
+    }
 }
 
-private func burnTimingBottomText(_ context: ActivityViewContext<BaskSessionAttributes>) -> String {
-    return context.state.canAccessSunburnRisk
-        ? "\(formatBurnTime(context.attributes.timeToBurnMinutes)) before sunburn"
-        : "Burn timing unlocks with Pro"
+// The countdown value itself (Pro users only — gating handled by sunburnRow).
+@available(iOS 16.1, *)
+@ViewBuilder
+private func sunburnValue(_ context: ActivityViewContext<BaskSessionAttributes>) -> some View {
+    if context.state.isPaused {
+        // Frozen remaining while paused: total MED minus elapsed-at-pause.
+        Text(formatCountdown(
+            context.attributes.timeToBurnMinutes * 60 - context.state.elapsedSecondsAtPause
+        ))
+    } else {
+        let target = sunburnTargetDate(context)
+        if target > Date() {
+            // Native countdown — auto-updates, clamps at 0:00, shows hours when >= 1h.
+            Text(timerInterval: Date()...target, countsDown: true)
+        } else {
+            Text("Now")
+        }
+    }
 }
 
 @available(iOS 16.1, *)
@@ -36,6 +77,7 @@ struct BaskLiveActivityView: View {
     let context: ActivityViewContext<BaskSessionAttributes>
 
     var body: some View {
+        VStack(spacing: 6) {
         HStack(spacing: 10) {
             // Sun icon with glow effect
             ZStack {
@@ -86,12 +128,19 @@ struct BaskLiveActivityView: View {
                     .font(.headline)
                     .foregroundColor(.orange)
 
-                // UV index and burn time
-                Text("UV \(String(format: "%.1f", context.attributes.uvIndex)) · \(burnTimingText(context))")
+                // UV index
+                Text("UV \(String(format: "%.1f", context.attributes.uvIndex))")
                     .font(.caption2)
                     .foregroundColor(.secondary)
                     .lineLimit(1)
             }
+        }
+
+            // Time Until Sunburn — native countdown, stays live while locked
+            sunburnRow(context)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+                .lineLimit(1)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
@@ -153,7 +202,7 @@ struct BaskLiveActivity: Widget {
                 }
 
                 DynamicIslandExpandedRegion(.bottom) {
-                    Text(burnTimingBottomText(context))
+                    sunburnRow(context)
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .frame(maxWidth: .infinity, alignment: .center)
