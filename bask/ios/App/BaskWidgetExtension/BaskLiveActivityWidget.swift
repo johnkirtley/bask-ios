@@ -31,14 +31,32 @@ private func formatCountdown(_ seconds: Int) -> String {
     return String(format: "%d:%02d", mins, secs)
 }
 
-// Live "Time Until Sunburn" value. Updates natively on the Lock Screen /
-// Dynamic Island even while the app is suspended.
+// Live "Time Until Sunburn" row. The countdown updates natively on the Lock
+// Screen / Dynamic Island even while the app is suspended. Falls back to a
+// clear upsell message when the user can't access sunburn risk.
+@available(iOS 16.1, *)
+@ViewBuilder
+private func sunburnRow(_ context: ActivityViewContext<BaskSessionAttributes>) -> some View {
+    if !context.state.canAccessSunburnRisk {
+        HStack(spacing: 4) {
+            Image(systemName: "lock.fill")
+            Text("Unlock sunburn timing with Pro")
+        }
+    } else {
+        HStack(spacing: 4) {
+            Text("Time Until Sunburn")
+            Text("·")
+            sunburnValue(context)
+                .monospacedDigit()
+        }
+    }
+}
+
+// The countdown value itself (Pro users only — gating handled by sunburnRow).
 @available(iOS 16.1, *)
 @ViewBuilder
 private func sunburnValue(_ context: ActivityViewContext<BaskSessionAttributes>) -> some View {
-    if !context.state.canAccessSunburnRisk {
-        Text("Pro")
-    } else if context.state.isPaused {
+    if context.state.isPaused {
         // Frozen remaining while paused: total MED minus elapsed-at-pause.
         Text(formatCountdown(
             context.attributes.timeToBurnMinutes * 60 - context.state.elapsedSecondsAtPause
@@ -119,15 +137,10 @@ struct BaskLiveActivityView: View {
         }
 
             // Time Until Sunburn — native countdown, stays live while locked
-            HStack(spacing: 4) {
-                Text("Time Until Sunburn")
-                Text("·")
-                sunburnValue(context)
-                    .monospacedDigit()
-            }
-            .font(.caption2)
-            .foregroundColor(.secondary)
-            .lineLimit(1)
+            sunburnRow(context)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+                .lineLimit(1)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
@@ -189,15 +202,10 @@ struct BaskLiveActivity: Widget {
                 }
 
                 DynamicIslandExpandedRegion(.bottom) {
-                    HStack(spacing: 4) {
-                        Text("Time Until Sunburn")
-                        Text("·")
-                        sunburnValue(context)
-                            .monospacedDigit()
-                    }
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .center)
+                    sunburnRow(context)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
                 }
             } compactLeading: {
                 // Compact leading (small icon on left)
