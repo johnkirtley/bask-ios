@@ -40,7 +40,7 @@ private func sunburnRow(_ context: ActivityViewContext<BaskSessionAttributes>) -
     if !context.state.canAccessSunburnRisk {
         HStack(spacing: 4) {
             Image(systemName: "lock.fill")
-            Text("Unlock sunburn timing with Pro")
+            Text("Unlock with Pro")
         }
     } else {
         HStack(spacing: 4) {
