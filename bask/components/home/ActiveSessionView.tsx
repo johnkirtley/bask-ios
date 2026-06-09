@@ -8,6 +8,7 @@ import Mascot from '../ui/Mascot';
 import LockedSunburnValue from './LockedSunburnValue';
 import { effectiveUv, formatEstimatedIU } from '../../lib/dEngine';
 import type { SunData } from '../../lib/sunDataUtils';
+import type { TimeOfDay } from '../../hooks/useTimeOfDay';
 
 interface ActiveSessionViewProps {
   formattedTime: string;
@@ -26,6 +27,14 @@ interface ActiveSessionViewProps {
   onUnlockSunburnRisk?: () => void;
   dailyGoalIU: number;
   baselineTodayIU: number;
+  /** Whether the session has ever crossed into vitamin D (sticky once true). */
+  hasSynthesized: boolean;
+  /** Whether live effective UV is currently >= 3. */
+  isSynthesizing: boolean;
+  /** Minutes until today's synthesis window opens (pre-synthesis subline). */
+  synthesisCountdownMinutes?: number | null;
+  /** Time of day, for the morning-light vs daylight label. */
+  timeOfDay?: TimeOfDay;
 }
 
 /**
@@ -48,11 +57,42 @@ export default function ActiveSessionView({
   onUnlockSunburnRisk,
   dailyGoalIU,
   baselineTodayIU,
+  hasSynthesized,
+  isSynthesizing,
+  synthesisCountdownMinutes,
+  timeOfDay,
 }: ActiveSessionViewProps) {
   const [isWhyZeroTooltipOpen, setIsWhyZeroTooltipOpen] = useState(false);
   const [showZeroIUHint, setShowZeroIUHint] = useState(false);
-  const isCloudBlockingVitaminD =
-    uvIndex >= 3 && effectiveUv(uvIndex, cloudCover) < 3;
+
+  // Pre-synthesis = morning-light/low-UV phase: the session is running but UV hasn't
+  // crossed 3 yet. Sticky: once it synthesizes we stay on the IU hero even if UV dips.
+  const inLightPhase = !hasSynthesized;
+  const lightPhaseLabel = timeOfDay === 'morning' ? 'Morning Light' : 'Daylight';
+
+  // Celebrate the morph exactly once, when the session first crosses into vitamin D
+  // (not on mount for sessions that started already synthesizing).
+  const prevHasSynthesizedRef = useRef(hasSynthesized);
+  const [showMorphBeat, setShowMorphBeat] = useState(false);
+  useEffect(() => {
+    if (hasSynthesized && !prevHasSynthesizedRef.current) {
+      Haptics.notification({ type: NotificationType.Success }).catch(() => {});
+      setShowMorphBeat(true);
+      const t = setTimeout(() => setShowMorphBeat(false), 3200);
+      prevHasSynthesizedRef.current = hasSynthesized;
+      return () => clearTimeout(t);
+    }
+    prevHasSynthesizedRef.current = hasSynthesized;
+  }, [hasSynthesized]);
+  // Cloud-adjusted UV is the figure that actually drives synthesis/accrual, so
+  // the "UV Now" stat shows it (not raw) to stay consistent with the IU counter
+  // and the gating elsewhere. Burn-risk timing legitimately stays on raw UV.
+  const liveEffectiveUv = effectiveUv(uvIndex, cloudCover);
+  const isCloudBlockingVitaminD = uvIndex >= 3 && liveEffectiveUv < 3;
+  const cloudsDimmingUv =
+    cloudCover !== undefined &&
+    cloudCover >= 0.2 &&
+    uvIndex - liveEffectiveUv >= 0.3;
 
   // Daily goal: projected total = already-banked today + this session
   const projectedTodayIU = baselineTodayIU + currentIU;
@@ -85,9 +125,11 @@ export default function ActiveSessionView({
   const accumulatedZeroTimeRef = useRef(0);
   const zeroIUPeriodStartRef = useRef<number | null>(null);
 
-  // Show tooltip trigger after 60s if IU is still at 0
+  // Show tooltip trigger after 60s if IU is still at 0.
+  // Suppressed during the intentional light phase — there 0 IU is expected, not a
+  // problem to explain. Only relevant once the session has reached vitamin D.
   useEffect(() => {
-    if (currentIU === 0 && !isPaused) {
+    if (currentIU === 0 && !isPaused && hasSynthesized) {
       // Calculate remaining time needed
       const remainingTime = 60000 - accumulatedZeroTimeRef.current;
 
@@ -119,7 +161,7 @@ export default function ActiveSessionView({
       zeroIUPeriodStartRef.current = null;
       setShowZeroIUHint(false);
     }
-  }, [currentIU, isPaused]);
+  }, [currentIU, isPaused, hasSynthesized]);
   return (
     <AtmosphericBackground>
       <div className='min-h-screen pb-24 pt-safe overflow-x-hidden overflow-hidden overscroll-contain'>
@@ -160,27 +202,64 @@ export default function ActiveSessionView({
             />
           </div>
 
-          {/* Hero IU counter */}
-          <div
-            className='text-[88px] font-black text-text-primary tracking-[-0.04em] tabular-nums leading-none'
-            aria-live='polite'
-            aria-atomic='true'>
-            +{currentIU}
-          </div>
-          <div className='text-[11px] font-extrabold uppercase tracking-[0.12em] text-text-secondary mt-2'>
-            IU Gained This Session
-          </div>
+          {/* Morph celebration — fires once when vitamin D switches on */}
+          {showMorphBeat && (
+            <div
+              className='mb-4 flex items-center gap-1.5 rounded-full bg-gradient-to-r from-solar-flare to-solar-warm px-5 py-2.5 shadow-[0_8px_24px_rgba(244,165,54,0.33)] animate-fade-in motion-safe:flame-pulse'
+              role='status'
+              aria-live='polite'>
+              <span className='text-sm font-black tracking-[0.01em] text-[#2A2419]'>
+                ☀️ Vitamin D activated
+              </span>
+            </div>
+          )}
 
-          {/* Timer */}
-          <div
-            className='text-2xl font-black text-text-primary tabular-nums mt-4'
-            aria-live='polite'
-            aria-atomic='true'>
-            {formattedTime}
-          </div>
+          {inLightPhase ? (
+            <>
+              {/* Morning-light hero: the timer is the hero, no "+0 IU" */}
+              <div className='text-[11px] font-extrabold uppercase tracking-[0.16em] text-amber-600/90 mb-1'>
+                {lightPhaseLabel}
+              </div>
+              <div
+                className='text-[72px] font-black text-text-primary tracking-[-0.03em] tabular-nums leading-none'
+                aria-live='polite'
+                aria-atomic='true'>
+                {formattedTime}
+              </div>
+              <div className='mt-3 max-w-[280px] text-center text-[13px] font-semibold leading-snug text-text-secondary'>
+                {synthesisCountdownMinutes != null
+                  ? `Vitamin D starts in ~${synthesisCountdownMinutes} min`
+                  : isCloudBlockingVitaminD
+                  ? 'Clouds are blocking vitamin D — light still supports your rhythm'
+                  : 'Vitamin D begins when the sun climbs higher'}
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Vitamin D hero: IU counter */}
+              <div
+                className='text-[88px] font-black text-text-primary tracking-[-0.04em] tabular-nums leading-none'
+                aria-live='polite'
+                aria-atomic='true'>
+                +{currentIU}
+              </div>
+              <div className='text-[11px] font-extrabold uppercase tracking-[0.12em] text-text-secondary mt-2'>
+                IU Gained This Session
+              </div>
 
-          {/* Daily goal progress — total today vs goal */}
-          {dailyGoalIU > 0 && !goalReached && (
+              {/* Timer */}
+              <div
+                className='text-2xl font-black text-text-primary tabular-nums mt-4'
+                aria-live='polite'
+                aria-atomic='true'>
+                {formattedTime}
+              </div>
+            </>
+          )}
+
+          {/* Daily goal progress — total today vs goal (hidden during light phase
+              since no IU is accruing yet) */}
+          {dailyGoalIU > 0 && !goalReached && !inLightPhase && (
             <div
               className='w-full max-w-[280px] mt-5'
               role='status'
@@ -214,7 +293,7 @@ export default function ActiveSessionView({
           )}
 
           {/* Daily goal reached celebration */}
-          {goalReached && (
+          {goalReached && !inLightPhase && (
             <div
               className='mt-5 flex flex-col items-center gap-1 rounded-full bg-gradient-to-r from-solar-flare to-solar-warm px-5 py-2.5 text-center shadow-[0_8px_24px_rgba(244,165,54,0.33)] animate-fade-in motion-safe:flame-pulse'
               role='status'
@@ -273,13 +352,17 @@ export default function ActiveSessionView({
                 UV Now
               </span>
               <div className='text-[24px] font-black text-text-primary tabular-nums tracking-[-0.02em] mt-1'>
-                {uvIndex.toFixed(1)}
+                {liveEffectiveUv.toFixed(1)}
               </div>
-              {isCloudBlockingVitaminD && (
+              {isCloudBlockingVitaminD ? (
                 <div className='text-[10px] font-semibold text-amber-600 leading-tight mt-0.5'>
                   Vitamin D blocked by clouds
                 </div>
-              )}
+              ) : cloudsDimmingUv ? (
+                <div className='text-[10px] font-semibold text-text-secondary/70 leading-tight mt-0.5'>
+                  Raw UV {uvIndex.toFixed(1)} · clouds dimming
+                </div>
+              ) : null}
             </div>
             <div className='bg-white rounded-card px-4 py-2.5 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_6px_24px_rgba(40,30,10,0.06)] border-l-4 border-[#F8A3A1]'>
               <span className='text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em]'>

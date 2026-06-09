@@ -44,7 +44,9 @@ import {
   DWindowForecast,
   getSynthesisStatSubtext,
   isInSynthesisWindow,
+  getSynthesisCountdown,
 } from '../lib/dWindowForecast';
+import { getBaskCta, ctaVariantToPhase } from '../lib/lightPhase';
 import { BaskWeather } from '../lib/plugins';
 import type { HourlyForecastItem } from '../lib/plugins/baskWeather';
 import { getRepresentativeUvForPassiveSync } from '../lib/healthKitUvUtils';
@@ -452,6 +454,17 @@ export default function Home() {
   const isCurrentCloudBlocked =
     !isLoading && sunData.uvIndex >= 3 && effectiveUV < 3;
 
+  // Adaptive idle CTA: morning light vs vitamin D vs generic low-UV light session.
+  const synthesisCountdownMin =
+    getSynthesisCountdown(dWindowForecast?.todaySynthesis ?? null, now)?.minutesUntil ??
+    null;
+  const baskCta = getBaskCta({
+    rawUV: sunData.uvIndex,
+    effectiveUV,
+    timeOfDay,
+    synthesisCountdownMin,
+  });
+
   const labGuidanceHint = getBloodTestGuidanceHint(bloodTestCalibration);
 
   // Daily decay (educational - shows ~4.5% decay per day)
@@ -537,6 +550,7 @@ export default function Home() {
     await session.startSession(
       selectedPresetId,
       selectedPreset.coveragePercent,
+      ctaVariantToPhase(baskCta.variant),
     );
   };
 
@@ -633,6 +647,10 @@ export default function Home() {
         onUnlockSunburnRisk={handleOpenSunburnRiskPaywall}
         dailyGoalIU={sunData.vitaminDGoal}
         baselineTodayIU={todayTotal}
+        hasSynthesized={session.hasSynthesized}
+        isSynthesizing={session.isSynthesizing}
+        synthesisCountdownMinutes={synthesisCountdownMin}
+        timeOfDay={timeOfDay}
       />
     );
   }
@@ -715,10 +733,13 @@ export default function Home() {
               onPress={handleStartSession}
               onPresetChange={() => setIsPresetSelectorOpen(true)}
               disabled={!canStartSession}
+              label={baskCta.label}
+              helper={baskCta.helper}
+              variant={baskCta.variant}
               disabledReason={
                 isLoading
                   ? 'Checking current UV conditions…'
-                  : 'UV too low for vitamin D synthesis right now'
+                  : "No daylight right now — check back when the sun's up"
               }
             />
           </div>

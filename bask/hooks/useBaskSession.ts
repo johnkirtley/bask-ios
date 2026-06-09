@@ -8,7 +8,8 @@ import { sessionsRepository } from '../lib/database';
 import { leaderboardService } from '../lib/supabase/leaderboardService';
 import { capture, ANALYTICS_EVENTS } from '../lib/analytics';
 import { recordReviewValueEvent } from '../lib/services/inAppReviewService';
-import { calculateVitaminD, calculateTimeToBurn, getExposurePercent, formatSunburnCountdown } from '../lib/dEngine';
+import { vitaminDRatePerMinute, calculateTimeToBurn, getExposurePercent, formatSunburnCountdown } from '../lib/dEngine';
+import { integrateAccrual } from '../lib/sessionAccrual';
 import { BaskLiveActivity } from '../lib/plugins';
 import type { BaskSessionStatus } from '../types';
 import type { FitzpatrickType } from '../lib/dEngine';
@@ -18,13 +19,18 @@ interface BaskSessionState {
   elapsedSeconds: number;
   startTime: Date | null;
   pausedAt: Date | null;
-  uvIndex: number; // Effective UV (cloud-adjusted)
+  uvIndex: number; // Effective UV captured at start (display/reference only)
   rawUvIndex: number; // Raw UV for display/Live Activity
   clothingPresetId: string;
   exposurePercent: number;
   fitzpatrickType: FitzpatrickType;
   age: number | null;
-  currentIU: number;
+  currentIU: number; // Rounded accumulated IU (display)
+  accumulatedIU: number; // Float IU accumulator (monotonic, integrated off live UV)
+  lastAccrualMs: number; // Wall-clock of last accrual tick (for incremental dt)
+  lastAccrualEffUv: number; // Effective UV at last accrual (conservative gap crediting)
+  synthesizing: boolean; // Whether live effective UV is currently >= 3 (vitamin D phase)
+  hasSynthesized: boolean; // Whether the session has ever produced vitamin D (morph latch)
   projectedTimeToBurn: number;
   sessionId: number | null;
   liveActivityId: string | null;
@@ -42,10 +48,16 @@ const INITIAL_STATE: BaskSessionState = {
   fitzpatrickType: 2,
   age: null,
   currentIU: 0,
+  accumulatedIU: 0,
+  lastAccrualMs: 0,
+  lastAccrualEffUv: 0,
+  synthesizing: false,
+  hasSynthesized: false,
   projectedTimeToBurn: 0,
   sessionId: null,
   liveActivityId: null,
 };
+
 
 /**
  * Format elapsed seconds as MM:SS
@@ -78,10 +90,14 @@ export function useBaskSession(
   const elapsedSecondsRef = useRef(state.elapsedSeconds);
   const sunDataRef = useRef(sunData);
   const canAccessSunburnRiskRef = useRef(canAccessSunburnRisk);
+  const hasSynthesizedRef = useRef(state.hasSynthesized);
 
   useEffect(() => {
     sunDataRef.current = sunData;
   }, [sunData.rawUvIndex, sunData.effectiveUV]);
+  useEffect(() => {
+    hasSynthesizedRef.current = state.hasSynthesized;
+  }, [state.hasSynthesized]);
   useEffect(() => {
     canAccessSunburnRiskRef.current = canAccessSunburnRisk;
   }, [canAccessSunburnRisk]);
@@ -105,7 +121,11 @@ export function useBaskSession(
    * Start a new basking session
    */
   const startSession = useCallback(
-    async (clothingPresetId: string, coveragePercent: number) => {
+    async (
+      clothingPresetId: string,
+      coveragePercent: number,
+      startPhase: 'morning_light' | 'low_uv' | 'vitamin_d' = 'vitamin_d',
+    ) => {
       const now = new Date();
       const exposurePercent = getExposurePercent(coveragePercent);
 
@@ -115,6 +135,11 @@ export function useBaskSession(
         console.warn('Cannot start session: UV too low for vitamin D synthesis');
         return;
       }
+
+      // Is the session already synthesizing at the moment it starts? If so, it
+      // began in the vitamin D phase and must never fire the morning-light "morph".
+      const startsSynthesizing =
+        vitaminDRatePerMinute(effectiveUV, exposurePercent, fitzpatrickType, age) > 0;
 
       try {
         // Create session in database (store raw UV for reference)
@@ -138,6 +163,7 @@ export function useBaskSession(
                 timeToBurnMinutes: calculateTimeToBurn(rawUV, fitzpatrickType),
                 canAccessSunburnRisk: canAccessSunburnRiskRef.current,
                 startTimeMs: now.getTime(),
+                phase: startsSynthesizing ? 'vitaminD' : 'morningLight',
               });
               liveActivityId = result.activityId;
             }
@@ -151,13 +177,18 @@ export function useBaskSession(
           elapsedSeconds: 0,
           startTime: now,
           pausedAt: null,
-          uvIndex: effectiveUV, // Use cloud-adjusted UV for vitamin D calculations
+          uvIndex: effectiveUV, // Cloud-adjusted UV at start (reference only)
           rawUvIndex: rawUV, // Keep raw UV for reference
           clothingPresetId,
           exposurePercent,
           fitzpatrickType,
           age,
           currentIU: 0,
+          accumulatedIU: 0,
+          lastAccrualMs: now.getTime(),
+          lastAccrualEffUv: effectiveUV,
+          synthesizing: startsSynthesizing,
+          hasSynthesized: startsSynthesizing,
           projectedTimeToBurn: calculateTimeToBurn(rawUV, fitzpatrickType), // Burn risk uses raw UV
           sessionId,
           liveActivityId,
@@ -167,6 +198,7 @@ export function useBaskSession(
           clothing_preset_id: clothingPresetId,
           exposure_percent: exposurePercent,
           uv_index: rawUV,
+          phase_at_start: startPhase,
         });
 
         // Haptic feedback
@@ -186,28 +218,10 @@ export function useBaskSession(
     if (state.status === 'active') {
       timerRef.current = setInterval(() => {
         setState((prev) => {
-          if (!prev.startTime) return prev;
-
-          // Calculate elapsed time from wall-clock (not cumulative increments)
-          const now = Date.now();
-          const totalElapsedMs = now - prev.startTime.getTime();
-          const newElapsed = Math.floor(totalElapsedMs / 1000);
-          const minutes = newElapsed / 60;
-
-          // Recalculate vitamin D IU
-          const newIU = calculateVitaminD(
-            prev.uvIndex,
-            minutes,
-            prev.exposurePercent,
-            prev.fitzpatrickType,
-            prev.age
-          );
-
-          return {
-            ...prev,
-            elapsedSeconds: newElapsed,
-            currentIU: newIU,
-          };
+          // Integrate IU off the *live* (cloud-adjusted) UV so a session morphs
+          // from morning light into vitamin D the moment effective UV crosses 3.
+          const next = integrateAccrual(prev, sunDataRef.current.effectiveUV, Date.now());
+          return next ? { ...prev, ...next } : prev;
         });
       }, 1000);
 
@@ -233,6 +247,7 @@ export function useBaskSession(
           canAccessSunburnRisk: canAccessSunburnRiskRef.current,
           effectiveStartTimeMs: startTimeRef.current?.getTime() ?? Date.now(),
           elapsedSecondsAtPause: 0,
+          phase: hasSynthesizedRef.current ? 'vitaminD' : 'morningLight',
         });
       } catch (e) {
         console.error('Failed to update Live Activity:', e);
@@ -258,8 +273,30 @@ export function useBaskSession(
       effectiveStartTimeMs: startTimeRef.current?.getTime() ?? Date.now(),
       elapsedSecondsAtPause:
         statusRef.current === 'paused' ? elapsedSecondsRef.current : 0,
+      phase: hasSynthesizedRef.current ? 'vitaminD' : 'morningLight',
     }).catch(e => console.error('Failed to update Live Activity access:', e));
   }, [canAccessSunburnRisk, state.liveActivityId]);
+
+  /**
+   * When the session first crosses into vitamin D, push an immediate Live Activity
+   * update so the lock screen morphs in sync with the in-app celebration (rather
+   * than waiting up to 15s for the next periodic tick).
+   */
+  useEffect(() => {
+    if (!state.hasSynthesized || !state.liveActivityId) return;
+    if (!Capacitor.isNativePlatform()) return;
+
+    BaskLiveActivity.updateActivity({
+      activityId: state.liveActivityId,
+      currentIU: currentIURef.current,
+      isPaused: statusRef.current === 'paused',
+      canAccessSunburnRisk: canAccessSunburnRiskRef.current,
+      effectiveStartTimeMs: startTimeRef.current?.getTime() ?? Date.now(),
+      elapsedSecondsAtPause:
+        statusRef.current === 'paused' ? elapsedSecondsRef.current : 0,
+      phase: 'vitaminD',
+    }).catch(e => console.error('Failed to push morph to Live Activity:', e));
+  }, [state.hasSynthesized, state.liveActivityId]);
 
   /**
    * App state change listener - reconciles time when returning from background
@@ -275,36 +312,25 @@ export function useBaskSession(
             setState((prev) => {
               if (prev.status !== 'active' || !prev.startTime) return prev;
 
-              const now = Date.now();
-              const totalElapsedMs = now - prev.startTime.getTime();
-              const newElapsed = Math.floor(totalElapsedMs / 1000);
-              const minutes = newElapsed / 60;
-
-              const newIU = calculateVitaminD(
-                prev.uvIndex,
-                minutes,
-                prev.exposurePercent,
-                prev.fitzpatrickType,
-                prev.age
-              );
+              // Reconcile the backgrounded interval with the same integrator (it
+              // credits the gap conservatively at the lower of start/now UV).
+              const next = integrateAccrual(prev, sunDataRef.current.effectiveUV, Date.now());
+              if (!next) return prev;
 
               // Update Live Activity on foreground resume
               if (prev.liveActivityId && Capacitor.isNativePlatform()) {
                 BaskLiveActivity.updateActivity({
                   activityId: prev.liveActivityId,
-                  currentIU: newIU,
+                  currentIU: next.currentIU ?? prev.currentIU,
                   isPaused: false,
                   canAccessSunburnRisk: canAccessSunburnRiskRef.current,
                   effectiveStartTimeMs: prev.startTime?.getTime() ?? Date.now(),
                   elapsedSecondsAtPause: 0,
+                  phase: next.hasSynthesized ? 'vitaminD' : 'morningLight',
                 }).catch(e => console.error('Failed to update Live Activity on foreground:', e));
               }
 
-              return {
-                ...prev,
-                elapsedSeconds: newElapsed,
-                currentIU: newIU,
-              };
+              return { ...prev, ...next };
             });
           }
         });
@@ -338,6 +364,7 @@ export function useBaskSession(
           canAccessSunburnRisk: canAccessSunburnRiskRef.current,
           effectiveStartTimeMs: prev.startTime?.getTime() ?? Date.now(),
           elapsedSecondsAtPause: prev.elapsedSeconds,
+          phase: prev.hasSynthesized ? 'vitaminD' : 'morningLight',
         }).catch(e => console.error('Failed to update Live Activity on pause:', e));
       }
 
@@ -381,6 +408,7 @@ export function useBaskSession(
           canAccessSunburnRisk: canAccessSunburnRiskRef.current,
           effectiveStartTimeMs: adjustedStartTime?.getTime() ?? Date.now(),
           elapsedSecondsAtPause: 0,
+          phase: prev.hasSynthesized ? 'vitaminD' : 'morningLight',
         }).catch(e => console.error('Failed to update Live Activity on resume:', e));
       }
 
@@ -389,6 +417,9 @@ export function useBaskSession(
         status: 'active',
         pausedAt: null,
         startTime: adjustedStartTime,
+        // Reset the accrual clock so the paused interval is never credited.
+        lastAccrualMs: Date.now(),
+        lastAccrualEffUv: sunDataRef.current.effectiveUV,
       };
     });
     await Haptics.impact({ style: ImpactStyle.Light });
@@ -503,6 +534,8 @@ export function useBaskSession(
     status: state.status,
     elapsedSeconds: state.elapsedSeconds,
     currentIU: state.currentIU,
+    isSynthesizing: state.synthesizing, // live UV >= 3 (vitamin D phase)
+    hasSynthesized: state.hasSynthesized, // session has crossed into vitamin D at least once
     projectedTimeToBurn: state.projectedTimeToBurn,
     remainingSunburnSeconds,
     formattedSunburnCountdown: formatSunburnCountdown(remainingSunburnSeconds),

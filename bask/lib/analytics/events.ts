@@ -101,6 +101,7 @@ export interface AnalyticsEventProps {
     clothing_preset_id: string;
     exposure_percent: number;
     uv_index: number;
+    phase_at_start?: 'morning_light' | 'low_uv' | 'vitamin_d';
   };
   session_paused: { elapsed_seconds: number; current_iu: number };
   session_resumed: { pause_duration_seconds: number };

@@ -15,6 +15,12 @@ public class BaskLiveActivityPlugin: CAPPlugin {
 
     private var currentActivityId: String?
 
+    // Map the JS phase string ('morningLight' | 'vitaminD') to the typed enum.
+    @available(iOS 16.1, *)
+    private func parsePhase(_ call: CAPPluginCall) -> BaskSessionAttributes.SynthesisPhase {
+        return call.getString("phase") == "morningLight" ? .morningLight : .vitaminD
+    }
+
     // MARK: - Check Availability
 
     @objc func isSupported(_ call: CAPPluginCall) {
@@ -65,7 +71,8 @@ public class BaskLiveActivityPlugin: CAPPlugin {
             isPaused: false,
             canAccessSunburnRisk: canAccessSunburnRisk,
             effectiveStartDate: startDate,
-            elapsedSecondsAtPause: 0
+            elapsedSecondsAtPause: 0,
+            phase: parsePhase(call)
         )
 
         let content = ActivityContent(state: initialState, staleDate: nil)
@@ -117,7 +124,8 @@ public class BaskLiveActivityPlugin: CAPPlugin {
             isPaused: isPaused,
             canAccessSunburnRisk: canAccessSunburnRisk,
             effectiveStartDate: effectiveStartDate,
-            elapsedSecondsAtPause: elapsedSecondsAtPause
+            elapsedSecondsAtPause: elapsedSecondsAtPause,
+            phase: parsePhase(call)
         )
 
         let content = ActivityContent(state: updatedState, staleDate: nil)
