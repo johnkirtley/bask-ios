@@ -3,13 +3,34 @@
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { capture, ANALYTICS_EVENTS } from '../../lib/analytics';
 
+type BaskCtaVariant = 'vitaminD' | 'morningLight' | 'lowUv' | 'night';
+
 interface BaskNowButtonProps {
   preset: string;
   onPress?: () => void;
   onPresetChange?: () => void;
   disabled?: boolean;
   disabledReason?: string;
+  /** Button label, phase-aware (e.g. "Get your morning light"). Defaults to "Bask Now". */
+  label?: string;
+  /** Helper line under the button when enabled. */
+  helper?: string;
+  /** Drives the accent treatment by phase. */
+  variant?: BaskCtaVariant;
 }
+
+// Enabled gradient + leading glyph per phase. Morning light / low-UV get a softer
+// "dawn" gradient so the hero re-skins without leaving Bask's warm palette.
+const VARIANT_GRADIENT: Record<BaskCtaVariant, string> = {
+  vitaminD:
+    'bg-gradient-to-r from-[#FFC93C] to-[#F4A536] text-[#2A2419] shadow-[0_12px_30px_rgba(244,165,54,0.33),0_0_0_1px_rgba(255,255,255,0.4)_inset] active:shadow-[0_6px_15px_rgba(244,165,54,0.25)]',
+  night:
+    'bg-gradient-to-r from-[#FFC93C] to-[#F4A536] text-[#2A2419] shadow-[0_12px_30px_rgba(244,165,54,0.33),0_0_0_1px_rgba(255,255,255,0.4)_inset] active:shadow-[0_6px_15px_rgba(244,165,54,0.25)]',
+  morningLight:
+    'bg-gradient-to-r from-[#FFE1A8] via-[#FFC56E] to-[#F4A94A] text-[#2A2419] shadow-[0_12px_30px_rgba(244,165,54,0.28),0_0_0_1px_rgba(255,255,255,0.5)_inset] active:shadow-[0_6px_15px_rgba(244,165,54,0.22)]',
+  lowUv:
+    'bg-gradient-to-r from-[#F1E4C4] to-[#E2CE9C] text-[#2A2419] shadow-[0_10px_26px_rgba(120,100,50,0.18),0_0_0_1px_rgba(255,255,255,0.5)_inset] active:shadow-[0_5px_13px_rgba(120,100,50,0.14)]',
+};
 
 /**
  * Large call-to-action button to start a basking session
@@ -21,6 +42,9 @@ export default function BaskNowButton({
   onPresetChange,
   disabled = false,
   disabledReason,
+  label = 'Bask Now',
+  helper = 'Tap to start tracking your sun exposure',
+  variant = 'vitaminD',
 }: BaskNowButtonProps) {
   const handlePress = async () => {
     if (disabled) return;
@@ -86,19 +110,39 @@ export default function BaskNowButton({
         onClick={handlePress}
         disabled={disabled}
         aria-disabled={disabled}
-        className={`bask-button w-full py-5 rounded-full text-xl font-black tracking-[-0.01em] flex items-center justify-center gap-2 ${
+        className={`bask-button w-full py-5 rounded-full text-xl font-black tracking-[-0.01em] whitespace-nowrap flex items-center justify-center gap-2 ${
           disabled
             ? 'bg-black/10 text-text-muted cursor-not-allowed shadow-none'
-            : 'bg-gradient-to-r from-[#FFC93C] to-[#F4A536] text-[#2A2419] shadow-[0_12px_30px_rgba(244,165,54,0.33),0_0_0_1px_rgba(255,255,255,0.4)_inset] active:shadow-[0_6px_15px_rgba(244,165,54,0.25)]'
+            : VARIANT_GRADIENT[variant]
         }`}>
-        {!disabled && <span className="w-3 h-3 rounded-full bg-[#2A2419] opacity-80" aria-hidden="true" />}
-        Bask Now
+        {!disabled &&
+          (variant === 'morningLight' ? (
+            // Sunrise glyph: half-sun rising over a horizon line.
+            <svg
+              xmlns='http://www.w3.org/2000/svg'
+              viewBox='0 0 24 24'
+              fill='none'
+              stroke='currentColor'
+              strokeWidth={2.2}
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              className='w-5 h-5'
+              aria-hidden='true'>
+              <path d='M17 18a5 5 0 0 0-10 0' />
+              <line x1='12' y1='2' x2='12' y2='6' />
+              <line x1='4.2' y1='9.2' x2='5.6' y2='10.6' />
+              <line x1='19.8' y1='9.2' x2='18.4' y2='10.6' />
+              <line x1='2' y1='18' x2='22' y2='18' />
+              <line x1='8' y1='5' x2='9' y2='6' />
+            </svg>
+          ) : (
+            <span className='w-3 h-3 rounded-full bg-[#2A2419] opacity-80' aria-hidden='true' />
+          ))}
+        {label}
       </button>
 
       <p className='text-sm text-text-secondary text-center mt-3'>
-        {disabled && disabledReason
-          ? disabledReason
-          : 'Tap to start tracking your sun exposure'}
+        {disabled && disabledReason ? disabledReason : helper}
       </p>
     </div>
   );

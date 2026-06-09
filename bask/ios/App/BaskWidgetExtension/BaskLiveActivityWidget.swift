@@ -73,6 +73,18 @@ private func sunburnValue(_ context: ActivityViewContext<BaskSessionAttributes>)
 }
 
 @available(iOS 16.1, *)
+private func statusLabel(_ context: ActivityViewContext<BaskSessionAttributes>) -> String {
+    if context.state.isPaused { return "Paused" }
+    return context.state.phase == .morningLight ? "Morning light" : "Basking"
+}
+
+// SF Symbol for the leading icon — a sunrise during the morning-light phase.
+@available(iOS 16.1, *)
+private func phaseIcon(_ context: ActivityViewContext<BaskSessionAttributes>) -> String {
+    return context.state.phase == .morningLight ? "sunrise.fill" : "sun.max.fill"
+}
+
+@available(iOS 16.1, *)
 struct BaskLiveActivityView: View {
     let context: ActivityViewContext<BaskSessionAttributes>
 
@@ -94,14 +106,14 @@ struct BaskLiveActivityView: View {
                     )
                     .frame(width: 32, height: 32)
 
-                Image(systemName: "sun.max.fill")
+                Image(systemName: phaseIcon(context))
                     .font(.system(size: 20))
                     .foregroundColor(context.state.isPaused ? .orange.opacity(0.6) : .orange)
             }
 
             VStack(alignment: .leading, spacing: 1) {
                 // Status label
-                Text(context.state.isPaused ? "Paused" : "Basking")
+                Text(statusLabel(context))
                     .font(.caption2)
                     .fontWeight(.medium)
                     .foregroundColor(.secondary)
@@ -123,10 +135,17 @@ struct BaskLiveActivityView: View {
             Spacer(minLength: 8)
 
             VStack(alignment: .trailing, spacing: 1) {
-                // IU accumulated
-                Text("\(context.state.currentIU) IU")
-                    .font(.headline)
-                    .foregroundColor(.orange)
+                // During morning light, IU is 0 by design — show a sunrise glyph
+                // instead of "0 IU" so the lock screen isn't a dead-end.
+                if context.state.phase == .vitaminD {
+                    Text("\(context.state.currentIU) IU")
+                        .font(.headline)
+                        .foregroundColor(.orange)
+                } else {
+                    Image(systemName: "sunrise.fill")
+                        .font(.headline)
+                        .foregroundColor(.orange)
+                }
 
                 // UV index
                 Text("UV \(String(format: "%.1f", context.attributes.uvIndex))")
@@ -164,12 +183,12 @@ struct BaskLiveActivity: Widget {
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     HStack(spacing: 8) {
-                        Image(systemName: "sun.max.fill")
+                        Image(systemName: phaseIcon(context))
                             .font(.system(size: 22))
                             .foregroundColor(context.state.isPaused ? .orange.opacity(0.6) : .orange)
 
                         VStack(alignment: .leading, spacing: 1) {
-                            Text(context.state.isPaused ? "Paused" : "Basking")
+                            Text(statusLabel(context))
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
 
@@ -190,10 +209,16 @@ struct BaskLiveActivity: Widget {
 
                 DynamicIslandExpandedRegion(.trailing) {
                     VStack(alignment: .trailing, spacing: 1) {
-                        Text("\(context.state.currentIU) IU")
-                            .font(.title3)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.orange)
+                        if context.state.phase == .vitaminD {
+                            Text("\(context.state.currentIU) IU")
+                                .font(.title3)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.orange)
+                        } else {
+                            Image(systemName: "sunrise.fill")
+                                .font(.title3)
+                                .foregroundColor(.orange)
+                        }
 
                         Text("UV \(String(format: "%.1f", context.attributes.uvIndex))")
                             .font(.caption2)
@@ -209,7 +234,7 @@ struct BaskLiveActivity: Widget {
                 }
             } compactLeading: {
                 // Compact leading (small icon on left)
-                Image(systemName: "sun.max.fill")
+                Image(systemName: phaseIcon(context))
                     .foregroundColor(context.state.isPaused ? .orange.opacity(0.6) : .orange)
             } compactTrailing: {
                 // Compact trailing (timer only) — fixed width so the
@@ -231,7 +256,7 @@ struct BaskLiveActivity: Widget {
                 .frame(width: 44)
             } minimal: {
                 // Minimal (when multiple activities are active)
-                Image(systemName: "sun.max.fill")
+                Image(systemName: phaseIcon(context))
                     .foregroundColor(context.state.isPaused ? .orange.opacity(0.6) : .orange)
             }
         }

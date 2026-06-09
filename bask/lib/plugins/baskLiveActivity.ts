@@ -17,11 +17,15 @@ export interface LiveActivityStartResult {
 /**
  * Options for starting a Live Activity
  */
+/** Which phase the Live Activity presents (mirrors the in-app hero). */
+export type LiveActivityPhase = 'morningLight' | 'vitaminD';
+
 export interface StartLiveActivityOptions {
   uvIndex: number;
   timeToBurnMinutes: number;
   canAccessSunburnRisk: boolean;
   startTimeMs: number; // Date.now() epoch milliseconds
+  phase: LiveActivityPhase;
 }
 
 /**
@@ -34,6 +38,7 @@ export interface UpdateLiveActivityOptions {
   canAccessSunburnRisk: boolean;
   effectiveStartTimeMs: number; // Adjusted start time for timer calculation
   elapsedSecondsAtPause: number; // Frozen elapsed seconds when paused
+  phase: LiveActivityPhase;
 }
 
 /**

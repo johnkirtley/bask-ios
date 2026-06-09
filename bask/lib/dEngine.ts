@@ -152,6 +152,44 @@ export function calculateVitaminD(
 }
 
 /**
+ * Marginal vitamin D synthesis rate in IU per minute at a given UV/exposure.
+ *
+ * This is the pre-saturation rate (the linear term of `calculateVitaminD`), used
+ * both to estimate time-to-goal and to *integrate* IU incrementally during a live
+ * session off the current (cloud-adjusted) UV. Returns 0 below the UV-3 shadow-rule
+ * threshold, so integrating this rate naturally accrues nothing during morning light
+ * and starts the moment effective UV crosses 3 — never crediting pre-threshold minutes.
+ *
+ * Note (v1): this omits the post-burn diminishing-returns taper that `calculateVitaminD`
+ * applies past ~1 MED. For any session shorter than time-to-burn the two agree exactly;
+ * past the burn threshold the integrated value runs slightly higher. Acceptable for v1 —
+ * the sunburn-risk UI already discourages exposure that long. (Follow-up: fold the taper
+ * into the integrator using accumulated synthesis minutes.)
+ *
+ * @param uvIndex - Current (effective) UV index
+ * @param exposurePercent - Percentage of skin exposed (0-100)
+ * @param fitzpatrickType - Skin type (1-6)
+ * @param age - User's age (optional)
+ * @returns IU synthesized per minute (0 when UV < 3 or no skin exposed)
+ */
+export function vitaminDRatePerMinute(
+  uvIndex: number,
+  exposurePercent: number,
+  fitzpatrickType: FitzpatrickType,
+  age?: number | null
+): number {
+  // Shadow Rule: no UVB-driven synthesis below UV 3
+  if (uvIndex < 3 || exposurePercent <= 0) return 0;
+
+  const skinMultiplier = SKIN_MULTIPLIERS[fitzpatrickType] ?? 3.0;
+  const exposureFraction = exposurePercent / 100;
+  const uvFactor = uvIndex / 10;
+  const ageFactor = getAgeMultiplier(age ?? null);
+
+  return uvFactor * exposureFraction * (1 / skinMultiplier) * ageFactor * BASE_IU_PER_MINUTE;
+}
+
+/**
  * Calculate minutes needed to reach a target IU
  * @param targetIU - Goal vitamin D in IU
  * @param uvIndex - Current UV index
@@ -167,16 +205,9 @@ export function calculateTimeToGoal(
   fitzpatrickType: FitzpatrickType,
   age?: number | null
 ): number {
-  // Shadow Rule: UV must be >= 3 for vitamin D synthesis
-  if (uvIndex < 3 || exposurePercent <= 0 || targetIU <= 0) return Infinity;
+  if (targetIU <= 0) return Infinity;
 
-  const skinMultiplier = SKIN_MULTIPLIERS[fitzpatrickType] ?? 3.0;
-  const exposureFraction = exposurePercent / 100;
-  const uvFactor = uvIndex / 10;
-  const ageFactor = getAgeMultiplier(age ?? null);
-
-  const ratePerMinute =
-    uvFactor * exposureFraction * (1 / skinMultiplier) * ageFactor * BASE_IU_PER_MINUTE;
+  const ratePerMinute = vitaminDRatePerMinute(uvIndex, exposurePercent, fitzpatrickType, age);
   if (ratePerMinute <= 0) return Infinity;
 
   // Uncapped — callers compare against timeToBurn for safety-aware UI
