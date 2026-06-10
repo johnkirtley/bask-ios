@@ -191,6 +191,7 @@ struct BaskLiveActivity: Widget {
                             Text(statusLabel(context))
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
+                                .lineLimit(1)
 
                             if context.state.isPaused {
                                 Text(formatElapsedTime(context.state.elapsedSecondsAtPause))
@@ -204,6 +205,7 @@ struct BaskLiveActivity: Widget {
                                     .monospacedDigit()
                             }
                         }
+                        .lineLimit(1)
                     }
                 }
 
@@ -223,6 +225,7 @@ struct BaskLiveActivity: Widget {
                         Text("UV \(String(format: "%.1f", context.attributes.uvIndex))")
                             .font(.caption2)
                             .foregroundColor(.secondary)
+                            .lineLimit(1)
                     }
                 }
 
@@ -230,6 +233,8 @@ struct BaskLiveActivity: Widget {
                     sunburnRow(context)
                         .font(.caption)
                         .foregroundColor(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                         .frame(maxWidth: .infinity, alignment: .center)
                 }
             } compactLeading: {

@@ -7,6 +7,7 @@ import WhyZeroIUTooltip from './WhyZeroIUTooltip';
 import Mascot from '../ui/Mascot';
 import LockedSunburnValue from './LockedSunburnValue';
 import { effectiveUv, formatEstimatedIU } from '../../lib/dEngine';
+import { morningLightRecommendation } from '../../lib/lightPhase';
 import type { SunData } from '../../lib/sunDataUtils';
 import type { TimeOfDay } from '../../hooks/useTimeOfDay';
 
@@ -231,7 +232,9 @@ export default function ActiveSessionView({
                   ? `Vitamin D starts in ~${synthesisCountdownMinutes} min`
                   : isCloudBlockingVitaminD
                   ? 'Clouds are blocking vitamin D, but light still supports your rhythm'
-                  : 'Vitamin D begins when the sun climbs higher'}
+                  : `Aim for ~${
+                      morningLightRecommendation(cloudCover).minutes
+                    } min of morning light to support your circadian rhythm`}
               </div>
             </>
           ) : (

@@ -179,7 +179,7 @@ export default function AddSessionModal({ isOpen, onClose, onSaved }: AddSession
       breakpoints={[0, 0.95, 1]}>
       <div className='bg-light-bg flex flex-col h-full'>
         {/* Scrollable body */}
-        <div className='ion-content-scroll-host flex-1 min-h-0 overflow-y-auto px-6 pt-6'>
+        <div className='ion-content-scroll-host flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 pt-6'>
         {/* Header */}
         <div className='flex items-center gap-4 mb-4'>
           <div className='w-12 h-12 rounded-full bg-solar-flare/15 flex items-center justify-center'>

@@ -73,6 +73,7 @@ import SolarWindowChart from '../components/home/SolarWindowChart';
 import SupplementCard from '../components/home/SupplementCard';
 import CofactorCard from '../components/home/CofactorCard';
 import DWindowForecastCard from '../components/home/DWindowForecastCard';
+import WeatherAttribution from '../components/WeatherAttribution';
 import StreakCard from '../components/home/StreakCard';
 import TrialOfferCard from '../components/home/TrialOfferCard';
 import StreakDetailSheet from '../components/streaks/StreakDetailSheet';
@@ -463,6 +464,7 @@ export default function Home() {
     effectiveUV,
     timeOfDay,
     synthesisCountdownMin,
+    cloudCover: sunData.cloudCover,
   });
 
   const labGuidanceHint = getBloodTestGuidanceHint(bloodTestCalibration);
@@ -840,19 +842,7 @@ export default function Home() {
 
           {/* WeatherKit Attribution */}
           <div className='text-center py-6'>
-            <p className='text-xs text-text-muted mb-1'>
-              {Capacitor.isNativePlatform() ? (
-                <a
-                  href='https://weatherkit.apple.com/legal-attribution.html'
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='hover:text-text-secondary transition-colors'>
-                  Weather: Apple WeatherKit
-                </a>
-              ) : (
-                'Weather: Simulated Data'
-              )}
-            </p>
+            <WeatherAttribution />
           </div>
         </div>
       </AtmosphericBackground>
