@@ -25,6 +25,32 @@ export interface BaskCtaInput {
   timeOfDay: TimeOfDayPhase;
   /** Minutes until today's synthesis window opens, or null if none coming/within 2h. */
   synthesisCountdownMin: number | null;
+  /** Cloud cover fraction 0-1 (WeatherKit). Scales the morning-light target. */
+  cloudCover?: number;
+}
+
+export type MorningLightCondition = 'clear' | 'cloudy' | 'overcast';
+
+export interface MorningLightRecommendation {
+  /** Suggested outdoor minutes for a meaningful circadian "dose". */
+  minutes: number;
+  condition: MorningLightCondition;
+}
+
+/**
+ * Recommended morning-light duration, scaled to sky conditions. Brighter skies
+ * deliver more lux, so they need less time; overcast needs more. Tiers follow
+ * common circadian guidance (≈10 min clear / 20 cloudy / 30 overcast). It's
+ * general guidance rather than a medical prescription, so phrase it as
+ * "aim for ~N min".
+ */
+export function morningLightRecommendation(
+  cloudCover?: number,
+): MorningLightRecommendation {
+  const cc = cloudCover ?? 0;
+  if (cc >= 0.7) return { minutes: 30, condition: 'overcast' };
+  if (cc >= 0.3) return { minutes: 20, condition: 'cloudy' };
+  return { minutes: 10, condition: 'clear' };
 }
 
 export interface BaskCta {
@@ -44,6 +70,7 @@ export function getBaskCta({
   effectiveUV,
   timeOfDay,
   synthesisCountdownMin,
+  cloudCover,
 }: BaskCtaInput): BaskCta {
   // Strong enough for vitamin D right now → normal Bask.
   if (effectiveUV >= 3) return VITAMIN_D;
@@ -64,9 +91,12 @@ export function getBaskCta({
       const label = isMorning ? 'Get morning light' : 'Get some light';
       // The vitamin D countdown lives on the live session and D-Window views, so the
       // helper here focuses on why morning light is worth it now, not a repeat clock.
+      // When clouds are the blocker, the cloud story is the honest lead; otherwise we
+      // surface the adaptive target with the reference-app's energy/mood/sleep framing.
+      const rec = morningLightRecommendation(cloudCover);
       const helper = cloudsBlocking
         ? 'Clouds are blocking vitamin D, but light still supports your rhythm'
-        : "Great for your circadian rhythm. UV isn't strong enough for vitamin D yet.";
+        : `~${rec.minutes} min of morning light supports energy, mood, and sleep`;
       return { variant: 'morningLight', label, helper };
     }
 

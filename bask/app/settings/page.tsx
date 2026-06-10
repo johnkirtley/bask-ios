@@ -35,6 +35,7 @@ import ProBadge from '../../components/ui/ProBadge';
 import ScienceFAQ from '../../components/settings/ScienceFAQ';
 import LeaderboardSettings from '../../components/settings/LeaderboardSettings';
 import BloodTestModal from '../../components/settings/BloodTestModal';
+import WeatherAttribution from '../../components/WeatherAttribution';
 import { userProfileRepository } from '../../lib/database/repositories/userProfileRepository';
 import { capture, ANALYTICS_EVENTS } from '../../lib/analytics';
 
@@ -949,19 +950,7 @@ export default function SettingsPage() {
 
           {/* Version Footer */}
           <div className='text-center py-6'>
-            <p className='text-xs text-text-muted mb-1'>
-              {Capacitor.isNativePlatform() ? (
-                <a
-                  href='https://weatherkit.apple.com/legal-attribution.html'
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='hover:text-text-secondary transition-colors'>
-                  Weather: Apple WeatherKit
-                </a>
-              ) : (
-                'Weather: Simulated Data'
-              )}
-            </p>
+            <WeatherAttribution className='mb-1' />
             <p className='text-sm text-text-muted'>Version {packageJson.version}</p>
           </div>
         </div>
