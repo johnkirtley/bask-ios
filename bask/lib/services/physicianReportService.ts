@@ -398,7 +398,7 @@ export async function generatePhysicianReport(period: ReportPeriod): Promise<Blo
   // Header
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.text('BASK — Vitamin D Report', pageWidth / 2, yPos, { align: 'center' });
+  doc.text('Bask Vitamin D Report', pageWidth / 2, yPos, { align: 'center' });
   yPos += 10;
 
   doc.setFontSize(10);

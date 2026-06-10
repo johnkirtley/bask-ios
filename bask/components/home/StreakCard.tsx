@@ -21,7 +21,7 @@ function getStatusMessage(
   }
 
   if (summary.hitToday) {
-    return 'Goal hit — soak the rest in tomorrow';
+    return 'Goal hit. Soak the rest in tomorrow.';
   }
 
   if (currentStreak > 0) {
@@ -56,7 +56,7 @@ export default function StreakCard({
       <div className='rounded-card overflow-hidden relative bg-gradient-to-br from-[#1AA1A2] to-[#148B8C] p-5 shadow-[0_6px_24px_rgba(40,30,10,0.06)]'>
         {/* Mascot in top-right */}
         <div className='absolute top-3 right-3 z-10'>
-          <Mascot size={80} mood="happy" floating={false} />
+          <Mascot size={80} mood='happy' floating={false} />
         </div>
 
         <div className='relative z-10'>
@@ -85,7 +85,9 @@ export default function StreakCard({
             {summary.recentDays.map((day) => {
               const isGoalMet = day.goalMet;
               const isToday = day.dateKey === getLocalDateKey(new Date());
-              const dayLetter = day.date.toLocaleDateString('en-US', { weekday: 'short' }).slice(0, 1);
+              const dayLetter = day.date
+                .toLocaleDateString('en-US', { weekday: 'short' })
+                .slice(0, 1);
 
               return (
                 <div
@@ -94,12 +96,13 @@ export default function StreakCard({
                     isGoalMet
                       ? 'bg-white text-[#1AA1A2]'
                       : isToday
-                        ? 'bg-[#FFC93C] text-[#2A2419]'
-                        : 'bg-white/25 text-white/50'
+                      ? 'bg-[#FFC93C] text-[#2A2419]'
+                      : 'bg-white/25 text-white/50'
                   }`}
                   title={`${day.totalIU.toLocaleString()} IU`}
-                  aria-label={`${day.date.toLocaleDateString('en-US', { weekday: 'long' })}: ${day.totalIU.toLocaleString()} IU`}
-                >
+                  aria-label={`${day.date.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                  })}: ${day.totalIU.toLocaleString()} IU`}>
                   {dayLetter}
                 </div>
               );

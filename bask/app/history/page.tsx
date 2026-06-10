@@ -510,7 +510,7 @@ export default function History() {
         {/* Header */}
         <div className='px-6 py-6 pt-safe'>
           <h1 className='text-[32px] font-extrabold tracking-[-0.02em] text-text-primary'>History</h1>
-          <p className='text-text-secondary mt-1'>Your vitamin D journey</p>
+          <p className='text-text-secondary mt-1'>Your sun and supplement history</p>
           <button
             type='button'
             onClick={() => setShowAddModal(true)}
@@ -663,9 +663,9 @@ export default function History() {
                     />
                   </svg>
                 </div>
-                <h2 className='text-2xl font-bold text-text-primary mb-3'>Your Journey Begins</h2>
+                <h2 className='text-2xl font-bold text-text-primary mb-3'>Nothing logged yet</h2>
                 <p className='text-text-secondary max-w-sm mx-auto leading-relaxed'>
-                  Start tracking your sun exposure, supplements, and cofactors to watch your vitamin D story unfold here.
+                  Log a sun session or supplement and it&apos;ll show up here.
                 </p>
               </div>
             </div>

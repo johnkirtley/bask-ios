@@ -202,7 +202,7 @@ export default function AddSessionModal({ isOpen, onClose, onSaved }: AddSession
         {/* Today-only notice */}
         <div className='mb-5 bg-amber-50 border border-amber-200 rounded-xl p-3'>
           <p className='text-xs text-amber-800'>
-            We can only calculate vitamin D for <span className='font-semibold'>today</span> — past
+            We can only calculate vitamin D for <span className='font-semibold'>today</span>. Past
             days&apos; UV data isn&apos;t available.
           </p>
         </div>
@@ -289,7 +289,7 @@ export default function AddSessionModal({ isOpen, onClose, onSaved }: AddSession
             </div>
             {computedIU === 0 && !noUvData && isWindowCloudBlocked && (
               <p className='text-xs text-amber-700 leading-snug'>
-                Clouds are blocking vitamin D for this window — effective UV stayed under 3, so
+                Clouds are blocking vitamin D for this window. Effective UV stayed under 3, so
                 no IU is produced.
               </p>
             )}

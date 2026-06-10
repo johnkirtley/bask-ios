@@ -66,11 +66,11 @@ function getTodayNoWindowCopy(
     headline: 'No window right now',
     subtext:
       reason === 'clouds-blocking'
-        ? 'Clouds are blocking UV right now. Forecasts can change; check back later.'
+        ? 'Clouds are blocking vitamin D right now. Check back later.'
         : reason === 'low-exposure'
-        ? 'Conditions are not enough for your D-window right now. Check back later.'
+        ? 'Conditions aren\'t enough for your D-window right now. Check back later.'
         : reason === 'uv-too-low'
-        ? 'UV is too low right now. Forecasts can change; check back later.'
+        ? 'UV is too low for vitamin D right now. Check back later.'
         : 'Forecast still updating. Check back later.',
   };
 }
@@ -408,11 +408,11 @@ export default function DWindowForecastCard({
                 </p>
                 <p className='text-xs text-text-secondary mt-0.5'>
                   {forecast.tomorrowNoWindowReason === 'clouds-blocking'
-                    ? 'Cloud cover is blocking UV'
+                    ? 'Cloud cover is blocking vitamin D'
                     : forecast.tomorrowNoWindowReason === 'low-exposure'
                     ? 'UV available · exposure may be limiting'
                     : forecast.tomorrowNoWindowReason === 'uv-too-low'
-                    ? 'UV levels too low'
+                    ? 'UV too low for vitamin D'
                     : "We'll keep updating"}
                 </p>
               </div>
@@ -551,7 +551,7 @@ function SynthesisOnlyDisplay({
         {isCurrentCloudBlocked
           ? 'Check back when cloud cover clears; IU will stay at 0 while effective UV is below 3.'
           : isWindowClosing
-          ? "Today's window is closing — check back tomorrow"
+          ? "Today's window is closing. Check back tomorrow."
           : noWindowReason === 'low-exposure'
           ? 'UV is sufficient · exposure may be limiting meaningful IU'
           : 'No optimal session window today'}

@@ -739,7 +739,7 @@ export default function Home() {
               disabledReason={
                 isLoading
                   ? 'Checking current UV conditions…'
-                  : "No daylight right now — check back when the sun's up"
+                  : "No daylight right now. Check back when the sun's up."
               }
             />
           </div>
@@ -790,7 +790,7 @@ export default function Home() {
                   : "Today's decay covered";
               })()}
               decayCovered={todayTotal >= dailyDecay}
-              decayInfoText='Vitamin D has a roughly 15-day half-life, so the body gradually clears it over time — on the order of a few percent per day. Regular sun exposure or supplementation helps maintain healthy levels. This is general educational information, not a measurement of your personal vitamin D level.'
+              decayInfoText='Vitamin D has a roughly 15-day half-life, so the body gradually clears it over time, on the order of a few percent per day. Regular sun exposure or supplementation helps maintain healthy levels. This is general educational information, not a measurement of your personal vitamin D level.'
             />
           </div>
 

@@ -62,20 +62,17 @@ export function getBaskCta({
       // Labels are kept short so the CTA never wraps to two lines.
       const isMorning = timeOfDay === 'morning';
       const label = isMorning ? 'Get morning light' : 'Get some light';
-      let helper: string;
-      if (synthesisCountdownMin != null) {
-        helper = `${isMorning ? 'Morning light' : 'Light'} now · vitamin D starts in ${synthesisCountdownMin} min`;
-      } else if (cloudsBlocking) {
-        helper = 'Clouds are blocking vitamin D — light still supports your rhythm';
-      } else {
-        helper = "Great for your circadian rhythm — UV isn't strong enough for vitamin D yet";
-      }
+      // The vitamin D countdown lives on the live session and D-Window views, so the
+      // helper here focuses on why morning light is worth it now, not a repeat clock.
+      const helper = cloudsBlocking
+        ? 'Clouds are blocking vitamin D, but light still supports your rhythm'
+        : "Great for your circadian rhythm. UV isn't strong enough for vitamin D yet.";
       return { variant: 'morningLight', label, helper };
     }
 
     const helper = cloudsBlocking
-      ? 'Clouds are blocking vitamin D right now — but getting sunlight still helps'
-      : "UV isn't strong enough for vitamin D right now — but getting sunlight still helps";
+      ? 'Clouds are blocking vitamin D right now, but getting sunlight still helps'
+      : "UV isn't strong enough for vitamin D right now, but getting sunlight still helps";
     return { variant: 'lowUv', label: 'Get some light', helper };
   }
 

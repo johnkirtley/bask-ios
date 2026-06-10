@@ -101,7 +101,7 @@ export interface DWindowForecast {
  * Determine why no D-window exists for a given forecast period
  */
 function determineNoWindowReason(
-  forecast: HourlyForecastItem[]
+  forecast: HourlyForecastItem[],
 ): 'uv-too-low' | 'clouds-blocking' | 'low-exposure' | undefined {
   if (forecast.length === 0) return undefined;
 
@@ -205,8 +205,12 @@ export function calculateOptimalWindows(
 
   // Determine why no windows exist (for contextual UI messaging)
   // Compute reason for today and tomorrow separately
-  const todayNoWindowReason = !effectiveTodayWindow ? determineNoWindowReason(todayForecast) : undefined;
-  const tomorrowNoWindowReason = !tomorrowWindow ? determineNoWindowReason(tomorrowForecast) : undefined;
+  const todayNoWindowReason = !effectiveTodayWindow
+    ? determineNoWindowReason(todayForecast)
+    : undefined;
+  const tomorrowNoWindowReason = !tomorrowWindow
+    ? determineNoWindowReason(tomorrowForecast)
+    : undefined;
 
   // For backwards compatibility, use today's reason, or fall back to tomorrow's if both are null
   const noWindowReason = todayNoWindowReason || tomorrowNoWindowReason;
@@ -787,7 +791,11 @@ function generateRecommendations(
       priority: 1,
       content: {
         headline: 'Perfect sun right now!',
-        details: `About ${today.durationMinutes} min in the sun — an estimated ~${formatEstimatedIU(today.estimatedIU)} IU.`,
+        details: `About ${
+          today.durationMinutes
+        } min in the sun, an estimated ~${formatEstimatedIU(
+          today.estimatedIU,
+        )} IU.`,
       },
     });
   } else if (today && today.effectiveUvIndex >= 3) {
@@ -805,7 +813,7 @@ function generateRecommendations(
       priority: 3,
       content: {
         headline: `Low UV today (${today.avgUvIndex.toFixed(1)})`,
-        details: `You'll need ${today.durationMinutes} min. Some people also consider supplementation — consult your provider.`,
+        details: `You'll need ${today.durationMinutes} min. Some people also consider supplementation. Ask your provider.`,
       },
     });
   }
@@ -828,7 +836,9 @@ function generateRecommendations(
       priority: 5,
       content: {
         headline: `Tomorrow: ${tomorrow.startTime}–${tomorrow.endTime}`,
-        details: `An estimated ~${formatEstimatedIU(tomorrow.estimatedIU)} IU available.`,
+        details: `An estimated ~${formatEstimatedIU(
+          tomorrow.estimatedIU,
+        )} IU available.`,
       },
     });
   }
@@ -854,8 +864,7 @@ function generateRecommendations(
   // and skip when exposure (not UV) is the limiter: 'poor' efficiency is then
   // just an artifact of windows being null, and the exposure action covers it.
   const isExposureLimited =
-    todayNoWindowReason === 'low-exposure' ||
-    noWindowReason === 'low-exposure';
+    todayNoWindowReason === 'low-exposure' || noWindowReason === 'low-exposure';
   if (efficiency === 'poor' && !isLowUvScenario && !isExposureLimited) {
     recommendations.push({
       type: 'alert',

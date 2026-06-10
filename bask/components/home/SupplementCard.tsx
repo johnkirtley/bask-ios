@@ -108,14 +108,14 @@ export default function SupplementCard({
         return {
           message: `UV is ${uvIndex.toFixed(
             1,
-          )} outside! Your recent lab looks strong — sun exposure may be enough today.`,
+          )} outside. Your recent lab looks strong, so sun exposure may be enough today.`,
           type: 'success',
         };
       }
       return {
         message: `UV is ${uvIndex.toFixed(
           1,
-        )} outside! If you supplement today, log it here.`,
+        )} outside. If you supplement today, log it here.`,
         type: 'warning',
       };
     }
@@ -264,7 +264,7 @@ export default function SupplementCard({
             <div className='flex-1'>
               <p className='text-sm font-medium text-text-primary'>
                 {hasLoggedToday
-                  ? `Logged ${todayTotalIU} IU today!`
+                  ? `Logged ${todayTotalIU} IU today`
                   : 'Select Your Dosage'}
               </p>
               {hasLoggedToday && (
@@ -361,8 +361,7 @@ export default function SupplementCard({
         {showFatPrompt && fatPromptResponse === 'yes' && (
           <div className='mt-3 p-3 rounded-xl bg-grove-green/20 border border-grove-green/30'>
             <p className='text-xs text-grove-green-dark'>
-              ✓ Great! Some research suggests fat may support vitamin D
-              absorption.
+              ✓ Fat may help your body absorb vitamin D.
             </p>
           </div>
         )}

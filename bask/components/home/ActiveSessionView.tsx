@@ -230,7 +230,7 @@ export default function ActiveSessionView({
                 {synthesisCountdownMinutes != null
                   ? `Vitamin D starts in ~${synthesisCountdownMinutes} min`
                   : isCloudBlockingVitaminD
-                  ? 'Clouds are blocking vitamin D — light still supports your rhythm'
+                  ? 'Clouds are blocking vitamin D, but light still supports your rhythm'
                   : 'Vitamin D begins when the sun climbs higher'}
               </div>
             </>
@@ -462,7 +462,7 @@ export default function ActiveSessionView({
             </>
           )}
           <p className='text-sm text-text-secondary mt-1 text-center'>
-            Pocket your phone — I&apos;ll keep counting for you
+            Pocket your phone. I&apos;ll keep counting for you.
           </p>
         </div>
       </div>
