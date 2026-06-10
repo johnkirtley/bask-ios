@@ -84,13 +84,13 @@ export function getBloodTestGuidanceHint(
 
   switch (calibration.status) {
     case 'deficient':
-      return `Your recent lab (${calibration.ngMl} ng/mL) suggests levels may be low — sun and supplements may both help.`;
+      return `Your recent lab (${calibration.ngMl} ng/mL) suggests levels may be low. Sun and supplements may both help.`;
     case 'insufficient':
-      return `Your recent lab (${calibration.ngMl} ng/mL) is below optimal — consistent sun or supplementation may help.`;
+      return `Your recent lab (${calibration.ngMl} ng/mL) is below optimal. Consistent sun or supplementation may help.`;
     case 'sufficient':
-      return `Your recent lab (${calibration.ngMl} ng/mL) looks adequate — maintenance exposure may be enough.`;
+      return `Your recent lab (${calibration.ngMl} ng/mL) looks adequate. Maintenance exposure may be enough.`;
     case 'optimal':
-      return `Your recent lab (${calibration.ngMl} ng/mL) looks strong — focus on maintaining levels.`;
+      return `Your recent lab (${calibration.ngMl} ng/mL) looks strong. Focus on maintaining levels.`;
     default:
       return null;
   }

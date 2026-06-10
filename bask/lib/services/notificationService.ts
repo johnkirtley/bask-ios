@@ -392,7 +392,7 @@ export const notificationService = {
     return {
       id,
       title: 'Clouds are limiting UV today',
-      body: 'Vitamin D synthesis is blocked by cloud cover — but a walk outside still does you good. ☀️',
+      body: 'Vitamin D synthesis is blocked by cloud cover, but a walk outside still does you good. ☀️',
       schedule: {
         at: notificationTime,
         allowWhileIdle: true,

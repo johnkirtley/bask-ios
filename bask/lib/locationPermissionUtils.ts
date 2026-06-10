@@ -7,9 +7,9 @@ export function locationPermissionLabel(status: LocationPermissionState): string
     case 'granted':
       return 'Enabled';
     case 'denied':
-      return 'Denied — tap to open Settings';
+      return 'Denied. Tap to open Settings.';
     case 'prompt':
-      return 'Not set — tap to enable';
+      return 'Not set. Tap to enable.';
   }
 }
 

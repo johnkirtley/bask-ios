@@ -850,7 +850,7 @@ export default function SettingsPage() {
                   </li>
                   <li>
                     If you opt into the Touch Grass Leaderboard, only your anonymous score is
-                    shared — see Community settings above.
+                    shared. See Community settings above.
                   </li>
                 </ul>
               </div>
@@ -1086,7 +1086,7 @@ export default function SettingsPage() {
           isOpen={showRestoreSuccessAlert}
           onDidDismiss={() => setShowRestoreSuccessAlert(false)}
           header='Purchases Restored'
-          message='Your purchases have been restored successfully!'
+          message='Your purchases have been restored.'
           buttons={['OK']}
         />
 

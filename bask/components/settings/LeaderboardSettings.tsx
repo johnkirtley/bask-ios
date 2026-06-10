@@ -133,7 +133,7 @@ export default function LeaderboardSettings() {
 
         <div className='p-4 border-b border-black/5'>
           <p className='text-xs text-text-secondary'>
-            Bask is private by default. If you join, only anonymous session scores are sent—never
+            Bask is private by default. If you join, only anonymous session scores are sent, never
             supplements or health profile data.
           </p>
           <button
@@ -209,7 +209,7 @@ export default function LeaderboardSettings() {
                 </button>
               </div>
               <p className='text-xs text-text-secondary'>
-                Optional. Never uses precise GPS — you choose what appears on the public leaderboard.
+                Optional. Never uses precise GPS. You choose what appears on the public leaderboard.
               </p>
             </div>
 

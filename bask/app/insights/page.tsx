@@ -43,7 +43,7 @@ export default function Insights() {
       gradientTo: 'rgba(244, 165, 54, 0.10)',
       pullQuote: 'A Harvard trial linked daily vitamin D to slower biological aging.',
       content: [
-        'In a randomized, placebo-controlled study of over 1,000 adults aged 50+, participants taking 2,000 IU of vitamin D daily showed less than half the telomere shortening of those on placebo over four years — roughly the equivalent of three fewer years of aging.',
+        'In a randomized, placebo-controlled study of over 1,000 adults aged 50+, participants taking 2,000 IU of vitamin D daily showed less than half the telomere shortening of those on placebo over four years, roughly the equivalent of three fewer years of aging.',
         'Telomeres are the protective caps on your DNA that naturally wear down as you age.',
       ],
       citation: 'Harvard Medical School & Mass General Brigham · American Journal of Clinical Nutrition (2025)',
@@ -80,10 +80,10 @@ export default function Insights() {
       gradientTo: 'rgba(217, 119, 6, 0.10)',
       pullQuote: 'Where and when you get sun changes how much vitamin D you can make.',
       content: [
-        'The sun\'s UVB rays are what trigger vitamin D production in your skin — but their strength depends on season, latitude, and time of day.',
+        'The sun\'s UVB rays are what trigger vitamin D production in your skin, but their strength depends on season, latitude, and time of day.',
         'In northern cities like Boston, the sun is too weak to produce meaningful vitamin D from roughly November through February. This is exactly why tracking your real sun window beats simply "getting outside."',
       ],
-      citation: 'Harvard Health Publishing — "6 Things You Should Know About Vitamin D"',
+      citation: 'Harvard Health Publishing: "6 Things You Should Know About Vitamin D"',
       sources: [
         { label: 'Harvard Health', url: 'https://www.health.harvard.edu/healthy-aging-and-longevity/6-things-you-should-know-about-vitamin-d' },
       ],
@@ -99,7 +99,7 @@ export default function Insights() {
       pullQuote: 'Short, regular sun sessions can support healthy vitamin D levels.',
       content: [
         'General guidance suggests around 10–15 minutes of midday sun on bare skin (like arms and legs), a few times per week, can help maintain healthy levels for many people.',
-        'Skin tone, age, location, and sunscreen all shift the amount needed — which is why personalized tracking matters.',
+        'Skin tone, age, location, and sunscreen all shift the amount needed, which is why personalized tracking matters.',
       ],
       citation: 'Harvard Health Publishing',
       sources: [
@@ -119,7 +119,7 @@ export default function Insights() {
         'National survey (NHANES) estimates vary by the threshold used: roughly 1 in 4 adults is considered deficient, and a substantially larger share fall below levels many researchers consider optimal.',
         'Risk is higher for people with darker skin, those who live farther from the equator, and during winter.',
       ],
-      citation: 'NHANES — U.S. National Health and Nutrition Examination Survey',
+      citation: 'NHANES: U.S. National Health and Nutrition Examination Survey',
       sources: [
         { label: 'NCBI / PMC', url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC6075634/' },
       ],
@@ -135,9 +135,9 @@ export default function Insights() {
       pullQuote: 'Sunlight affects far more than bone health.',
       content: [
         'The active form of vitamin D is thought to help regulate over 1,000 genes across the body.',
-        'Beyond vitamin D itself, sun exposure has been associated with improved mood, immune function, and cardiovascular effects — supporting the idea that healthy sun habits are about more than a single nutrient.',
+        'Beyond vitamin D itself, sun exposure has been associated with improved mood, immune function, and cardiovascular effects, which suggests healthy sun habits are about more than a single nutrient.',
       ],
-      citation: 'Environmental Health Perspectives (NIH) — "Benefits of Sunlight: A Bright Spot for Human Health"',
+      citation: 'Environmental Health Perspectives (NIH): "Benefits of Sunlight: A Bright Spot for Human Health"',
       sources: [
         { label: 'NCBI / PMC', url: 'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2290997/' },
       ],
@@ -813,7 +813,7 @@ export default function Insights() {
 
 function getSkinTypePullQuote(type: number): string {
   if (type <= 2) {
-    return 'Fair skin burns easily but produces vitamin D quickly—balance is key.';
+    return 'Fair skin burns easily but produces vitamin D quickly, so balance is key.';
   } else if (type <= 4) {
     return 'Medium to olive skin has a wider "sweet spot" for vitamin D synthesis.';
   } else {
@@ -886,10 +886,10 @@ function getSkinTypeTips(type: number): string[] {
     ];
   } else {
     return [
-      'Longer exposure times are essential—don\'t cut sessions short',
+      'Longer exposure times are essential, so don\'t cut sessions short',
       'Some people with darker skin types choose year-round supplementation; discuss with a clinician',
       'Blood tests can help you understand your levels',
-      'Midday sun (UV 5-8) is most efficient—avoid wasting time in weak morning/evening UV',
+      'Midday sun (UV 5-8) is most efficient, so avoid weak morning and evening UV',
     ];
   }
 }

@@ -134,7 +134,7 @@ export default function CofactorCard({ onCofactorLogged }: CofactorCardProps) {
               </p>
               <p className='text-xs text-text-secondary mt-0.5'>
                 {bothLogged
-                  ? 'Great work! Your cofactors are logged'
+                  ? 'Magnesium and K2 logged'
                   : 'May support vitamin D utilization'}
               </p>
             </div>
