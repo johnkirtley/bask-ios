@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "appkittie": {
+      "source": "appkittie/aso-mcp-skills",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "d8d591ec80c1dd8002b24e397ca880d70262f4473005fff87f444bcbe541f7b0"
+    }
+  }
+}

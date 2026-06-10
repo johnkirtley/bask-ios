@@ -65,6 +65,15 @@ bask/scripts/.leaderboard-bootstrap-manifest.json
 # Agent tooling
 .ralphrc
 
+# Vendored skill tooling & local AI config
+bask/.agents/
+bask/.claude/
+
+# Design handoff scratch & local feature notes
+design_handoff_bask_ios/
+design_handoff_onboarding_warm/
+potential-features.md
+
 # Test coverage
 coverage/
 
