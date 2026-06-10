@@ -19,7 +19,8 @@ build/
 .vscode/
 .idea/
 .cursor/
-.claude/
+.claude/*
+!.claude/skills/
 .ruby-lsp/
 
 # OS
