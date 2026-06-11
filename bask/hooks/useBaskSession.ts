@@ -11,6 +11,9 @@ import { recordReviewValueEvent } from '../lib/services/inAppReviewService';
 import { vitaminDRatePerMinute, calculateTimeToBurn, getExposurePercent, formatSunburnCountdown } from '../lib/dEngine';
 import { integrateAccrual } from '../lib/sessionAccrual';
 import { BaskLiveActivity } from '../lib/plugins';
+import { getSolarPhase, isSunUp } from '../lib/lightPhase';
+import type { SolarClock } from '../lib/lightPhase';
+import type { LiveActivityPhase } from '../lib/plugins';
 import type { BaskSessionStatus } from '../types';
 import type { FitzpatrickType } from '../lib/dEngine';
 
@@ -34,6 +37,24 @@ interface BaskSessionState {
   projectedTimeToBurn: number;
   sessionId: number | null;
   liveActivityId: string | null;
+}
+
+/**
+ * Phase label for the lock screen / Dynamic Island. Pre-synthesis sessions are
+ * only "morning light" when it's actually morning — computed sun-anchored at
+ * each update so a session that outlives its window flips live, matching the
+ * in-app hero label. "night" reads as evening light: a session can outlive
+ * sunset by a few minutes.
+ */
+function lightPhaseForLiveActivity(
+  hasSynthesized: boolean,
+  solar: SolarClock,
+): LiveActivityPhase {
+  if (hasSynthesized) return 'vitaminD';
+  const phase = getSolarPhase(Date.now(), solar);
+  if (phase === 'morning') return 'morningLight';
+  if (phase === 'evening' || phase === 'night') return 'eveningLight';
+  return 'daylight';
 }
 
 const INITIAL_STATE: BaskSessionState = {
@@ -68,7 +89,7 @@ function formatElapsedTime(seconds: number): string {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-interface SessionSunData {
+interface SessionSunData extends SolarClock {
   rawUvIndex: number;
   effectiveUV: number;
 }
@@ -94,7 +115,13 @@ export function useBaskSession(
 
   useEffect(() => {
     sunDataRef.current = sunData;
-  }, [sunData.rawUvIndex, sunData.effectiveUV]);
+  }, [
+    sunData.rawUvIndex,
+    sunData.effectiveUV,
+    sunData.sunriseMs,
+    sunData.sunsetMs,
+    sunData.isDaylightFlag,
+  ]);
   useEffect(() => {
     hasSynthesizedRef.current = state.hasSynthesized;
   }, [state.hasSynthesized]);
@@ -131,8 +158,10 @@ export function useBaskSession(
 
       const { rawUvIndex: rawUV, effectiveUV } = sunDataRef.current;
 
-      if (effectiveUV <= 0) {
-        console.warn('Cannot start session: UV too low for vitamin D synthesis');
+      // Zero UV is startable while the sun is up (time-only morning/evening
+      // light session); only a genuinely set sun blocks the start.
+      if (effectiveUV <= 0 && !isSunUp(Date.now(), sunDataRef.current)) {
+        console.warn('Cannot start session: the sun is down');
         return;
       }
 
@@ -163,7 +192,7 @@ export function useBaskSession(
                 timeToBurnMinutes: calculateTimeToBurn(rawUV, fitzpatrickType),
                 canAccessSunburnRisk: canAccessSunburnRiskRef.current,
                 startTimeMs: now.getTime(),
-                phase: startsSynthesizing ? 'vitaminD' : 'morningLight',
+                phase: lightPhaseForLiveActivity(startsSynthesizing, sunDataRef.current),
               });
               liveActivityId = result.activityId;
             }
@@ -247,7 +276,7 @@ export function useBaskSession(
           canAccessSunburnRisk: canAccessSunburnRiskRef.current,
           effectiveStartTimeMs: startTimeRef.current?.getTime() ?? Date.now(),
           elapsedSecondsAtPause: 0,
-          phase: hasSynthesizedRef.current ? 'vitaminD' : 'morningLight',
+          phase: lightPhaseForLiveActivity(hasSynthesizedRef.current, sunDataRef.current),
         });
       } catch (e) {
         console.error('Failed to update Live Activity:', e);
@@ -273,7 +302,7 @@ export function useBaskSession(
       effectiveStartTimeMs: startTimeRef.current?.getTime() ?? Date.now(),
       elapsedSecondsAtPause:
         statusRef.current === 'paused' ? elapsedSecondsRef.current : 0,
-      phase: hasSynthesizedRef.current ? 'vitaminD' : 'morningLight',
+      phase: lightPhaseForLiveActivity(hasSynthesizedRef.current, sunDataRef.current),
     }).catch(e => console.error('Failed to update Live Activity access:', e));
   }, [canAccessSunburnRisk, state.liveActivityId]);
 
@@ -326,7 +355,7 @@ export function useBaskSession(
                   canAccessSunburnRisk: canAccessSunburnRiskRef.current,
                   effectiveStartTimeMs: prev.startTime?.getTime() ?? Date.now(),
                   elapsedSecondsAtPause: 0,
-                  phase: next.hasSynthesized ? 'vitaminD' : 'morningLight',
+                  phase: lightPhaseForLiveActivity(next.hasSynthesized, sunDataRef.current),
                 }).catch(e => console.error('Failed to update Live Activity on foreground:', e));
               }
 
@@ -364,7 +393,7 @@ export function useBaskSession(
           canAccessSunburnRisk: canAccessSunburnRiskRef.current,
           effectiveStartTimeMs: prev.startTime?.getTime() ?? Date.now(),
           elapsedSecondsAtPause: prev.elapsedSeconds,
-          phase: prev.hasSynthesized ? 'vitaminD' : 'morningLight',
+          phase: lightPhaseForLiveActivity(prev.hasSynthesized, sunDataRef.current),
         }).catch(e => console.error('Failed to update Live Activity on pause:', e));
       }
 
@@ -408,7 +437,7 @@ export function useBaskSession(
           canAccessSunburnRisk: canAccessSunburnRiskRef.current,
           effectiveStartTimeMs: adjustedStartTime?.getTime() ?? Date.now(),
           elapsedSecondsAtPause: 0,
-          phase: prev.hasSynthesized ? 'vitaminD' : 'morningLight',
+          phase: lightPhaseForLiveActivity(prev.hasSynthesized, sunDataRef.current),
         }).catch(e => console.error('Failed to update Live Activity on resume:', e));
       }
 

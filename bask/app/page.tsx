@@ -46,7 +46,13 @@ import {
   isInSynthesisWindow,
   getSynthesisCountdown,
 } from '../lib/dWindowForecast';
-import { getBaskCta, ctaVariantToPhase } from '../lib/lightPhase';
+import {
+  getBaskCta,
+  ctaVariantToPhase,
+  getSolarPhase,
+  isSunUp,
+  type SolarClock,
+} from '../lib/lightPhase';
 import { BaskWeather } from '../lib/plugins';
 import type { HourlyForecastItem } from '../lib/plugins/baskWeather';
 import { getRepresentativeUvForPassiveSync } from '../lib/healthKitUvUtils';
@@ -181,12 +187,24 @@ export default function Home() {
     [isPremium, userProfile],
   );
 
+  // Real solar events anchor "morning/evening/sun down" decisions — clock-hour
+  // buckets misread long summer evenings (UV 0 well before actual sunset).
+  const solarClock = useMemo<SolarClock>(() => {
+    const sunriseMs = sunData.sunriseIso ? Date.parse(sunData.sunriseIso) : NaN;
+    const sunsetMs = sunData.sunsetIso ? Date.parse(sunData.sunsetIso) : NaN;
+    return {
+      sunriseMs: Number.isFinite(sunriseMs) ? sunriseMs : undefined,
+      sunsetMs: Number.isFinite(sunsetMs) ? sunsetMs : undefined,
+      isDaylightFlag: sunData.isDaylight,
+    };
+  }, [sunData.sunriseIso, sunData.sunsetIso, sunData.isDaylight]);
+
   // Session tracking — pass sun data from parent to avoid duplicate WeatherKit polling
   const sessionSunData = useMemo(() => {
     const rawUvIndex = sunData.uvIndex;
     const effective = effectiveUv(rawUvIndex, sunData.cloudCover);
-    return { rawUvIndex, effectiveUV: effective };
-  }, [sunData.uvIndex, sunData.cloudCover]);
+    return { rawUvIndex, effectiveUV: effective, ...solarClock };
+  }, [sunData.uvIndex, sunData.cloudCover, solarClock]);
   const session = useBaskSession(
     fitzpatrickType,
     answers.age,
@@ -451,7 +469,13 @@ export default function Home() {
       ? 'Low'
       : formatTimeToBurn(calculateTimeToBurn(sunData.uvIndex, fitzpatrickType));
 
-  const canStartSession = !isLoading && effectiveUV > 0;
+  // Sun-anchored phase drives all light framing (the greeting keeps the
+  // clock-based timeOfDay). UV reads 0 near sunrise/sunset while the sun is
+  // genuinely up, so the button stays startable for time-only light sessions.
+  const sunUp = isSunUp(now.getTime(), solarClock);
+  const solarPhase = getSolarPhase(now.getTime(), solarClock);
+
+  const canStartSession = !isLoading && (effectiveUV > 0 || sunUp);
   const isCurrentCloudBlocked =
     !isLoading && sunData.uvIndex >= 3 && effectiveUV < 3;
 
@@ -462,9 +486,10 @@ export default function Home() {
   const baskCta = getBaskCta({
     rawUV: sunData.uvIndex,
     effectiveUV,
-    timeOfDay,
+    timeOfDay: solarPhase,
     synthesisCountdownMin,
     cloudCover: sunData.cloudCover,
+    sunIsUp: sunUp,
   });
 
   const labGuidanceHint = getBloodTestGuidanceHint(bloodTestCalibration);
@@ -652,7 +677,7 @@ export default function Home() {
         hasSynthesized={session.hasSynthesized}
         isSynthesizing={session.isSynthesizing}
         synthesisCountdownMinutes={synthesisCountdownMin}
-        timeOfDay={timeOfDay}
+        timeOfDay={solarPhase}
       />
     );
   }

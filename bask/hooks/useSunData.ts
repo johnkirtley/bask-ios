@@ -167,6 +167,9 @@ export function useSunData(): SunData & { isLive: boolean; locationDenied: boole
             ? formatTime12Hour(new Date(solarEvents.solarNoon))
             : '--',
           sunsetTime: solarEvents.sunsetFormatted || '--',
+          sunriseIso: solarEvents.sunrise,
+          sunsetIso: solarEvents.sunset,
+          isDaylight: currentWeather.isDaylight,
           sweetSpotStart,
           sweetSpotEnd,
           hasOptimalWindow,

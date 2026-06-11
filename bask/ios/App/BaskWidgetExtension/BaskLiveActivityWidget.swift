@@ -75,13 +75,23 @@ private func sunburnValue(_ context: ActivityViewContext<BaskSessionAttributes>)
 @available(iOS 16.1, *)
 private func statusLabel(_ context: ActivityViewContext<BaskSessionAttributes>) -> String {
     if context.state.isPaused { return "Paused" }
-    return context.state.phase == .morningLight ? "Morning light" : "Basking"
+    switch context.state.phase {
+    case .morningLight: return "Morning light"
+    case .daylight: return "Daylight"
+    case .eveningLight: return "Evening light"
+    case .vitaminD: return "Basking"
+    }
 }
 
-// SF Symbol for the leading icon — a sunrise during the morning-light phase.
+// SF Symbol for the leading icon — sun position mirrors the light phase.
 @available(iOS 16.1, *)
 private func phaseIcon(_ context: ActivityViewContext<BaskSessionAttributes>) -> String {
-    return context.state.phase == .morningLight ? "sunrise.fill" : "sun.max.fill"
+    switch context.state.phase {
+    case .morningLight: return "sunrise.fill"
+    case .daylight: return "sun.min.fill"
+    case .eveningLight: return "sunset.fill"
+    case .vitaminD: return "sun.max.fill"
+    }
 }
 
 @available(iOS 16.1, *)
