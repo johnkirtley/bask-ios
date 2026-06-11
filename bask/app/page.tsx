@@ -328,6 +328,7 @@ export default function Home() {
         exposurePercent,
         sunData.vitaminDGoal,
         answers.age,
+        { uvIndex: sunData.uvIndex, cloudCover: sunData.cloudCover },
       );
       setDWindowForecast(forecast);
     } catch (error) {
@@ -340,6 +341,8 @@ export default function Home() {
     selectedPreset.coveragePercent,
     answers.age,
     sunData.vitaminDGoal,
+    sunData.uvIndex,
+    sunData.cloudCover,
   ]);
 
   useEffect(() => {

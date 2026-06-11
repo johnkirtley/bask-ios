@@ -140,6 +140,7 @@ export function calculateOptimalWindows(
   exposurePercent: number = 50,
   targetIU: number = DEFAULT_DAILY_GOAL_IU,
   age: number | null = null,
+  currentConditions: { uvIndex: number; cloudCover?: number } | null = null,
 ): DWindowForecast {
   const now = new Date();
   const todayStart = new Date(now);
@@ -179,7 +180,17 @@ export function calculateOptimalWindows(
     now,
   );
 
-  const todaySynthesis = findSynthesisWindow(todayForecast, 'Today');
+  // Reconcile today's current-hour bucket with the live reading before computing
+  // the synthesis band. The hourly forecast is bucketed and can lag the live
+  // WeatherKit reading (the same value the active session uses to accrue IU), so
+  // without this the card can claim "D synthesis starts in N min" while the user
+  // is already synthesizing. Scoped to the synthesis band only — the scored
+  // optimal window keeps using the raw forecast.
+  const reconciledTodayForecast = currentConditions
+    ? applyCurrentConditions(todayForecast, currentConditions, now)
+    : todayForecast;
+
+  const todaySynthesis = findSynthesisWindow(reconciledTodayForecast, 'Today');
   const tomorrowSynthesis = findSynthesisWindow(tomorrowForecast, 'Tomorrow');
 
   // Null out today's windows if they have already fully passed
@@ -267,6 +278,78 @@ export function calculateOptimalWindows(
   };
 }
 
+/** Earliest clock hour the synthesis band is allowed to start (basking-hours floor). */
+const SYNTHESIS_START_HOUR_FLOOR = 8;
+
+/**
+ * Return a copy of today's forecast with the current-hour bucket overridden by the
+ * live reading. The live UV/cloud is the same value the active session uses, so this
+ * keeps the D-Window's "now" honest when the bucketed forecast lags reality.
+ */
+function applyCurrentConditions(
+  forecast: HourlyForecastItem[],
+  current: { uvIndex: number; cloudCover?: number },
+  now: Date,
+): HourlyForecastItem[] {
+  const currentHour = now.getHours();
+  let replaced = false;
+  const result = forecast.map((h) => {
+    if (!replaced && h.hour === currentHour) {
+      replaced = true;
+      return {
+        ...h,
+        uvIndex: current.uvIndex,
+        cloudCover: current.cloudCover ?? h.cloudCover,
+      };
+    }
+    return h;
+  });
+  return result;
+}
+
+/**
+ * Estimate the minute effective UV crosses 3 on the rising edge into `first`.
+ *
+ * The hourly forecast is bucketed, so snapping the band start to `first.hour:00`
+ * overstates the wait by up to ~59 min on a steep morning rise. When the
+ * immediately-preceding hour exists and sits below the threshold, linearly
+ * interpolate effective UV between the two samples to find the crossing instant.
+ * Falls back to the top of `first.hour`, and never backs below the 8 AM floor.
+ */
+function interpolateSynthesisStart(
+  forecast: HourlyForecastItem[],
+  first: HourlyForecastItem,
+): Date {
+  // Never back the crossing below the basking-hours floor (08:00).
+  const floor = buildDateFromHour(first.date, SYNTHESIS_START_HOUR_FLOOR, 0);
+  const hourStart = buildDateFromHour(first.date, first.hour, 0);
+
+  // Only interpolate when the band genuinely starts at the top of its hour;
+  // an already-floored start (e.g. first.hour < 8) has no sub-hour rise to model.
+  if (first.hour < SYNTHESIS_START_HOUR_FLOOR) return floor;
+
+  // Match the preceding hour by calendar day — `date` is a full ISO timestamp
+  // whose hour component differs between buckets, so it can't be compared directly.
+  const firstDay = new Date(first.date).toDateString();
+  const prev = forecast.find(
+    (h) =>
+      h.hour === first.hour - 1 && new Date(h.date).toDateString() === firstDay,
+  );
+  if (!prev) return hourStart;
+
+  const prevUv = effectiveUv(prev.uvIndex, prev.cloudCover);
+  const firstUv = effectiveUv(first.uvIndex, first.cloudCover);
+  // Guard against flat/non-rising edges (prev already >= 3, or no rise to divide).
+  if (prevUv >= 3 || firstUv <= prevUv) return hourStart;
+
+  const fraction = (3 - prevUv) / (firstUv - prevUv); // 0..1 within the prior hour
+  const crossing = new Date(
+    hourStart.getTime() - (1 - fraction) * 60 * 60 * 1000,
+  );
+
+  return crossing < floor ? floor : crossing;
+}
+
 /**
  * Find when vitamin D synthesis is possible (effective UV >= 3, 8 AM–6 PM).
  */
@@ -290,7 +373,9 @@ function findSynthesisWindow(
   const startHour = first.hour;
   const endHour = last.hour + 1;
 
-  const startsAt = buildDateFromHour(first.date, startHour, 0);
+  // Precise crossing instant for the countdown / start notification; the displayed
+  // startTime stays hour-based so the band label reads cleanly.
+  const startsAt = interpolateSynthesisStart(forecast, first);
   const endsAt = buildDateFromHour(last.date, endHour, 0);
 
   return {
