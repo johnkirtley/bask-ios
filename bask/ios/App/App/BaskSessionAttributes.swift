@@ -12,10 +12,13 @@ import ActivityKit
 @available(iOS 16.1, *)
 struct BaskSessionAttributes: ActivityAttributes {
     // Which phase of the session the widget should present.
-    // morningLight: pre-synthesis (UV < 3) — show the timer, not "0 IU".
+    // morningLight/daylight/eveningLight: pre-synthesis (sun-anchored framing) —
+    // show the timer, not "0 IU".
     // vitaminD: synthesizing (UV >= 3) — show accumulated IU. Sticky once reached.
     public enum SynthesisPhase: String, Codable, Hashable {
         case morningLight
+        case daylight
+        case eveningLight
         case vitaminD
     }
 

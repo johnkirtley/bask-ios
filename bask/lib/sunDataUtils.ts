@@ -21,6 +21,9 @@ export interface SunData {
   sunriseTime: string; // "6:32 AM"
   solarNoonTime: string; // "12:36 PM"
   sunsetTime: string; // "7:45 PM"
+  sunriseIso?: string; // Today's sunrise, ISO8601 (solar phase gating)
+  sunsetIso?: string; // Today's sunset, ISO8601 (solar phase gating)
+  isDaylight?: boolean; // WeatherKit "sun is up" flag (fallback gating)
   sweetSpotStart: number; // hour (e.g., 10)
   sweetSpotEnd: number; // hour (e.g., 14)
   hasOptimalWindow: boolean; // whether sweetSpot is viable (UV >= 3)
@@ -94,6 +97,13 @@ export function generateMockSunData(): SunData {
   const currentHour = now.getHours();
   const uvCurve = generateMockUVCurve();
 
+  // Synthetic solar events matching the mock curve's 6am-8pm daylight span so
+  // sun-anchored gating behaves in the web preview.
+  const sunrise = new Date(now);
+  sunrise.setHours(6, 32, 0, 0);
+  const sunset = new Date(now);
+  sunset.setHours(19, 45, 0, 0);
+
   // Find current UV index from curve
   const currentUVData = uvCurve.find(d => d.hour === currentHour) || uvCurve[0];
   const uvIndex = currentUVData.uvIndex;
@@ -120,6 +130,9 @@ export function generateMockSunData(): SunData {
     sunriseTime: '6:32 AM',
     solarNoonTime: '12:00 PM',
     sunsetTime: '7:45 PM',
+    sunriseIso: sunrise.toISOString(),
+    sunsetIso: sunset.toISOString(),
+    isDaylight: now >= sunrise && now < sunset,
     sweetSpotStart: 10, // 10am
     sweetSpotEnd: 14, // 2pm
     hasOptimalWindow: true, // Mock data always has optimal window

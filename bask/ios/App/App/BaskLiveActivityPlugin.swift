@@ -15,10 +15,15 @@ public class BaskLiveActivityPlugin: CAPPlugin {
 
     private var currentActivityId: String?
 
-    // Map the JS phase string ('morningLight' | 'vitaminD') to the typed enum.
+    // Map the JS phase string to the typed enum (unknown values fall back to vitaminD).
     @available(iOS 16.1, *)
     private func parsePhase(_ call: CAPPluginCall) -> BaskSessionAttributes.SynthesisPhase {
-        return call.getString("phase") == "morningLight" ? .morningLight : .vitaminD
+        switch call.getString("phase") {
+        case "morningLight": return .morningLight
+        case "daylight": return .daylight
+        case "eveningLight": return .eveningLight
+        default: return .vitaminD
+        }
     }
 
     // MARK: - Check Availability

@@ -34,7 +34,7 @@ interface ActiveSessionViewProps {
   isSynthesizing: boolean;
   /** Minutes until today's synthesis window opens (pre-synthesis subline). */
   synthesisCountdownMinutes?: number | null;
-  /** Time of day, for the morning-light vs daylight label. */
+  /** Sun-anchored phase of day, for the morning/evening/daylight framing. */
   timeOfDay?: TimeOfDay;
 }
 
@@ -68,8 +68,15 @@ export default function ActiveSessionView({
 
   // Pre-synthesis = morning-light/low-UV phase: the session is running but UV hasn't
   // crossed 3 yet. Sticky: once it synthesizes we stay on the IU hero even if UV dips.
+  // "night" reads as Evening Light: a session can outlive sunset by a few minutes.
   const inLightPhase = !hasSynthesized;
-  const lightPhaseLabel = timeOfDay === 'morning' ? 'Morning Light' : 'Daylight';
+  const isEveningLight = timeOfDay === 'evening' || timeOfDay === 'night';
+  const lightPhaseLabel =
+    timeOfDay === 'morning'
+      ? 'Morning Light'
+      : isEveningLight
+      ? 'Evening Light'
+      : 'Daylight';
 
   // Celebrate the morph exactly once, when the session first crosses into vitamin D
   // (not on mount for sessions that started already synthesizing).
@@ -232,9 +239,13 @@ export default function ActiveSessionView({
                   ? `Vitamin D starts in ~${synthesisCountdownMinutes} min`
                   : isCloudBlockingVitaminD
                   ? 'Clouds are blocking vitamin D, but light still supports your rhythm'
-                  : `Aim for ~${
+                  : timeOfDay === 'morning'
+                  ? `Aim for ~${
                       morningLightRecommendation(cloudCover).minutes
-                    } min of morning light to support your circadian rhythm`}
+                    } min of morning light to support your circadian rhythm`
+                  : isEveningLight
+                  ? 'Evening light still supports your circadian rhythm'
+                  : 'Daylight still supports your mood and circadian rhythm'}
               </div>
             </>
           ) : (
