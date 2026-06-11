@@ -240,12 +240,12 @@ export default function ActiveSessionView({
                   : isCloudBlockingVitaminD
                   ? 'Clouds are blocking vitamin D, but light still supports your rhythm'
                   : timeOfDay === 'morning'
-                  ? `Aim for ~${
+                  ? `UV isn't strong enough for vitamin D right now. You can still aim for ~${
                       morningLightRecommendation(cloudCover).minutes
                     } min of morning light to support your circadian rhythm`
                   : isEveningLight
-                  ? 'Evening light still supports your circadian rhythm'
-                  : 'Daylight still supports your mood and circadian rhythm'}
+                  ? 'No more vitamin D today. Evening light still supports your circadian rhythm'
+                  : "UV isn't strong enough for vitamin D right now. Daylight still supports your mood and circadian rhythm"}
               </div>
             </>
           ) : (

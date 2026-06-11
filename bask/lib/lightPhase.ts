@@ -54,7 +54,10 @@ export function isSunUp(nowMs: number, solar: SolarClock): boolean {
  * useTimeOfDay). Reuses the TimeOfDayPhase union so existing consumers can take
  * either source.
  */
-export function getSolarPhase(nowMs: number, solar: SolarClock): TimeOfDayPhase {
+export function getSolarPhase(
+  nowMs: number,
+  solar: SolarClock,
+): TimeOfDayPhase {
   if (!isSunUp(nowMs, solar)) return 'night';
   if (solar.sunriseMs != null && nowMs < solar.sunriseMs + MORNING_WINDOW_MS) {
     return 'morning';
@@ -138,7 +141,8 @@ export function getBaskCta({
     const cloudsBlocking = rawUV >= 3;
     // Promote *morning light* only when it's honest: actually morning, or vitamin D
     // is genuinely coming later today (countdown present).
-    const morningContext = synthesisCountdownMin != null || timeOfDay === 'morning';
+    const morningContext =
+      synthesisCountdownMin != null || timeOfDay === 'morning';
 
     if (morningContext) {
       // Only call it "morning" when it actually is — a late-clearing day can have a
@@ -153,7 +157,9 @@ export function getBaskCta({
       const rec = morningLightRecommendation(cloudCover);
       const helper = cloudsBlocking
         ? 'Clouds are blocking vitamin D, but light still supports your rhythm'
-        : `~${rec.minutes} min of ${
+        : `UV isn't strong enough for vitamin D right now, but ~${
+            rec.minutes
+          } min of ${
             isMorning ? 'morning light' : 'daylight'
           } supports energy, mood, and sleep`;
       return { variant: 'morningLight', label, helper };
