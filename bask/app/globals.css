@@ -643,21 +643,8 @@ input[type='datetime-local']::-webkit-date-and-time-value {
 
 /* History Timeline Styles */
 
-/* Timeline entry fade-in animation */
-@keyframes history-entry-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .history-entry-card {
-  animation: history-entry-fade-in 0.5s ease-out forwards;
-  opacity: 0;
+  opacity: 1;
 }
 
 /* Timeline dot pulse animation */
@@ -674,22 +661,6 @@ input[type='datetime-local']::-webkit-date-and-time-value {
   animation: timeline-dot-pulse 2s ease-in-out infinite;
 }
 
-/* Summary stats banner fade-in */
-@keyframes summary-stats-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(-12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.summary-stats-banner {
-  animation: summary-stats-fade-in 0.6s ease-out forwards;
-}
-
 /* Timeline entry hover effect */
 .timeline-entry {
   transition: transform 0.2s ease-out;
@@ -701,12 +672,6 @@ input[type='datetime-local']::-webkit-date-and-time-value {
 
 /* Respect reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
-  .history-entry-card,
-  .summary-stats-banner {
-    animation: none;
-    opacity: 1;
-  }
-
   .timeline-dot {
     animation: none;
   }
