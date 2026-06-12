@@ -340,7 +340,7 @@ export default function History() {
     }
   };
 
-  const renderEntry = (entry: HistoryEntry, index: number) => {
+  const renderEntry = (entry: HistoryEntry) => {
     const entryId = getEntryId(entry);
     let cardContent;
 
@@ -349,7 +349,6 @@ export default function History() {
       cardContent = (
         <div className='history-entry-card relative backdrop-blur-xl rounded-card p-5 overflow-hidden'
              style={{
-               animationDelay: `${index * 0.05}s`,
                background: 'linear-gradient(135deg, rgba(255, 201, 60, 0.15) 0%, rgba(244, 165, 54, 0.08) 100%), rgba(255, 255, 255, 0.75)'
              }}>
           {/* Subtle radial glow */}
@@ -417,7 +416,6 @@ export default function History() {
       cardContent = (
         <div className='history-entry-card relative backdrop-blur-xl rounded-card p-5 overflow-hidden'
              style={{
-               animationDelay: `${index * 0.05}s`,
                background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.12) 0%, rgba(245, 158, 11, 0.06) 100%), rgba(255, 255, 255, 0.75)'
              }}>
           <div className='absolute top-0 right-0 w-32 h-32 bg-amber-400/10 rounded-full blur-2xl -z-10' />
@@ -457,7 +455,6 @@ export default function History() {
       cardContent = (
         <div className='history-entry-card relative backdrop-blur-xl rounded-card p-5 overflow-hidden'
              style={{
-               animationDelay: `${index * 0.05}s`,
                background: isMagnesium
                  ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.06) 100%), rgba(255, 255, 255, 0.75)'
                  : 'linear-gradient(135deg, rgba(168, 85, 247, 0.12) 0%, rgba(147, 51, 234, 0.06) 100%), rgba(255, 255, 255, 0.75)'
@@ -759,7 +756,7 @@ export default function History() {
                 {/* Timeline spine */}
                 <div className='timeline-spine absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-bask-teal via-bask-teal/50 to-transparent'></div>
 
-                {groupedEntries.map((group, groupIndex) => (
+                {groupedEntries.map((group) => (
                   <div key={group.date} className='mb-8 last:mb-0'>
                     {/* Date header */}
                     <div className='flex items-center gap-4 mb-4'>
@@ -771,7 +768,7 @@ export default function History() {
 
                     {/* Entries for this date */}
                     <div className='ml-10 space-y-3'>
-                      {group.entries.map((entry, entryIndex) => renderEntry(entry, groupIndex * 10 + entryIndex))}
+                      {group.entries.map((entry) => renderEntry(entry))}
                     </div>
                   </div>
                 ))}
