@@ -161,8 +161,17 @@ export function calculateOptimalWindows(
     return date >= tomorrowStart && date < tomorrowEnd;
   });
 
+  // Reconcile today's current-hour bucket with the live reading before any
+  // today-scoped computation. The hourly forecast is bucketed and can lag the
+  // live WeatherKit reading — the same value the home CTA and active session
+  // use — so without this the card can recommend a near-now window, or claim
+  // "D synthesis starts in N min", that the live conditions contradict.
+  const reconciledTodayForecast = currentConditions
+    ? applyCurrentConditions(todayForecast, currentConditions, now)
+    : todayForecast;
+
   const todayWindow = findOptimalWindow(
-    todayForecast,
+    reconciledTodayForecast,
     'Today',
     fitzpatrickType,
     exposurePercent,
@@ -179,16 +188,6 @@ export function calculateOptimalWindows(
     age,
     now,
   );
-
-  // Reconcile today's current-hour bucket with the live reading before computing
-  // the synthesis band. The hourly forecast is bucketed and can lag the live
-  // WeatherKit reading (the same value the active session uses to accrue IU), so
-  // without this the card can claim "D synthesis starts in N min" while the user
-  // is already synthesizing. Scoped to the synthesis band only — the scored
-  // optimal window keeps using the raw forecast.
-  const reconciledTodayForecast = currentConditions
-    ? applyCurrentConditions(todayForecast, currentConditions, now)
-    : todayForecast;
 
   const todaySynthesis = findSynthesisWindow(reconciledTodayForecast, 'Today');
   const tomorrowSynthesis = findSynthesisWindow(tomorrowForecast, 'Tomorrow');
@@ -210,14 +209,18 @@ export function calculateOptimalWindows(
   }
 
   // Calculate max forecasted UV across next 48 hours (for circadian rhythm advice)
-  const allForecast = [...todayForecast, ...tomorrowForecast];
+  const allForecast = [...reconciledTodayForecast, ...tomorrowForecast];
   const maxForecastedUV =
     allForecast.length > 0 ? Math.max(...allForecast.map((h) => h.uvIndex)) : 0;
 
   // Determine why no windows exist (for contextual UI messaging)
-  // Compute reason for today and tomorrow separately
+  // Today's reason must explain why findOptimalWindow found nothing in the
+  // *remaining* day — scanning passed hours would mislabel a late-day
+  // "uv-too-low" as "low-exposure" because midday effective UV was fine.
   const todayNoWindowReason = !effectiveTodayWindow
-    ? determineNoWindowReason(todayForecast)
+    ? determineNoWindowReason(
+        remainingRecommendableHours(reconciledTodayForecast, now),
+      )
     : undefined;
   const tomorrowNoWindowReason = !tomorrowWindow
     ? determineNoWindowReason(tomorrowForecast)
@@ -253,7 +256,7 @@ export function calculateOptimalWindows(
   // are the blocker, so these never coexist with a window or synthesis band.
   let todayCloudBlocked =
     todayNoWindowReason === 'clouds-blocking'
-      ? findCloudBlockedBand(todayForecast, 'Today')
+      ? findCloudBlockedBand(reconciledTodayForecast, 'Today')
       : null;
   if (todayCloudBlocked && now > todayCloudBlocked.endsAt) {
     todayCloudBlocked = null;
@@ -437,6 +440,21 @@ function roundedSameDayRecommendationStart(now: Date): Date {
   );
   const intervalMs = SAME_DAY_RECOMMENDATION_ROUNDING_MINUTES * 60_000;
   return new Date(Math.ceil(earliest.getTime() / intervalMs) * intervalMs);
+}
+
+/**
+ * Hours of today that can still host a near-future recommendation — the same
+ * cut findOptimalWindow applies to its usable hours, so reason codes describe
+ * the remaining day rather than hours that have already passed.
+ */
+function remainingRecommendableHours(
+  forecast: HourlyForecastItem[],
+  now: Date,
+): HourlyForecastItem[] {
+  const sameDayStart = roundedSameDayRecommendationStart(now);
+  return forecast.filter(
+    (h) => buildDateFromHour(h.date, h.hour + 1, 0) > sameDayStart,
+  );
 }
 
 function formatDateTime(date: Date): string {
