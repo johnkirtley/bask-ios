@@ -321,29 +321,29 @@ export default function VitaminDTrendChart({
         <>
           {/* Stats Cards */}
           <div className='grid grid-cols-3 gap-2 mb-6'>
-            <div className='backdrop-blur-sm bg-white/70 rounded-lg p-2.5 border border-black/5'>
+            <div className='backdrop-blur-sm bg-white/70 rounded-lg p-2.5 border border-black/5 min-w-0 overflow-hidden'>
               <div className='text-text-secondary text-[11px] font-bold uppercase tracking-wide mb-1 whitespace-nowrap'>
                 Avg
               </div>
-              <div className='text-text-primary text-lg font-bold tabular-nums'>
+              <div className='text-text-primary text-lg font-bold tabular-nums whitespace-nowrap'>
                 {avgDailyIU.toLocaleString()}
               </div>
               <div className='text-text-secondary text-[11px]'>IU</div>
             </div>
-            <div className='backdrop-blur-sm bg-white/70 rounded-lg p-2.5 border border-black/5'>
+            <div className='backdrop-blur-sm bg-white/70 rounded-lg p-2.5 border border-black/5 min-w-0 overflow-hidden'>
               <div className='text-text-secondary text-[11px] font-bold uppercase tracking-wide mb-1 whitespace-nowrap'>
                 Peak
               </div>
-              <div className='text-bask-teal text-lg font-bold tabular-nums'>
+              <div className='text-bask-teal text-lg font-bold tabular-nums whitespace-nowrap'>
                 {peakIU.toLocaleString()}
               </div>
               <div className='text-text-secondary text-[11px]'>IU</div>
             </div>
-            <div className='backdrop-blur-sm bg-white/70 rounded-lg p-2.5 border border-black/5'>
+            <div className='backdrop-blur-sm bg-white/70 rounded-lg p-2.5 border border-black/5 min-w-0 overflow-hidden'>
               <div className='text-text-secondary text-[11px] font-bold uppercase tracking-wide mb-1 whitespace-nowrap'>
                 Tracked
               </div>
-              <div className='text-text-primary text-lg font-bold tabular-nums'>
+              <div className='text-text-primary text-lg font-bold tabular-nums whitespace-nowrap'>
                 {totalDaysTracked}
               </div>
               <div className='text-text-secondary text-[11px]'>
