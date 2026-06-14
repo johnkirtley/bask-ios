@@ -71,6 +71,17 @@ export function SubscriptionProvider({
         await Purchases.setLogLevel({ level: LOG_LEVEL.ERROR });
         await Purchases.configure({ apiKey: REVENUECAT_API_KEY });
 
+        // Apple Search Ads attribution (iOS 14.3+). Forwards the AdServices
+        // attribution token to RevenueCat for the Search Ads integration.
+        // Disabled by default, so it must be enabled explicitly after configure.
+        if (Capacitor.getPlatform() === 'ios') {
+          try {
+            await Purchases.enableAdServicesAttributionTokenCollection();
+          } catch (e) {
+            console.error('Failed to enable Apple Search Ads attribution:', e);
+          }
+        }
+
         listenerId = await Purchases.addCustomerInfoUpdateListener(
           (info: CustomerInfo) => {
             const isPremium = checkPremiumStatus(info);
