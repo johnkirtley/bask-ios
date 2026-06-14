@@ -327,7 +327,9 @@ export default function VitaminDTrendChart({
               </span>
               <span className='text-text-primary text-lg font-bold tabular-nums whitespace-nowrap'>
                 {avgDailyIU.toLocaleString()}
-                <span className='text-text-secondary text-[11px] font-medium ml-1'>IU</span>
+                <span className='text-text-secondary text-[11px] font-medium ml-1'>
+                  IU
+                </span>
               </span>
             </div>
             <div className='flex items-baseline justify-between gap-3 py-3'>
@@ -336,7 +338,9 @@ export default function VitaminDTrendChart({
               </span>
               <span className='text-bask-teal text-lg font-bold tabular-nums whitespace-nowrap'>
                 {peakIU.toLocaleString()}
-                <span className='text-text-secondary text-[11px] font-medium ml-1'>IU</span>
+                <span className='text-text-secondary text-[11px] font-medium ml-1'>
+                  IU
+                </span>
               </span>
             </div>
             <div className='flex items-baseline justify-between gap-3 py-3'>
@@ -345,7 +349,9 @@ export default function VitaminDTrendChart({
               </span>
               <span className='text-text-primary text-lg font-bold tabular-nums whitespace-nowrap'>
                 {totalDaysTracked}
-                <span className='text-text-secondary text-[11px] font-medium ml-1'>of {data.length}</span>
+                <span className='text-text-secondary text-[11px] font-medium ml-1'>
+                  of {data.length} days
+                </span>
               </span>
             </div>
           </div>
