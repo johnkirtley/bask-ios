@@ -1,6 +1,6 @@
 # Bask App Backlog
 
-Last updated: 2026-06-03
+Last updated: 2026-06-14
 
 Use this as the running list for app fixes and feature work. Higher-priority open items stay higher in the list. When an item ships, move it to `Completed` with the completion date and a short note about what changed.
 
@@ -81,6 +81,14 @@ Reason for deferral:
 - The previous UTC/local-day concern is much less important for streak-only ranking.
 
 ## Completed
+
+### Wire Apple Search Ads Attribution Into RevenueCat
+
+Completed: 2026-06-14
+Priority: Medium
+Risk: Low
+
+Enabled Apple Search Ads attribution for the RevenueCat integration (BASKAPP-20). The dashboard Basic and Advanced integrations were already connected, but the SDK does not collect or send the Apple AdServices attribution token by default. Added a single `Purchases.enableAdServicesAttributionTokenCollection()` call in `contexts/SubscriptionContext.tsx`, immediately after `Purchases.configure(...)`, guarded to iOS only (`Capacitor.getPlatform() === 'ios'`) and wrapped in its own try/catch so a token-collection failure cannot abort the rest of subscription init. No ATT prompt, IDFA collection, Info.plist, or native framework changes were needed — the AdServices token does not depend on tracking consent and RevenueCat links AdServices internally. App min target is iOS 16, above the iOS 14.3+ requirement. Validated with `npx tsc --noEmit --incremental false` (clean) and `npm run lint` (pre-existing warnings only, none in the edited file). Device/dashboard attribution flow requires a real-device Search Ads install and was not run here.
 
 ### Add Onboarding Goal Choice, Trial Offer, Sharing, And Review Prompt Polish
 
