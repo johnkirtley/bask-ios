@@ -131,6 +131,41 @@ function determineNoWindowReason(
 }
 
 /**
+ * Validate a 'low-exposure' reason against the user's actual exposure.
+ *
+ * determineNoWindowReason infers the blocker from UV + cloud cover only — it
+ * never inspects exposurePercent — so it returns 'low-exposure' as a catch-all
+ * whenever UV is sufficient and clouds aren't the issue but no window scored.
+ * That mislabels timing/scoring no-windows (e.g. the day running out late in
+ * the synthesis band) as exposure, and the resulting copy never responds when
+ * the user raises their exposure. Re-run the window search at full exposure on
+ * the same hours: keep 'low-exposure' only when more skin would actually unlock
+ * a window; otherwise the limiter isn't exposure, so drop the label.
+ */
+function reconcileExposureReason(
+  reason: ReturnType<typeof determineNoWindowReason>,
+  forecast: HourlyForecastItem[],
+  dayLabel: string,
+  fitzpatrickType: number,
+  targetIU: number,
+  age: number | null,
+  now: Date,
+): ReturnType<typeof determineNoWindowReason> {
+  if (reason !== 'low-exposure') return reason;
+
+  const fullExposureWindow = findOptimalWindow(
+    forecast,
+    dayLabel,
+    fitzpatrickType,
+    100,
+    targetIU,
+    age,
+    now,
+  );
+  return fullExposureWindow ? 'low-exposure' : undefined;
+}
+
+/**
  * Calculate optimal basking windows for next 48 hours
  * This is the "D-Window Forecast" MOAT feature
  */
@@ -218,12 +253,28 @@ export function calculateOptimalWindows(
   // *remaining* day — scanning passed hours would mislabel a late-day
   // "uv-too-low" as "low-exposure" because midday effective UV was fine.
   const todayNoWindowReason = !effectiveTodayWindow
-    ? determineNoWindowReason(
-        remainingRecommendableHours(reconciledTodayForecast, now),
+    ? reconcileExposureReason(
+        determineNoWindowReason(
+          remainingRecommendableHours(reconciledTodayForecast, now),
+        ),
+        reconciledTodayForecast,
+        'Today',
+        fitzpatrickType,
+        targetIU,
+        age,
+        now,
       )
     : undefined;
   const tomorrowNoWindowReason = !tomorrowWindow
-    ? determineNoWindowReason(tomorrowForecast)
+    ? reconcileExposureReason(
+        determineNoWindowReason(tomorrowForecast),
+        tomorrowForecast,
+        'Tomorrow',
+        fitzpatrickType,
+        targetIU,
+        age,
+        now,
+      )
     : undefined;
 
   // For backwards compatibility, use today's reason, or fall back to tomorrow's if both are null
