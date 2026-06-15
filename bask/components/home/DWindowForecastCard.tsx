@@ -549,7 +549,7 @@ function SynthesisOnlyDisplay({
           ? 'Check back when cloud cover clears; IU will stay at 0 while effective UV is below 3.'
           : isWindowClosing
           ? "Today's window is closing. Check back tomorrow."
-          : 'You can get vitamin D now — no standout session block left today.'}
+          : "You can get vitamin D now, but there's no standout window left today."}
       </p>
     </div>
   );
