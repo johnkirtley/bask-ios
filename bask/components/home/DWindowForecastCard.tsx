@@ -352,7 +352,6 @@ export default function DWindowForecastCard({
             ) : forecast.todaySynthesis ? (
               <SynthesisOnlyDisplay
                 synthesis={forecast.todaySynthesis}
-                noWindowReason={forecast.todayNoWindowReason}
                 isActive={isWindowActive}
                 isCurrentCloudBlocked={isCurrentCloudBlocked}
                 now={now}
@@ -504,13 +503,11 @@ function SynthesisRow({
 
 function SynthesisOnlyDisplay({
   synthesis,
-  noWindowReason,
   isActive,
   isCurrentCloudBlocked = false,
   now,
 }: {
   synthesis: SynthesisWindow;
-  noWindowReason?: DWindowForecast['todayNoWindowReason'];
   isActive?: boolean;
   isCurrentCloudBlocked?: boolean;
   now: Date;
@@ -552,9 +549,7 @@ function SynthesisOnlyDisplay({
           ? 'Check back when cloud cover clears; IU will stay at 0 while effective UV is below 3.'
           : isWindowClosing
           ? "Today's window is closing. Check back tomorrow."
-          : noWindowReason === 'low-exposure'
-          ? 'UV is sufficient · exposure may be limiting meaningful IU'
-          : 'No optimal session window today'}
+          : 'You can get vitamin D now — no standout session block left today.'}
       </p>
     </div>
   );
