@@ -96,6 +96,10 @@ export default function ActiveSessionView({
   // the "UV Now" stat shows it (not raw) to stay consistent with the IU counter
   // and the gating elsewhere. Burn-risk timing legitimately stays on raw UV.
   const liveEffectiveUv = effectiveUv(uvIndex, cloudCover);
+  // Below the UV-3 shadow rule there's effectively no burn risk, so mirror the
+  // idle StatMetrics card: show "Low" (with context) instead of a misleading
+  // minutes countdown derived from the start-of-session burn time.
+  const sunburnRiskLow = liveEffectiveUv < 3;
   const isCloudBlockingVitaminD = uvIndex >= 3 && liveEffectiveUv < 3;
   const cloudsDimmingUv =
     cloudCover !== undefined &&
@@ -380,17 +384,24 @@ export default function ActiveSessionView({
             </div>
             <div className='bg-white rounded-card px-4 py-2.5 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_6px_24px_rgba(40,30,10,0.06)] border-l-4 border-[#F8A3A1]'>
               <span className='text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.12em]'>
-                Sunburn Risk In
+                {sunburnRiskLow ? 'Sunburn Risk' : 'Sunburn Risk In'}
               </span>
               {canAccessSunburnRisk ? (
-                <div
-                  className={`text-[24px] font-black tabular-nums tracking-[-0.02em] mt-1 ${
-                    remainingSunburnSeconds <= 120
-                      ? 'text-ember-alert'
-                      : 'text-text-primary'
-                  }`}>
-                  {sunburnCountdown}
-                </div>
+                <>
+                  <div
+                    className={`text-[24px] font-black tabular-nums tracking-[-0.02em] mt-1 ${
+                      !sunburnRiskLow && remainingSunburnSeconds <= 120
+                        ? 'text-ember-alert'
+                        : 'text-text-primary'
+                    }`}>
+                    {sunburnRiskLow ? 'Low' : sunburnCountdown}
+                  </div>
+                  {sunburnRiskLow && (
+                    <div className='text-[11px] text-text-muted mt-0.5'>
+                      UV {liveEffectiveUv.toFixed(1)} — too low to burn right now
+                    </div>
+                  )}
+                </>
               ) : (
                 <LockedSunburnValue
                   label='Unlock Sunburn Risk'
