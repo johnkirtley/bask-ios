@@ -806,8 +806,10 @@ export default function Home() {
               isLoading={isLoading}
               burnRisk={hasSunburnRiskAccess ? burnRisk : ''}
               burnRiskSubtext={
-                hasSunburnRiskAccess && !isLoading && effectiveUV >= 3
-                  ? 'Estimated time to skin redness at current UV'
+                hasSunburnRiskAccess && !isLoading && effectiveUV > 0
+                  ? effectiveUV >= 3
+                    ? 'Estimated time to skin redness at current UV'
+                    : `UV ${effectiveUV.toFixed(1)} — too low to burn right now`
                   : undefined
               }
               canAccessSunburnRisk={hasSunburnRiskAccess}
