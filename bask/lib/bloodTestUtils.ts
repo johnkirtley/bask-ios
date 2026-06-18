@@ -1,5 +1,3 @@
-import { UserProfile } from './database/repositories/userProfileRepository';
-
 export type BloodTestStatus =
   | 'deficient'
   | 'insufficient'
@@ -46,34 +44,36 @@ function isRecentTest(dateStr: string): boolean {
 }
 
 /**
- * Returns lab calibration when a recent blood test exists; null otherwise.
+ * Build calibration from the latest logged lab result (`bask_lab_results`), the
+ * single source of truth for blood values. Mirrors `getBloodTestCalibration` but
+ * reads a lab row instead of the legacy profile fields. Accepts a minimal shape
+ * to avoid a circular import on the repository type.
  */
-export function getBloodTestCalibration(
-  profile: UserProfile | null | undefined,
+export function getCalibrationFromLab(
+  lab:
+    | {
+        value_ng_ml: number;
+        entered_value: number;
+        entered_unit: string;
+        test_date: string;
+      }
+    | null
+    | undefined,
 ): BloodTestCalibration | null {
-  if (
-    profile?.blood_test_value == null ||
-    !profile.blood_test_unit ||
-    !profile.blood_test_date
-  ) {
-    return null;
-  }
+  if (!lab) return null;
 
-  const unit = profile.blood_test_unit as BloodTestUnit;
+  const unit = lab.entered_unit as BloodTestUnit;
   if (unit !== 'ng/mL' && unit !== 'nmol/L') return null;
 
-  const ngMl = normalizeToNgMl(profile.blood_test_value, unit);
-  const recent = isRecentTest(profile.blood_test_date);
-
-  if (!recent) return null;
+  if (!isRecentTest(lab.test_date)) return null;
 
   return {
-    ngMl,
-    status: classifyNgMl(ngMl),
+    ngMl: lab.value_ng_ml,
+    status: classifyNgMl(lab.value_ng_ml),
     isRecent: true,
-    originalValue: profile.blood_test_value,
+    originalValue: lab.entered_value,
     originalUnit: unit,
-    testDate: profile.blood_test_date,
+    testDate: lab.test_date,
   };
 }
 

@@ -3,6 +3,7 @@ import {
   UserProfile,
   userProfileRepository,
 } from './database/repositories/userProfileRepository';
+import { labResultsRepository } from './database/repositories/labResultsRepository';
 import { DEFAULT_DAILY_GOAL_IU } from './constants';
 import { deriveFitzpatrickType, FitzpatrickType } from './dEngine';
 
@@ -72,12 +73,9 @@ export function buildProfileUpdateFromOnboarding(
     update.disclaimer_accepted_at = agreedToTermsAt;
   }
 
-  if (answers.hasBloodTest && answers.bloodTestValue != null) {
-    update.blood_test_value = answers.bloodTestValue;
-    update.blood_test_unit = answers.bloodTestUnit;
-    update.blood_test_date = answers.bloodTestDate ?? undefined;
-    update.blood_test_source = 'onboarding';
-  }
+  // Note: a blood value collected during onboarding is no longer written to the
+  // profile. It is persisted as a row in `bask_lab_results` (the single source of
+  // truth) by syncProfileFromOnboarding below.
 
   return update;
 }
@@ -90,8 +88,20 @@ export async function syncProfileFromOnboarding(
   agreedToTermsAt?: string | null,
 ): Promise<void> {
   const update = buildProfileUpdateFromOnboarding(answers, agreedToTermsAt);
-  if (Object.keys(update).length === 0) return;
-  await userProfileRepository.update(update);
+  if (Object.keys(update).length > 0) {
+    await userProfileRepository.update(update);
+  }
+
+  // A blood value entered during onboarding becomes the user's first lab result
+  // (the single source of truth), not a profile field.
+  if (answers.hasBloodTest && answers.bloodTestValue != null && answers.bloodTestDate) {
+    await labResultsRepository.create({
+      value: answers.bloodTestValue,
+      unit: answers.bloodTestUnit,
+      testDate: answers.bloodTestDate,
+      source: 'onboarding',
+    });
+  }
 }
 
 /**

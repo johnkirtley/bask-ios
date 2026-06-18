@@ -144,6 +144,52 @@ const migrations: Migration[] = [
       `DELETE FROM bask_sessions WHERE source = 'healthkit'`,
     ],
   },
+  {
+    version: 7,
+    up: [
+      // Logged vitamin D (25-OH-D) lab results — a one-to-many history so users can
+      // track serum levels over time. The single baseline on bask_user_profile
+      // (blood_test_*) stays for calibration; this table powers the trend/history UI.
+      // value_ng_ml is the canonical stored value; entered_value/entered_unit preserve
+      // exactly what the user typed so we can round-trip without conversion drift.
+      `CREATE TABLE IF NOT EXISTS bask_lab_results (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        value_ng_ml REAL NOT NULL,
+        entered_value REAL NOT NULL,
+        entered_unit TEXT NOT NULL DEFAULT 'ng/mL' CHECK (entered_unit IN ('ng/mL', 'nmol/L')),
+        test_date TEXT NOT NULL,
+        source TEXT,
+        notes TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )`,
+      `CREATE INDEX IF NOT EXISTS idx_bask_lab_results_test_date ON bask_lab_results(test_date)`,
+    ],
+  },
+  {
+    version: 8,
+    up: [
+      // Consolidate the legacy single blood value (bask_user_profile.blood_test_*)
+      // into bask_lab_results, the single source of truth. Copy any existing value
+      // in as the user's first logged result (canonical ng/mL: nmol/L is /2.5),
+      // then clear the profile fields so nothing edits the value in two places.
+      `INSERT INTO bask_lab_results (value_ng_ml, entered_value, entered_unit, test_date, source)
+       SELECT
+         CASE WHEN blood_test_unit = 'nmol/L' THEN ROUND(blood_test_value / 2.5, 1) ELSE blood_test_value END,
+         blood_test_value,
+         COALESCE(blood_test_unit, 'ng/mL'),
+         COALESCE(blood_test_date, date('now')),
+         COALESCE(blood_test_source, 'manual')
+       FROM bask_user_profile
+       WHERE id = 1 AND blood_test_value IS NOT NULL`,
+      `UPDATE bask_user_profile
+         SET blood_test_value = NULL,
+             blood_test_unit = NULL,
+             blood_test_date = NULL,
+             blood_test_source = NULL
+         WHERE id = 1`,
+    ],
+  },
 ];
 
 export async function runMigrations(): Promise<void> {

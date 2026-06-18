@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { IonAlert, IonToggle, IonToast, IonModal } from '@ionic/react';
 import { Browser } from '@capacitor/browser';
 import { App } from '@capacitor/app';
@@ -34,9 +35,10 @@ import { resetRepository } from '../../lib/database/repositories/resetRepository
 import ProBadge from '../../components/ui/ProBadge';
 import ScienceFAQ from '../../components/settings/ScienceFAQ';
 import LeaderboardSettings from '../../components/settings/LeaderboardSettings';
-import BloodTestModal from '../../components/settings/BloodTestModal';
 import WeatherAttribution from '../../components/WeatherAttribution';
 import { userProfileRepository } from '../../lib/database/repositories/userProfileRepository';
+import { labResultsRepository, type LabResult } from '../../lib/database';
+import { ROUTES } from '../../lib/constants';
 import { capture, ANALYTICS_EVENTS } from '../../lib/analytics';
 
 // Icon components
@@ -209,7 +211,19 @@ const ShareIcon = () => (
   </svg>
 );
 
+// Parse a YYYY-MM-DD test date as local (not UTC) so the displayed day matches
+// what the user entered, consistent with the Labs history list.
+function formatLocalDate(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, (m ?? 1) - 1, d ?? 1).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
 export default function SettingsPage() {
+  const router = useRouter();
   const { isPremium, restore, isLoading, presentPaywall } = useSubscription();
 
   // Wrap paywall presentation so every entry point is recorded with its source.
@@ -245,10 +259,9 @@ export default function SettingsPage() {
   const [showDeleteErrorAlert, setShowDeleteErrorAlert] = useState(false);
   const [showMedicalDisclaimer, setShowMedicalDisclaimer] = useState(false);
   const [showScienceFAQ, setShowScienceFAQ] = useState(false);
-  const [showBloodTestModal, setShowBloodTestModal] = useState(false);
-  const [bloodTestValue, setBloodTestValue] = useState<number | null>(null);
-  const [bloodTestUnit, setBloodTestUnit] = useState<'ng/mL' | 'nmol/L'>('ng/mL');
-  const [bloodTestDate, setBloodTestDate] = useState<string | null>(null);
+  // Read-only summary of the latest lab result. Editing happens in the Labs card
+  // (Insights), which is the single source of truth.
+  const [latestLab, setLatestLab] = useState<LabResult | null>(null);
   const [locationPermission, setLocationPermission] =
     useState<LocationPermissionState | null>(null);
 
@@ -307,13 +320,8 @@ export default function SettingsPage() {
         await loadNotificationPermission();
       }
 
-      // Load blood test data
-      const profile = await userProfileRepository.get();
-      if (profile) {
-        setBloodTestValue(profile.blood_test_value || null);
-        setBloodTestUnit((profile.blood_test_unit as 'ng/mL' | 'nmol/L') || 'ng/mL');
-        setBloodTestDate(profile.blood_test_date || null);
-      }
+      // Load the latest lab result for the read-only summary.
+      setLatestLab(await labResultsRepository.getLatest());
     }
     loadSettings();
   }, []);
@@ -503,31 +511,6 @@ export default function SettingsPage() {
     }
   };
 
-  const handleSaveBloodTest = async (data: {
-    bloodTestValue: number;
-    bloodTestUnit: 'ng/mL' | 'nmol/L';
-    bloodTestDate: string;
-  }) => {
-    await userProfileRepository.update({
-      blood_test_value: data.bloodTestValue,
-      blood_test_unit: data.bloodTestUnit,
-      blood_test_date: data.bloodTestDate,
-      blood_test_source: 'manual',
-    });
-
-    setBloodTestValue(data.bloodTestValue);
-    setBloodTestUnit(data.bloodTestUnit);
-    setBloodTestDate(data.bloodTestDate);
-  };
-
-  const handleRemoveBloodTest = async () => {
-    await userProfileRepository.clearBloodTest();
-
-    setBloodTestValue(null);
-    setBloodTestUnit('ng/mL');
-    setBloodTestDate(null);
-  };
-
   return (
     <AtmosphericBackground>
       <div className='min-h-screen pb-20'>
@@ -658,32 +641,38 @@ export default function SettingsPage() {
               Biomarkers
             </h2>
             <div className='backdrop-blur-xl bg-white/70 border border-black/5 shadow-sm rounded-xl overflow-hidden'>
-              <div className='p-4 flex items-center justify-between'>
+              <button
+                onClick={() => router.push(`${ROUTES.insights}?focus=labs`)}
+                className='w-full p-4 flex items-center justify-between text-left hover:bg-black/[0.02] transition-colors active:scale-[0.99]'>
                 <div className='flex items-center gap-3 flex-1'>
                   <span className='text-2xl'>💉</span>
                   <div className='flex-1'>
                     <span className='text-text-primary font-medium block'>
                       Vitamin D (25-OH)
                     </span>
-                    {bloodTestValue ? (
+                    {latestLab ? (
                       <p className='text-sm text-text-secondary'>
-                        {bloodTestValue} {bloodTestUnit}
-                        {bloodTestUnit === 'nmol/L' && (
-                          <> ({normalizeToNgMl(bloodTestValue, 'nmol/L')} ng/mL)</>
+                        {latestLab.entered_value} {latestLab.entered_unit}
+                        {latestLab.entered_unit === 'nmol/L' && (
+                          <> ({normalizeToNgMl(latestLab.entered_value, 'nmol/L')} ng/mL)</>
                         )}
-                        {bloodTestDate && ` • ${new Date(bloodTestDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+                        {` • ${formatLocalDate(latestLab.test_date)}`}
                       </p>
                     ) : (
-                      <p className='text-sm text-text-secondary'>Not set</p>
+                      <p className='text-sm text-text-secondary'>Add your blood test in Insights → Labs</p>
                     )}
                   </div>
                 </div>
-                <button
-                  onClick={() => setShowBloodTestModal(true)}
-                  className='px-4 py-2 rounded-lg bg-black/5 text-text-primary text-sm font-medium hover:bg-black/10 transition-colors active:scale-[0.98]'>
-                  {bloodTestValue ? 'Edit' : 'Add'}
-                </button>
-              </div>
+                <svg
+                  xmlns='http://www.w3.org/2000/svg'
+                  fill='none'
+                  viewBox='0 0 24 24'
+                  strokeWidth={2}
+                  stroke='currentColor'
+                  className='w-5 h-5 text-text-secondary flex-shrink-0'>
+                  <path strokeLinecap='round' strokeLinejoin='round' d='M9 5l7 7-7 7' />
+                </svg>
+              </button>
             </div>
           </section>
 
@@ -1097,16 +1086,6 @@ export default function SettingsPage() {
           buttons={['OK']}
         />
 
-        {/* Blood Test Modal */}
-        <BloodTestModal
-          isOpen={showBloodTestModal}
-          onClose={() => setShowBloodTestModal(false)}
-          currentValue={bloodTestValue}
-          currentUnit={bloodTestUnit}
-          currentDate={bloodTestDate}
-          onSave={handleSaveBloodTest}
-          onRemove={handleRemoveBloodTest}
-        />
       </div>
     </AtmosphericBackground>
   );

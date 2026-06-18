@@ -4,6 +4,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { sessionsRepository } from '../database/repositories/sessionsRepository';
 import { supplementsRepository } from '../database/repositories/supplementsRepository';
+import { labResultsRepository } from '../database/repositories/labResultsRepository';
 import { cofactorsRepository } from '../database/repositories/cofactorsRepository';
 import { userProfileRepository } from '../database/repositories/userProfileRepository';
 import { settingsRepository } from '../database/repositories/settingsRepository';
@@ -242,14 +243,16 @@ async function collectReportData(period: ReportPeriod): Promise<ReportData> {
   let supplements: Awaited<ReturnType<typeof supplementsRepository.getByDateRange>> = [];
   let cofactors: Awaited<ReturnType<typeof cofactorsRepository.getByDateRange>> = [];
   let userProfile: Awaited<ReturnType<typeof userProfileRepository.get>> = null;
+  let latestLab: Awaited<ReturnType<typeof labResultsRepository.getLatest>> = null;
   let onboardingAnswers: OnboardingAnswers | null = null;
 
   try {
-    [sessions, supplements, cofactors, userProfile] = await Promise.all([
+    [sessions, supplements, cofactors, userProfile, latestLab] = await Promise.all([
       sessionsRepository.getByDateRange(startISO, endISO),
       supplementsRepository.getByDateRange(startISO, endISO),
       cofactorsRepository.getByDateRange(startISO, endISO),
       userProfileRepository.get(),
+      labResultsRepository.getLatest(),
     ]);
   } catch (error) {
     console.error('Failed to fetch report data:', error);
@@ -318,11 +321,11 @@ async function collectReportData(period: ReportPeriod): Promise<ReportData> {
       fitzpatrickType: resolveFitzpatrickType(userProfile, onboardingAnswers),
       dailyGoal: resolveDailyGoal(userProfile),
       bloodTestValue:
-        userProfile?.blood_test_value ?? onboardingAnswers?.bloodTestValue ?? null,
+        latestLab?.entered_value ?? onboardingAnswers?.bloodTestValue ?? null,
       bloodTestUnit:
-        userProfile?.blood_test_unit ?? onboardingAnswers?.bloodTestUnit ?? null,
+        latestLab?.entered_unit ?? onboardingAnswers?.bloodTestUnit ?? null,
       bloodTestDate:
-        userProfile?.blood_test_date ?? onboardingAnswers?.bloodTestDate ?? null,
+        latestLab?.test_date ?? onboardingAnswers?.bloodTestDate ?? null,
       skinTone: onboardingAnswers?.skinTone ?? null,
       eyeColor: onboardingAnswers?.eyeColor ?? null,
       sunReaction: onboardingAnswers?.sunReaction ?? null,

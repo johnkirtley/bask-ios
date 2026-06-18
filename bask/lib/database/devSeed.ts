@@ -279,3 +279,106 @@ export function seedCofactorLastLogged(type: CofactorType): string | null {
     .sort();
   return matches.length > 0 ? matches[matches.length - 1] : null;
 }
+
+// ---- Lab result helpers (web preview only) ----
+//
+// Unlike the read-only seeds above, lab results are a *mutable* in-memory store
+// so the full add/edit/delete flow is exercisable on localhost. The list seeds
+// with a few results that climb out of the deficient range, so the trend chart,
+// reference-range bands, and interpretation copy all populate on first load.
+
+export interface SeedLabResult {
+  id: number;
+  value_ng_ml: number;
+  entered_value: number;
+  entered_unit: 'ng/mL' | 'nmol/L';
+  test_date: string;
+  source: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+function dateKeyDaysAgo(days: number): string {
+  const d = new Date(startOfDay(new Date()).getTime() - days * 86_400_000);
+  return localDateKey(d.toISOString());
+}
+
+let labResults: SeedLabResult[] | null = null;
+let labNextId = 1;
+
+// Web-only testing aid: `?labs=N` controls how many seed readings to start with
+// (0 = empty state, 1 = single free reading, 5 = full history). Pairs with the
+// `?pro=free` override in lib/devFlags.ts to reach every gating path on web.
+function seedCountOverride(): number | null {
+  try {
+    const raw = new URLSearchParams(window.location.search).get('labs');
+    if (raw == null) return null;
+    const n = parseInt(raw, 10);
+    return Number.isNaN(n) ? null : Math.max(0, n);
+  } catch {
+    return null;
+  }
+}
+
+function buildLabResults(): SeedLabResult[] {
+  const nowIso = new Date().toISOString();
+  const allPoints: Array<{ daysAgo: number; ngMl: number; source: string | null }> = [
+    { daysAgo: 420, ngMl: 18, source: 'Quest Diagnostics' },
+    { daysAgo: 300, ngMl: 24, source: 'Quest Diagnostics' },
+    { daysAgo: 180, ngMl: 33, source: 'LabCorp' },
+    { daysAgo: 75, ngMl: 46, source: 'LabCorp' },
+    { daysAgo: 14, ngMl: 54, source: 'At-home kit' },
+  ];
+  // When `?labs=N` is set, keep the N most recent points (so 1 = just the latest).
+  const override = seedCountOverride();
+  const points = override == null ? allPoints : allPoints.slice(Math.max(0, allPoints.length - override));
+  return points.map((p) => ({
+    id: labNextId++,
+    value_ng_ml: p.ngMl,
+    entered_value: p.ngMl,
+    entered_unit: 'ng/mL' as const,
+    test_date: dateKeyDaysAgo(p.daysAgo),
+    source: p.source,
+    notes: null,
+    created_at: nowIso,
+    updated_at: nowIso,
+  }));
+}
+
+function getLabResults(): SeedLabResult[] {
+  if (!labResults) labResults = buildLabResults();
+  return labResults;
+}
+
+export function seedLabResultsAll(): SeedLabResult[] {
+  return [...getLabResults()].sort((a, b) =>
+    a.test_date < b.test_date ? 1 : a.test_date > b.test_date ? -1 : b.id - a.id,
+  );
+}
+
+export function seedLabResultCreate(
+  data: Omit<SeedLabResult, 'id' | 'created_at' | 'updated_at'>,
+): number {
+  const nowIso = new Date().toISOString();
+  const id = labNextId++;
+  getLabResults().push({ ...data, id, created_at: nowIso, updated_at: nowIso });
+  return id;
+}
+
+export function seedLabResultUpdate(
+  id: number,
+  data: Partial<Omit<SeedLabResult, 'id' | 'created_at' | 'updated_at'>>,
+): void {
+  const list = getLabResults();
+  const idx = list.findIndex((r) => r.id === id);
+  if (idx >= 0) {
+    list[idx] = { ...list[idx], ...data, updated_at: new Date().toISOString() };
+  }
+}
+
+export function seedLabResultDelete(id: number): void {
+  const list = getLabResults();
+  const idx = list.findIndex((r) => r.id === id);
+  if (idx >= 0) list.splice(idx, 1);
+}
