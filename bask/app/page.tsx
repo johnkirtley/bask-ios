@@ -18,6 +18,8 @@ import { useSubscription } from '../hooks/useSubscription';
 import {
   sessionsRepository,
   supplementsRepository,
+  labResultsRepository,
+  LabResult,
   StreakTransitionReason,
 } from '../lib/database';
 import {
@@ -35,7 +37,7 @@ import {
 import { resolveFitzpatrickType } from '../lib/profileUtils';
 import { leaderboardService } from '../lib/supabase/leaderboardService';
 import {
-  getBloodTestCalibration,
+  getCalibrationFromLab,
   getBloodTestGuidanceHint,
 } from '../lib/bloodTestUtils';
 import { getMockClothingPresets } from '../lib/sunDataUtils';
@@ -172,14 +174,23 @@ export default function Home() {
       .catch(() => setUserProfile(null));
   }, [refreshKey]);
 
+  // Latest logged lab result is the single source of truth for the blood value.
+  const [latestLab, setLatestLab] = useState<LabResult | null>(null);
+  useEffect(() => {
+    labResultsRepository
+      .getLatest()
+      .then(setLatestLab)
+      .catch(() => setLatestLab(null));
+  }, [refreshKey]);
+
   const fitzpatrickType = useMemo(
     () => resolveFitzpatrickType(userProfile, answers),
     [userProfile, answers],
   );
 
   const bloodTestCalibration = useMemo(
-    () => getBloodTestCalibration(userProfile),
-    [userProfile],
+    () => getCalibrationFromLab(latestLab),
+    [latestLab],
   );
 
   const hasSunburnRiskAccess = useMemo(

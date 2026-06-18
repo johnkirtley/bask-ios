@@ -37,6 +37,9 @@ export const resetRepository = {
         // Delete all cofactor logs
         await db.run('DELETE FROM bask_cofactors');
 
+        // Delete all logged lab results
+        await db.run('DELETE FROM bask_lab_results');
+
         // Reset user profile to defaults
         await db.run(`
           UPDATE bask_user_profile

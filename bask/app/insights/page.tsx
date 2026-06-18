@@ -6,6 +6,7 @@ import { useOnboardingContext } from '../../contexts/OnboardingContext';
 import { deriveFitzpatrickType } from '../../lib/dEngine';
 import AtmosphericBackground from '../../components/home/AtmosphericBackground';
 import VitaminDTrendChart from '../../components/history/VitaminDTrendChart';
+import LabResultsCard from '../../components/labs/LabResultsCard';
 
 type InsightCard = {
   id: string;
@@ -26,6 +27,21 @@ export default function Insights() {
   const { answers } = useOnboardingContext();
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'trends' | 'learn'>('trends');
+
+  // Deep link from Settings ("Vitamin D blood tests" row): land on Trends and
+  // scroll to the Labs card. Reads location directly to stay static-export-safe.
+  useEffect(() => {
+    try {
+      if (new URLSearchParams(window.location.search).get('focus') !== 'labs') return;
+    } catch {
+      return;
+    }
+    setActiveTab('trends');
+    const t = setTimeout(() => {
+      document.getElementById('labs-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 250);
+    return () => clearTimeout(t);
+  }, []);
 
   // Calculate Fitzpatrick type from onboarding
   const fitzpatrickType = answers.skinTone && answers.sunReaction
@@ -641,6 +657,10 @@ export default function Insights() {
           {activeTab === 'trends' ? (
             <div className='tab-content-fade space-y-4'>
               <VitaminDTrendChart />
+
+              <div id='labs-card' className='scroll-mt-6'>
+                <LabResultsCard />
+              </div>
 
               {/* Contextual Insight Callout */}
               <div className='backdrop-blur-xl bg-gradient-to-br from-bask-teal/10 to-bask-teal/5 rounded-card p-5 border border-bask-teal/20 shadow-sm'>
