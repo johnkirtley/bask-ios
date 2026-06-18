@@ -1,6 +1,6 @@
 # Bask App Backlog
 
-Last updated: 2026-06-14
+Last updated: 2026-06-18
 
 Use this as the running list for app fixes and feature work. Higher-priority open items stay higher in the list. When an item ships, move it to `Completed` with the completion date and a short note about what changed.
 
@@ -81,6 +81,14 @@ Reason for deferral:
 - The previous UTC/local-day concern is much less important for streak-only ranking.
 
 ## Completed
+
+### Format D Synthesis Starts In
+
+Completed: 2026-06-18
+Priority: Low
+Risk: Low
+
+Updated the pre-synthesis countdown copy for BASKAPP-18 so active-session and Home stat countdown labels use the shared hour/minute duration formatter instead of raw minute counts. Code-path inspection confirmed 45 -> 45m, 60 -> 1h, 90 -> 1h 30m, 110 -> 1h 50m, and the existing >120 minute suppression remains unchanged. Automated validation was not run because project instructions say not to run tests unless requested.
 
 ### Wire Apple Search Ads Attribution Into RevenueCat
 

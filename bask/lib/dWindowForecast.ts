@@ -7,6 +7,7 @@ import {
   getAgeMultiplier,
   BASE_IU_PER_MINUTE,
   effectiveUv,
+  formatDurationMinutes,
   formatEstimatedIU,
 } from './dEngine';
 
@@ -199,8 +200,8 @@ export function calculateOptimalWindows(
   // Reconcile today's current-hour bucket with the live reading before any
   // today-scoped computation. The hourly forecast is bucketed and can lag the
   // live WeatherKit reading — the same value the home CTA and active session
-  // use — so without this the card can recommend a near-now window, or claim
-  // "D synthesis starts in N min", that the live conditions contradict.
+  // use — so without this the card can recommend a near-now window, or show
+  // a synthesis countdown that the live conditions contradict.
   const reconciledTodayForecast = currentConditions
     ? applyCurrentConditions(todayForecast, currentConditions, now)
     : todayForecast;
@@ -530,7 +531,7 @@ export function getSynthesisCountdown(
 
   return {
     minutesUntil,
-    label: `D synthesis starts in ${minutesUntil} min`,
+    label: `D synthesis starts in ${formatDurationMinutes(minutesUntil)}`,
   };
 }
 

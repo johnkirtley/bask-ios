@@ -6,7 +6,11 @@ import AtmosphericBackground from './AtmosphericBackground';
 import WhyZeroIUTooltip from './WhyZeroIUTooltip';
 import Mascot from '../ui/Mascot';
 import LockedSunburnValue from './LockedSunburnValue';
-import { effectiveUv, formatEstimatedIU } from '../../lib/dEngine';
+import {
+  effectiveUv,
+  formatDurationMinutes,
+  formatEstimatedIU,
+} from '../../lib/dEngine';
 import { morningLightRecommendation } from '../../lib/lightPhase';
 import type { SunData } from '../../lib/sunDataUtils';
 import type { TimeOfDay } from '../../hooks/useTimeOfDay';
@@ -77,6 +81,10 @@ export default function ActiveSessionView({
       : isEveningLight
       ? 'Evening Light'
       : 'Daylight';
+  const synthesisCountdownLabel =
+    synthesisCountdownMinutes != null
+      ? formatDurationMinutes(synthesisCountdownMinutes)
+      : null;
 
   // Celebrate the morph exactly once, when the session first crosses into vitamin D
   // (not on mount for sessions that started already synthesizing).
@@ -239,8 +247,8 @@ export default function ActiveSessionView({
                 {formattedTime}
               </div>
               <div className='mt-3 max-w-[280px] text-center text-[13px] font-semibold leading-snug text-text-secondary'>
-                {synthesisCountdownMinutes != null
-                  ? `Vitamin D starts in ~${synthesisCountdownMinutes} min`
+                {synthesisCountdownLabel
+                  ? `Vitamin D starts in ~${synthesisCountdownLabel}`
                   : isCloudBlockingVitaminD
                   ? 'Clouds are blocking vitamin D, but light still supports your rhythm'
                   : timeOfDay === 'morning'
