@@ -1,0 +1,210 @@
+# AppKittie API Integration
+
+## Authentication
+
+All API requests require a Bearer token:
+
+```
+Authorization: Bearer appkittie_your_key_here
+```
+
+API keys are generated from the AppKittie dashboard at [appkittie.com/settings](https://appkittie.com/settings).
+
+## Base URL
+
+```
+https://appkittie.com/api/v1
+```
+
+## Endpoints
+
+### GET /apps
+
+Search and filter Apple App Store and Google Play apps.
+
+**Query Parameters:** See [REGISTRY.md](../REGISTRY.md) for the full filter list.
+
+**Response:**
+```json
+{
+  "data": [
+    {
+      "app_slug": "headspace-meditation-sleep",
+      "source": "apple_mobile",
+      "title": "Headspace: Meditation & Sleep",
+      "icon": "https://...",
+      "developer": "Headspace Health Inc.",
+      "primary_genre": "Health & Fitness",
+      "score": 4.9,
+      "reviews": 750000,
+      "downloads": 500000,
+      "revenue": 2500000
+    }
+  ],
+  "pagination": {
+    "nextCursor": 50,
+    "totalCount": 1234
+  }
+}
+```
+
+**Headers:**
+- `X-Credits-Used` — credits consumed
+- `X-Credits-Remaining` — remaining balance
+- `X-RateLimit-Limit` / `X-RateLimit-Remaining` / `X-RateLimit-Reset`
+
+### GET /apps/:appId
+
+Get detailed data for a single app.
+
+**Response:**
+```json
+{
+  "data": {
+    "title": "Headspace: Meditation & Sleep",
+    "description": "...",
+    "meta_ads": [{ "src": "https://...", "poster": "https://..." }],
+    "apple_ads": [{ ... }],
+    "in_app_purchases": [{ "name": "Annual", "price": "$69.99" }],
+    "historical_data": [{ "date": "2026-01-01", "downloads": 15000 }],
+    ...
+  }
+}
+```
+
+### GET /keywords/difficulty
+
+Single keyword analysis.
+
+**Query Parameters:**
+- `keyword` (required) — keyword to analyze
+- `country` (optional) — App Store country code (default: US)
+- `source` (optional) — `apple_mobile` or `google_mobile` (default: `apple_mobile`)
+
+**Response:**
+```json
+{
+  "data": {
+    "keyword": "meditation",
+    "country": "US",
+    "source": "apple_mobile",
+    "popularity": 65,
+    "difficulty": 78,
+    "appsCount": 1200,
+    "trafficScore": 42,
+    "topApps": [
+      {
+        "appStoreId": "1573759751",
+        "source": "apple_mobile",
+        "title": "Headspace: Meditation & Sleep",
+        "icon": "https://...",
+        "developer": "Headspace Health Inc.",
+        "reviews": 750000,
+        "score": 4.9,
+        "rank": 1
+      }
+    ]
+  }
+}
+```
+
+### POST /keywords/difficulty
+
+Batch keyword analysis (up to 10 keywords).
+
+**Body:**
+```json
+{
+  "keywords": ["meditation", "mindfulness", "sleep sounds"],
+  "country": "US",
+  "source": "apple_mobile"
+}
+```
+
+**Response:**
+```json
+{
+  "data": [
+    {
+      "keyword": "sleep sounds",
+      "country": "US",
+      "source": "apple_mobile",
+      "popularity": 55,
+      "difficulty": 45,
+      "appsCount": 800,
+      "trafficScore": 38
+    }
+  ]
+}
+```
+
+Results are sorted by opportunity (best first). Only successfully analyzed keywords are returned.
+
+### POST /reviews
+
+Fetch user reviews for an app.
+
+**Body:**
+```json
+{
+  "appId": "284882215",
+  "source": "apple_mobile",
+  "country": "US",
+  "maxReviews": 100,
+  "offset": 0
+}
+```
+
+**Body Parameters:**
+- `appId` (required) — numeric App Store ID or Google Play package name
+- `source` (optional) — `apple_mobile` or `google_mobile`; inferred from `appId` if omitted
+- `country` (optional) — App Store country code (default: US)
+- `maxReviews` (optional) — max reviews to return, 1–300 (default: 100)
+- `offset` (optional) — pagination offset (default: 0)
+
+**Response:**
+```json
+{
+  "data": {
+    "appId": 284882215,
+    "source": "apple_mobile",
+    "country": "us",
+    "reviews": [
+      {
+        "id": "10458723456",
+        "rating": 5,
+        "title": "Great app!",
+        "body": "Love the new features.",
+        "reviewerNickname": "AppFan2024",
+        "date": "2025-12-15T10:30:00Z",
+        "country": "us"
+      }
+    ],
+    "nextOffset": 100,
+    "totalFetched": 100
+  }
+}
+```
+
+Paginate by passing the `nextOffset` value as `offset` in the next request. When `nextOffset` is `null`, there are no more reviews.
+
+## Error Codes
+
+| Status | Meaning |
+|--------|---------|
+| 400 | Invalid parameters |
+| 401 | Invalid or missing API key |
+| 402 | Insufficient credits |
+| 404 | App not found |
+| 429 | Rate limit exceeded |
+| 503 | Search service unavailable |
+
+## Credit Costs
+
+| Operation | Cost |
+|-----------|------|
+| Search apps (per hit returned) | 1 credit |
+| App detail | 1 credit |
+| Keyword difficulty (single) | 10 credits |
+| Keyword difficulty (batch, per keyword) | 10 credits |
+| App reviews (per review returned) | 1 credit |
