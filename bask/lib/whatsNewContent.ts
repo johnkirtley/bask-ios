@@ -1,6 +1,6 @@
 /**
  * Curated "What's New" content, keyed by the iOS marketing version
- * (`CFBundleShortVersionString`, i.e. `App.getInfo().version` — e.g. "6.0").
+ * (`CFBundleShortVersionString`, i.e. `App.getInfo().version` — e.g. "6.2").
  *
  * After shipping a meaningful update, add an entry here for the version you are
  * releasing. On the first launch of that build, existing users who updated will
