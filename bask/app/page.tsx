@@ -71,6 +71,11 @@ import {
   recordReviewAppOpen,
   requestAppReview,
 } from '../lib/services/inAppReviewService';
+import {
+  getWhatsNewToShow,
+  markWhatsNewSeen,
+} from '../lib/services/whatsNewService';
+import { WhatsNewEntry } from '../lib/whatsNewContent';
 import AtmosphericBackground from '../components/home/AtmosphericBackground';
 import BaskRing from '../components/home/BaskRing';
 import StatMetrics from '../components/home/StatMetrics';
@@ -88,6 +93,7 @@ import StreakDetailSheet from '../components/streaks/StreakDetailSheet';
 import StreakMilestoneOverlay from '../components/streaks/StreakMilestoneOverlay';
 import ReviewFeedbackModal from '../components/ui/ReviewFeedbackModal';
 import ReviewPromptModal from '../components/ui/ReviewPromptModal';
+import WhatsNewSheet from '../components/whatsnew/WhatsNewSheet';
 
 /**
  * Format time to goal for the home stat (shows actual duration when achievable).
@@ -165,6 +171,7 @@ export default function Home() {
     valueEventCount: number;
   } | null>(null);
   const [showReviewFeedbackPrompt, setShowReviewFeedbackPrompt] = useState(false);
+  const [whatsNew, setWhatsNew] = useState<WhatsNewEntry | null>(null);
   const refreshReasonRef = useRef<StreakTransitionReason>('app_open');
 
   useEffect(() => {
@@ -391,11 +398,43 @@ export default function Home() {
     recordReviewAppOpen().finally(() => setReviewCheckKey((prev) => prev + 1));
   }, []);
 
+  // Show the "What's New" sheet once after a meaningful update. Runs on mount
+  // and on each app open (reviewCheckKey is bumped in both cases). Never stacks
+  // with the review prompt and never interrupts an active session.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function checkWhatsNew() {
+      if (whatsNew || reviewPromptMetrics) return;
+      if (session.isActive || session.isPaused) return;
+
+      const entry = await getWhatsNewToShow();
+      if (cancelled || !entry) return;
+
+      setWhatsNew(entry);
+      capture(ANALYTICS_EVENTS.whatsNewShown, { version: entry.version });
+    }
+
+    checkWhatsNew().catch((error) => {
+      console.warn('Failed to check whats-new:', error);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    reviewCheckKey,
+    whatsNew,
+    reviewPromptMetrics,
+    session.isActive,
+    session.isPaused,
+  ]);
+
   useEffect(() => {
     let cancelled = false;
 
     async function checkReviewEligibility() {
-      if (reviewPromptMetrics) return;
+      if (reviewPromptMetrics || whatsNew) return;
 
       const eligibility = await getReviewEligibility({
         isSessionActive: session.isActive || session.isPaused,
@@ -422,7 +461,13 @@ export default function Home() {
     return () => {
       cancelled = true;
     };
-  }, [reviewCheckKey, reviewPromptMetrics, session.isActive, session.isPaused]);
+  }, [
+    reviewCheckKey,
+    reviewPromptMetrics,
+    whatsNew,
+    session.isActive,
+    session.isPaused,
+  ]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -935,6 +980,15 @@ export default function Home() {
         isOpen={showReviewFeedbackPrompt}
         onClose={() => setShowReviewFeedbackPrompt(false)}
         onSendFeedback={() => void handleOpenReviewFeedbackForm()}
+      />
+
+      <WhatsNewSheet
+        isOpen={!!whatsNew}
+        entry={whatsNew}
+        onClose={() => {
+          if (whatsNew) void markWhatsNewSeen(whatsNew.version);
+          setWhatsNew(null);
+        }}
       />
     </>
   );
