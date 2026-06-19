@@ -28,11 +28,14 @@ export interface WhatsNewEntry extends WhatsNewContent {
   version: string;
 }
 
-/** Keyed by the iOS marketing version (`App.getInfo().version`, e.g. "6.0"). */
+/** Keyed by the iOS marketing version (`App.getInfo().version`, e.g. "6.2"). */
 export const WHATS_NEW: Record<string, WhatsNewContent> = {
-  // Example seed for the next release. Update the items (and add new version
-  // keys) whenever you ship a meaningful update.
-  '6.0': {
+  // Add an entry keyed to the exact MARKETING_VERSION you are shipping whenever a
+  // release is worth announcing. Bug-fix-only releases need no entry — they show
+  // nothing. Note: the version that first ships this feature silently baselines
+  // existing users (no sheet); the first sheet appears on the *next* release.
+  // This 6.2 entry is an example/template — edit the copy for your real release.
+  '6.2': {
     headline: "What's New in Bask",
     items: [
       {
