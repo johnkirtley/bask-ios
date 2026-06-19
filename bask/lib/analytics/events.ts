@@ -42,6 +42,7 @@ export const ANALYTICS_EVENTS = {
   reviewNegativeResponse: 'review_negative_response',
   reviewNativePromptRequested: 'review_native_prompt_requested',
   reviewFeedbackOpened: 'review_feedback_opened',
+  whatsNewShown: 'whats_new_shown',
 } as const;
 
 export type AnalyticsEventName =
@@ -133,4 +134,5 @@ export interface AnalyticsEventProps {
   review_negative_response: { app_open_count: number; value_event_count: number };
   review_native_prompt_requested: { source: 'onboarding' | 'value_prompt' | 'manual' };
   review_feedback_opened: { source: 'onboarding' | 'value_prompt' | 'settings' };
+  whats_new_shown: { version: string };
 }

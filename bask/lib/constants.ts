@@ -51,6 +51,7 @@ export const STORAGE_KEYS = {
   reviewNativeRequested: 'review_native_requested',
   reviewNegativeFeedback: 'review_negative_feedback',
   reviewLastPaywallDismissedAt: 'review_last_paywall_dismissed_at',
+  whatsNewLastSeenVersion: 'whats_new_last_seen_version',
 } as const;
 
 // App Routes
