@@ -10,6 +10,11 @@ import { capture, ANALYTICS_EVENTS } from '../lib/analytics';
 import { recordReviewValueEvent } from '../lib/services/inAppReviewService';
 import { vitaminDRatePerMinute, calculateTimeToBurn, getExposurePercent, formatSunburnCountdown } from '../lib/dEngine';
 import { integrateAccrual } from '../lib/sessionAccrual';
+import {
+  loadPersistedSession,
+  savePersistedSession,
+  clearPersistedSession,
+} from '../lib/sessionPersistence';
 import { BaskLiveActivity } from '../lib/plugins';
 import { getSolarPhase, isSunUp } from '../lib/lightPhase';
 import type { SolarClock } from '../lib/lightPhase';
@@ -17,7 +22,7 @@ import type { LiveActivityPhase } from '../lib/plugins';
 import type { BaskSessionStatus } from '../types';
 import type { FitzpatrickType } from '../lib/dEngine';
 
-interface BaskSessionState {
+export interface BaskSessionState {
   status: BaskSessionStatus;
   elapsedSeconds: number;
   startTime: Date | null;
@@ -103,7 +108,20 @@ export function useBaskSession(
   sunData: SessionSunData = { rawUvIndex: 0, effectiveUV: 0 },
   canAccessSunburnRisk = true,
 ) {
-  const [state, setState] = useState<BaskSessionState>(INITIAL_STATE);
+  // Restore an in-progress session synchronously on mount so a process-reclaim
+  // reload renders the active session immediately (no flash of the home screen).
+  const [state, setState] = useState<BaskSessionState>(
+    () => loadPersistedSession() ?? INITIAL_STATE,
+  );
+  // Captured once: was this mount a restore of a previously-running session?
+  const restoredRef = useRef(
+    state.status === 'active' || state.status === 'paused',
+  );
+  // True until the restored background gap has been credited at a live (>0) UV.
+  // While true we hold off consuming the gap so a cold reload (which starts at
+  // UV 0 before WeatherKit reloads) cannot under-credit it to zero.
+  const restorePendingRef = useRef(restoredRef.current && state.status === 'active');
+  const stateRef = useRef(state);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const currentIURef = useRef(state.currentIU);
   const startTimeRef = useRef(state.startTime);
@@ -130,19 +148,110 @@ export function useBaskSession(
   }, [canAccessSunburnRisk]);
 
   // Keep refs in sync with state for use in interval callbacks
+  useEffect(() => { stateRef.current = state; }, [state]);
   useEffect(() => { currentIURef.current = state.currentIU; }, [state.currentIU]);
   useEffect(() => { startTimeRef.current = state.startTime; }, [state.startTime]);
   useEffect(() => { statusRef.current = state.status; }, [state.status]);
   useEffect(() => { elapsedSecondsRef.current = state.elapsedSeconds; }, [state.elapsedSeconds]);
 
   /**
-   * Clean up any orphaned Live Activities on mount
+   * Start a replacement Live Activity for a restored session and adopt its id.
    */
-  useEffect(() => {
-    if (Capacitor.isNativePlatform()) {
-      BaskLiveActivity.endAllActivities().catch(() => {});
+  const restartLiveActivity = useCallback(async (restored: BaskSessionState) => {
+    if (!Capacitor.isNativePlatform()) return;
+    try {
+      const { supported } = await BaskLiveActivity.isSupported();
+      if (!supported) return;
+      const result = await BaskLiveActivity.startActivity({
+        uvIndex: restored.rawUvIndex,
+        timeToBurnMinutes: restored.projectedTimeToBurn,
+        canAccessSunburnRisk: canAccessSunburnRiskRef.current,
+        startTimeMs: restored.startTime?.getTime() ?? Date.now(),
+        phase: lightPhaseForLiveActivity(restored.hasSynthesized, sunDataRef.current),
+      });
+      setState((prev) =>
+        prev.status === 'idle' || prev.status === 'completed'
+          ? prev
+          : { ...prev, liveActivityId: result.activityId },
+      );
+    } catch (e) {
+      console.error('Failed to restart Live Activity on restore:', e);
     }
   }, []);
+
+  /**
+   * On mount: either restore a reclaimed session's Live Activity, or clean up
+   * orphaned activities on a normal cold start.
+   *
+   * When restoring, the Live Activity may have survived the process death
+   * (ActivityKit activities outlive the app), so we re-sync it rather than
+   * destroying it. If `updateActivity` rejects, the activity is gone and we
+   * start a fresh one. On a non-restore mount we keep the original cleanup of
+   * any truly-orphaned activities.
+   */
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    if (!restoredRef.current) {
+      BaskLiveActivity.endAllActivities().catch(() => {});
+      clearPersistedSession();
+      return;
+    }
+
+    const restored = stateRef.current;
+    if (!restored.liveActivityId) {
+      // Restored a session whose Live Activity never started — start one now.
+      void restartLiveActivity(restored);
+      return;
+    }
+
+    BaskLiveActivity.updateActivity({
+      activityId: restored.liveActivityId,
+      currentIU: restored.currentIU,
+      isPaused: restored.status === 'paused',
+      canAccessSunburnRisk: canAccessSunburnRiskRef.current,
+      effectiveStartTimeMs: restored.startTime?.getTime() ?? Date.now(),
+      elapsedSecondsAtPause:
+        restored.status === 'paused' ? restored.elapsedSeconds : 0,
+      phase: lightPhaseForLiveActivity(restored.hasSynthesized, sunDataRef.current),
+    }).catch(() => {
+      // The activity died with the process — start a fresh one.
+      void restartLiveActivity(restored);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /**
+   * Persist the in-progress session so it survives a process reclaim. Keyed on
+   * durable transitions only (not the per-second timer) to avoid a write loop —
+   * the integrator rebuilds elapsed/IU from `lastAccrualMs` on restore.
+   */
+  useEffect(() => {
+    if (state.status === 'active' || state.status === 'paused') {
+      savePersistedSession(state);
+    } else {
+      // Covers both 'idle' (cancel) and 'completed' (end).
+      clearPersistedSession();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    state.status,
+    state.sessionId,
+    state.liveActivityId,
+    state.hasSynthesized,
+    state.pausedAt,
+    state.startTime,
+  ]);
+
+  /**
+   * Coarse periodic flush (every 15s while active) so `accumulatedIU` snapshots
+   * mid-session — belt-and-suspenders on top of the transition-keyed persist.
+   */
+  useEffect(() => {
+    if (state.status !== 'active') return;
+    const id = setInterval(() => savePersistedSession(stateRef.current), 15_000);
+    return () => clearInterval(id);
+  }, [state.status]);
 
   /**
    * Start a new basking session
@@ -153,6 +262,10 @@ export function useBaskSession(
       coveragePercent: number,
       startPhase: 'morning_light' | 'low_uv' | 'vitamin_d' = 'vitamin_d',
     ) => {
+      // Fresh session has no background gap to hold for — clear any leftover
+      // restore-pending flag from an earlier reclaimed session.
+      restorePendingRef.current = false;
+
       const now = new Date();
       const exposurePercent = getExposurePercent(coveragePercent);
 
@@ -247,9 +360,29 @@ export function useBaskSession(
     if (state.status === 'active') {
       timerRef.current = setInterval(() => {
         setState((prev) => {
+          const liveUv = sunDataRef.current.effectiveUV;
+
+          // After a restore, the background gap (prev.lastAccrualMs → now) must
+          // be credited at a live UV, not the UV-0 of a freshly reloaded bundle.
+          // Until live UV is available, only advance the displayed clock and
+          // leave lastAccrualMs untouched so the gap survives to be credited
+          // once. (At genuinely-zero UV no IU accrues anyway, so holding is safe.)
+          if (restorePendingRef.current) {
+            if (liveUv <= 0) {
+              if (!prev.startTime) return prev;
+              const elapsedSeconds = Math.floor(
+                (Date.now() - prev.startTime.getTime()) / 1000,
+              );
+              return elapsedSeconds === prev.elapsedSeconds
+                ? prev
+                : { ...prev, elapsedSeconds };
+            }
+            restorePendingRef.current = false;
+          }
+
           // Integrate IU off the *live* (cloud-adjusted) UV so a session morphs
           // from morning light into vitamin D the moment effective UV crosses 3.
-          const next = integrateAccrual(prev, sunDataRef.current.effectiveUV, Date.now());
+          const next = integrateAccrual(prev, liveUv, Date.now());
           return next ? { ...prev, ...next } : prev;
         });
       }, 1000);
@@ -416,6 +549,8 @@ export function useBaskSession(
    * Resume a paused session
    */
   const resumeSession = useCallback(async () => {
+    // Resume resets the accrual clock below, so any held restore gap is moot.
+    restorePendingRef.current = false;
     setState((prev) => {
       // Adjust startTime forward by the pause duration
       // so wall-clock calculations remain correct

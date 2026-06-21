@@ -52,6 +52,7 @@ export const STORAGE_KEYS = {
   reviewNegativeFeedback: 'review_negative_feedback',
   reviewLastPaywallDismissedAt: 'review_last_paywall_dismissed_at',
   whatsNewLastSeenVersion: 'whats_new_last_seen_version',
+  activeSession: 'bask_active_session',
 } as const;
 
 // App Routes
