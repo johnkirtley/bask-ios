@@ -82,7 +82,7 @@ export const processingSteps: string[] = [
 ];
 
 // Total number of onboarding screens
-export const TOTAL_ONBOARDING_SCREENS = 18;
+export const TOTAL_ONBOARDING_SCREENS = 15;
 
 // Legal links (used by settings page)
 export const legalContent = {

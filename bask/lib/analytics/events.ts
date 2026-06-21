@@ -49,7 +49,7 @@ export type AnalyticsEventName =
   (typeof ANALYTICS_EVENTS)[keyof typeof ANALYTICS_EVENTS];
 
 /**
- * Human-readable labels for each onboarding screen index (0–16), so the
+ * Human-readable labels for each onboarding screen index (0–14), so the
  * `onboarding_step_viewed` funnel reads clearly in PostHog instead of raw numbers.
  * Mirrors the `switch (currentScreen)` in components/onboarding/OnboardingFlow.tsx.
  */
@@ -57,21 +57,18 @@ export const ONBOARDING_STEP_NAMES = [
   'emotional_hook', // 0
   'symptoms', // 1
   'skin_eye_color', // 2
-  'skin_reflection', // 3
-  'sun_reaction', // 4
-  'outdoor_time', // 5
-  'outdoor_reflection', // 6
-  'sunscreen_frequency', // 7
-  'sunscreen_reflection', // 8
-  'supplementation', // 9
-  'daily_goal', // 10
-  'biological_profile', // 11
-  'medical_disclaimer', // 12
-  'location_permission', // 13
-  'notification_permission', // 14
-  'healthkit_permission', // 15
-  'generating', // 16
-  'plan_ready', // 17
+  'sun_reaction', // 3
+  'outdoor_time', // 4
+  'sunscreen_frequency', // 5
+  'supplementation', // 6
+  'daily_goal', // 7
+  'biological_profile', // 8
+  'medical_disclaimer', // 9
+  'location_permission', // 10
+  'notification_permission', // 11
+  'healthkit_permission', // 12
+  'generating', // 13
+  'plan_ready', // 14
 ] as const;
 
 export function getOnboardingStepName(index: number): string {
