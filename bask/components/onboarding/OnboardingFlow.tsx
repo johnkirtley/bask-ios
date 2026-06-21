@@ -19,18 +19,12 @@ import {
   supplementationOptions,
 } from '../../lib/onboardingData';
 import { DEFAULT_DAILY_GOAL_IU } from '../../lib/constants';
-import {
-  getSkinReflection,
-  getOutdoorReflection,
-  getSunscreenReflection,
-} from '../../lib/onboarding/scienceFacts';
 import { useOnboardingContext } from '../../contexts/OnboardingContext';
 import { WarmBackground, WarmTopBar } from './warm/atoms';
 import EmotionalHookScreen from './EmotionalHookScreen';
 import SingleSelectScreen from './SingleSelectScreen';
 import MultiSelectScreen from './MultiSelectScreen';
 import SkinEyeColorScreen from './SkinEyeColorScreen';
-import ReflectionScreen from './ReflectionScreen';
 import ProcessingScreen from './ProcessingScreen';
 import BiologicalProfileScreen from './BiologicalProfileScreen';
 import MedicalDisclaimerScreen from './MedicalDisclaimerScreen';
@@ -164,21 +158,8 @@ export default function OnboardingFlow() {
           />
         );
 
-      // Screen 3: Skin Reflection
-      case 3: {
-        const reflection = getSkinReflection(answers.skinTone);
-        return (
-          <ReflectionScreen
-            variant="bubble"
-            label={reflection?.label}
-            body={reflection?.body ?? 'Your skin type helps Bask personalize your vitamin D plan.'}
-            onContinue={handleContinue}
-          />
-        );
-      }
-
-      // Screen 4: Sun Reaction
-      case 4:
+      // Screen 3: Sun Reaction
+      case 3:
         return (
           <SingleSelectScreen
             title="How does your skin typically react to 30 minutes of midday sun?"
@@ -189,8 +170,8 @@ export default function OnboardingFlow() {
           />
         );
 
-      // Screen 5: Outdoor Time
-      case 5:
+      // Screen 4: Outdoor Time
+      case 4:
         return (
           <SingleSelectScreen
             title="On a typical weekday, how much time do you spend outdoors?"
@@ -203,21 +184,8 @@ export default function OnboardingFlow() {
           />
         );
 
-      // Screen 6: Outdoor Reflection
-      case 6: {
-        const reflection = getOutdoorReflection(answers.outdoorTime);
-        return (
-          <ReflectionScreen
-            variant="insight"
-            headline={reflection?.headline}
-            body={reflection?.body ?? 'Your outdoor habits help Bask build a plan that fits your lifestyle.'}
-            onContinue={handleContinue}
-          />
-        );
-      }
-
-      // Screen 7: Sunscreen Frequency
-      case 7:
+      // Screen 5: Sunscreen Frequency
+      case 5:
         return (
           <SingleSelectScreen
             title="How often do you wear sunscreen?"
@@ -228,21 +196,8 @@ export default function OnboardingFlow() {
           />
         );
 
-      // Screen 8: Sunscreen Reflection
-      case 8: {
-        const reflection = getSunscreenReflection(answers.sunscreenFrequency);
-        return (
-          <ReflectionScreen
-            variant="spf"
-            label={reflection?.label}
-            body={reflection?.body ?? 'Your SPF routine helps Bask time your sun exposure correctly.'}
-            onContinue={handleContinue}
-          />
-        );
-      }
-
-      // Screen 9: Supplementation
-      case 9:
+      // Screen 6: Supplementation
+      case 6:
         return (
           <SingleSelectScreen
             title="Are you currently taking Vitamin D3 supplements?"
@@ -253,8 +208,8 @@ export default function OnboardingFlow() {
           />
         );
 
-      // Screen 10: Daily Goal
-      case 10:
+      // Screen 7: Daily Goal
+      case 7:
         return (
           <VitaminDGoalScreen
             selectedGoal={answers.dailyGoalIU ?? DEFAULT_DAILY_GOAL_IU}
@@ -263,8 +218,8 @@ export default function OnboardingFlow() {
           />
         );
 
-      // Screen 11: Biological Profile
-      case 11:
+      // Screen 8: Biological Profile
+      case 8:
         return (
           <BiologicalProfileScreen
             age={answers.age}
@@ -277,8 +232,8 @@ export default function OnboardingFlow() {
           />
         );
 
-      // Screen 12: Medical Disclaimer
-      case 12:
+      // Screen 9: Medical Disclaimer
+      case 9:
         return (
           <MedicalDisclaimerScreen
             onAccept={() => {
@@ -288,8 +243,8 @@ export default function OnboardingFlow() {
           />
         );
 
-      // Screen 13: Location Permission
-      case 13:
+      // Screen 10: Location Permission
+      case 10:
         return (
           <LocationPermissionScreen
             onPermissionResult={(result: PermissionResult) => {
@@ -301,8 +256,8 @@ export default function OnboardingFlow() {
           />
         );
 
-      // Screen 14: Notification Permission
-      case 14:
+      // Screen 11: Notification Permission
+      case 11:
         return (
           <NotificationPermissionScreen
             onPermissionResult={(result: PermissionResult) => {
@@ -314,8 +269,8 @@ export default function OnboardingFlow() {
           />
         );
 
-      // Screen 15: HealthKit Permission
-      case 15:
+      // Screen 12: HealthKit Permission
+      case 12:
         return (
           <HealthKitPermissionScreen
             onPermissionResult={async (result: PermissionResult) => {
@@ -340,8 +295,8 @@ export default function OnboardingFlow() {
           />
         );
 
-      // Screen 16: Generating
-      case 16:
+      // Screen 13: Generating
+      case 13:
         return (
           <ProcessingScreen
             answers={answers}
@@ -349,8 +304,8 @@ export default function OnboardingFlow() {
           />
         );
 
-      // Screen 17: Plan ready
-      case 17:
+      // Screen 14: Plan ready
+      case 14:
         return <PlanReadyScreen onComplete={handleProcessingComplete} />;
 
       default:
@@ -359,9 +314,9 @@ export default function OnboardingFlow() {
   };
 
   // Chrome (back + progress) shows only on the question screens.
-  const showChrome = currentScreen >= 1 && currentScreen <= 15;
+  const showChrome = currentScreen >= 1 && currentScreen <= 12;
   const heroBg = currentScreen === 0 || currentScreen >= TOTAL_ONBOARDING_SCREENS - 2;
-  const frac = currentScreen / 15;
+  const frac = currentScreen / 12;
 
   return (
     <div className="fixed inset-0 flex flex-col pt-safe pb-safe">
