@@ -1,6 +1,6 @@
 # Bask App Backlog
 
-Last updated: 2026-06-18
+Last updated: 2026-06-21
 
 Use this as the running list for app fixes and feature work. Higher-priority open items stay higher in the list. When an item ships, move it to `Completed` with the completion date and a short note about what changed.
 
@@ -8,7 +8,25 @@ Maintenance rule: every finalized plan or approved plan change should update thi
 
 ## Open
 
-### 1. Add UV Data Confidence Labels To Add Session
+### 1. Active Session Recovery
+
+Priority: High  
+Risk: Higher  
+Status: Implemented on `claude/live-session-recording-bug-68psu9` — pending device force-kill QA & merge
+
+Persist active-session checkpoints to `localStorage` and recover interrupted sessions after iOS reclaims the suspended app process mid-session. Previously the session lived only in React state and was silently lost on a cold reload, bouncing the user to the home screen, leaving an orphaned `bask_sessions` row (`ended_at IS NULL`), and dismissing the still-running Live Activity.
+
+Implementation notes (branch + review fixes):
+
+- `bask/lib/sessionPersistence.ts`: snapshots the full `BaskSessionState` (Dates → ISO) to `localStorage` and rehydrates on mount. Strictly validates the persisted shape (all integrator/UI fields, finite numbers) so a corrupt or partial blob cannot feed `undefined`/`NaN` into the IU rate.
+- `bask/hooks/useBaskSession.ts`: restore happens in a mount **layout effect** (not a lazy `useState` initializer) so the first render matches the statically-exported HTML (no React hydration mismatch) while still re-rendering before paint (no home-screen flash). Reuses the pure `integrateAccrual` integrator; a `restorePendingRef` holds the background gap until live UV loads so a cold reload at UV 0 cannot under-credit it to zero. Live Activities are re-synced on restore (falling back to a fresh start if the activity died) instead of destroyed, and the key is cleared on both `completed` and `idle` to prevent double-recording.
+
+Validation:
+
+- `npx tsc --noEmit --incremental false` clean; `npm run lint` clean (no new warnings in changed files); `npm run build` succeeds (static export).
+- NOT run: on-device force-terminate QA (Xcode kill mid-session → reopen) to confirm `localStorage` survives WKWebView process reclaim, correct IU crediting across the gap, Live Activity re-sync, and no orphaned `ended_at IS NULL` rows. This is the linchpin device test and is required before release.
+
+### 2. Add UV Data Confidence Labels To Add Session
 
 Priority: High  
 Risk: Low  
@@ -29,7 +47,7 @@ Validation:
 - Selecting a time without direct hourly UV data shows `Estimated from nearby forecast`.
 - The IU calculation behavior remains unchanged in this first pass.
 
-### 2. Preserve And Harden Apple Watch Daylight IU Estimation
+### 3. Preserve And Harden Apple Watch Daylight IU Estimation
 
 Priority: Medium  
 Risk: Medium  
@@ -53,19 +71,6 @@ Validation:
 - Existing premium behavior remains understandable and stable.
 
 ## Later
-
-### Active Session Recovery
-
-Priority: Later  
-Risk: Higher  
-Status: Deferred
-
-Persist active-session checkpoints and recover interrupted sessions after app kill, crash, or OS eviction.
-
-Reason for deferral:
-
-- This touches app lifecycle, session state, local persistence, and duplicate sync/leaderboard behavior.
-- It should be implemented as a dedicated project with focused force-kill/background testing.
 
 ### Leaderboard Local-Day Consistency
 

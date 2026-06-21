@@ -27,7 +27,14 @@ function isRestorableStatus(status: unknown): boolean {
   return status === 'active' || status === 'paused';
 }
 
+const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+const isBool = (v: unknown): v is boolean => typeof v === 'boolean';
+
 // Validate that parsed data matches the expected structure before trusting it.
+// A partially-corrupt blob must NOT reach the integrator — e.g. a missing
+// `fitzpatrickType`/`exposurePercent`/`age` would feed `undefined` into
+// `vitaminDRatePerMinute` and produce `NaN` IU, so every field the integrator
+// and downstream UI consume is checked here.
 function isValidPersistedSession(obj: unknown): obj is PersistedSession {
   if (!obj || typeof obj !== 'object') return false;
   const o = obj as Record<string, unknown>;
@@ -35,15 +42,29 @@ function isValidPersistedSession(obj: unknown): obj is PersistedSession {
     isRestorableStatus(o.status) &&
     typeof o.startTime === 'string' &&
     (o.pausedAt === null || typeof o.pausedAt === 'string') &&
-    typeof o.elapsedSeconds === 'number' &&
-    typeof o.accumulatedIU === 'number' &&
-    typeof o.lastAccrualMs === 'number'
+    isNum(o.elapsedSeconds) &&
+    isNum(o.uvIndex) &&
+    isNum(o.rawUvIndex) &&
+    typeof o.clothingPresetId === 'string' &&
+    isNum(o.exposurePercent) &&
+    isNum(o.fitzpatrickType) &&
+    (o.age === null || isNum(o.age)) &&
+    isNum(o.currentIU) &&
+    isNum(o.accumulatedIU) &&
+    isNum(o.lastAccrualMs) &&
+    isNum(o.lastAccrualEffUv) &&
+    isBool(o.synthesizing) &&
+    isBool(o.hasSynthesized) &&
+    isNum(o.projectedTimeToBurn) &&
+    (o.sessionId === null || isNum(o.sessionId)) &&
+    (o.liveActivityId === null || typeof o.liveActivityId === 'string')
   );
 }
 
 /**
  * Load and rehydrate a persisted in-progress session, or null if none/invalid.
- * Guarded for SSR (no `window`) so it is safe inside a lazy `useState` initializer.
+ * Guarded for SSR (no `window`) so it is safe to call from a client-only mount
+ * effect (see `useBaskSession`).
  */
 export function loadPersistedSession(): BaskSessionState | null {
   if (typeof window === 'undefined') return null;

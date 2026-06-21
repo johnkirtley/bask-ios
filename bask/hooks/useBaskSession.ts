@@ -1,6 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useLayoutEffect } from 'react';
+
+// useLayoutEffect warns during SSR (static export build); fall back to useEffect
+// there. On the client it runs after hydration commit but before paint, which is
+// what makes the session restore both hydration-safe and flash-free.
+const useIsomorphicLayoutEffect =
+  typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
@@ -108,19 +114,17 @@ export function useBaskSession(
   sunData: SessionSunData = { rawUvIndex: 0, effectiveUV: 0 },
   canAccessSunburnRisk = true,
 ) {
-  // Restore an in-progress session synchronously on mount so a process-reclaim
-  // reload renders the active session immediately (no flash of the home screen).
-  const [state, setState] = useState<BaskSessionState>(
-    () => loadPersistedSession() ?? INITIAL_STATE,
-  );
+  // First render always uses INITIAL_STATE so it matches the statically-exported
+  // HTML (no React hydration mismatch). A persisted in-progress session is
+  // restored in a layout effect below, which re-renders synchronously before
+  // paint, so there's no home-screen flash either.
+  const [state, setState] = useState<BaskSessionState>(INITIAL_STATE);
   // Captured once: was this mount a restore of a previously-running session?
-  const restoredRef = useRef(
-    state.status === 'active' || state.status === 'paused',
-  );
+  const restoredRef = useRef(false);
   // True until the restored background gap has been credited at a live (>0) UV.
   // While true we hold off consuming the gap so a cold reload (which starts at
   // UV 0 before WeatherKit reloads) cannot under-credit it to zero.
-  const restorePendingRef = useRef(restoredRef.current && state.status === 'active');
+  const restorePendingRef = useRef(false);
   const stateRef = useRef(state);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const currentIURef = useRef(state.currentIU);
@@ -153,6 +157,22 @@ export function useBaskSession(
   useEffect(() => { startTimeRef.current = state.startTime; }, [state.startTime]);
   useEffect(() => { statusRef.current = state.status; }, [state.status]);
   useEffect(() => { elapsedSecondsRef.current = state.elapsedSeconds; }, [state.elapsedSeconds]);
+
+  // Restore a persisted in-progress session AFTER hydration commits but BEFORE
+  // the first paint (layout effect → synchronous re-render). Initial render
+  // stays equal to INITIAL_STATE (matches the exported HTML → no hydration
+  // warning) while still surfacing the active session immediately, and the
+  // restore refs are set before the sibling passive mount effects (Live Activity
+  // re-sync, persistence) observe them.
+  useIsomorphicLayoutEffect(() => {
+    const restored = loadPersistedSession();
+    if (!restored) return;
+    if (restored.status !== 'active' && restored.status !== 'paused') return;
+    restoredRef.current = true;
+    restorePendingRef.current = restored.status === 'active';
+    stateRef.current = restored; // visible to passive mount effects pre-flush
+    setState(restored);
+  }, []);
 
   /**
    * Start a replacement Live Activity for a restored session and adopt its id.
