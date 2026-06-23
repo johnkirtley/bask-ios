@@ -421,8 +421,7 @@ export default function SettingsPage() {
   };
 
   const handleSuggestFeature = () => {
-    // Customize this link to your feature request platform
-    handleOpenLink('https://www.bask.io/feature-requests');
+    handleOpenLink('https://bask.canny.io/feature-requests');
   };
 
   const handleRateApp = async () => {
@@ -776,7 +775,7 @@ export default function SettingsPage() {
               Support
             </h2>
             <div className='backdrop-blur-xl bg-white/70 border border-black/5 shadow-sm rounded-xl overflow-hidden'>
-              {/* <button
+              <button
                 onClick={handleSuggestFeature}
                 className='w-full p-4 flex items-center gap-3 text-left border-b border-black/5 active:bg-black/5 transition-all'>
                 <span className='text-text-secondary'>
@@ -788,10 +787,10 @@ export default function SettingsPage() {
                 <span className='text-text-primary/40'>
                   <ChevronRightIcon />
                 </span>
-              </button> */}
+              </button>
               <button
                 onClick={handleReportIssue}
-                className='w-full p-4 flex items-center gap-3 text-left border-b border-black/5 active:bg-black/5 transition-all'>
+                className='w-full p-4 flex items-center gap-3 text-left active:bg-black/5 transition-all'>
                 <span className='text-text-secondary'>
                   <EnvelopeIcon />
                 </span>
