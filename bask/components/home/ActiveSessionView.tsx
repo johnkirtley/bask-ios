@@ -250,7 +250,7 @@ export default function ActiveSessionView({
                 {synthesisCountdownLabel
                   ? `Vitamin D starts in ~${synthesisCountdownLabel}`
                   : isCloudBlockingVitaminD
-                  ? 'Clouds are blocking vitamin D, but light still supports your rhythm'
+                  ? 'Clouds may be blocking vitamin D, but light still supports your rhythm'
                   : timeOfDay === 'morning'
                   ? `UV isn't strong enough for vitamin D right now. You can still aim for ~${
                       morningLightRecommendation(cloudCover).minutes
@@ -360,7 +360,7 @@ export default function ActiveSessionView({
                 </div>
                 <div>
                   <p className='text-sm font-extrabold text-text-primary'>
-                    Clouds are blocking vitamin D right now
+                    Clouds may be blocking vitamin D right now
                   </p>
                   <p className='mt-0.5 text-xs font-medium leading-snug text-text-secondary'>
                     Your timer can keep running, but IU will stay at 0 until
@@ -382,7 +382,7 @@ export default function ActiveSessionView({
               </div>
               {isCloudBlockingVitaminD ? (
                 <div className='text-[10px] font-semibold text-amber-600 leading-tight mt-0.5'>
-                  Vitamin D blocked by clouds
+                  Vitamin D may be blocked by clouds
                 </div>
               ) : cloudsDimmingUv ? (
                 <div className='text-[10px] font-semibold text-text-secondary/70 leading-tight mt-0.5'>

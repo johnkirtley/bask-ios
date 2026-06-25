@@ -156,7 +156,7 @@ export function getBaskCta({
       // surface the adaptive target with the reference-app's energy/mood/sleep framing.
       const rec = morningLightRecommendation(cloudCover);
       const helper = cloudsBlocking
-        ? 'Clouds are blocking vitamin D, but outdoor light still supports your mood and sleep'
+        ? 'Clouds may be blocking vitamin D, but outdoor light still supports your mood and sleep'
         : `UV isn't strong enough for vitamin D right now, but ~${
             rec.minutes
           } min of ${
@@ -169,13 +169,13 @@ export function getBaskCta({
     // evening light is still a worthwhile circadian session.
     if (timeOfDay === 'evening') {
       const helper = cloudsBlocking
-        ? 'Clouds are blocking vitamin D, but evening light still supports your rhythm'
+        ? 'Clouds may be blocking vitamin D, but evening light still supports your rhythm'
         : 'No vitamin D this late, but evening light still supports your circadian rhythm';
       return { variant: 'lowUv', label: 'Get evening light', helper };
     }
 
     const helper = cloudsBlocking
-      ? 'Clouds are blocking vitamin D right now, but outdoor light still supports your mood and sleep'
+      ? 'Clouds may be blocking vitamin D right now, but outdoor light still supports your mood and sleep'
       : "UV isn't strong enough for vitamin D right now, but daylight is still linked to better sleep and mood";
     return { variant: 'lowUv', label: 'Get some light', helper };
   }

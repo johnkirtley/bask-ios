@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import {
   generateMockSunData,
@@ -46,7 +46,7 @@ function createEmptySunData(): SunData {
  * On native error: Shows empty state
  * Updates every 5 minutes to stay current
  */
-export function useSunData(): SunData & { isLive: boolean; locationDenied: boolean; locationNeedsConnection: boolean; isLoading: boolean; locationCity?: string; locationState?: string; refreshGoal: () => void } {
+export function useSunData(): SunData & { isLive: boolean; locationDenied: boolean; locationNeedsConnection: boolean; isLoading: boolean; locationCity?: string; locationState?: string; refreshGoal: () => void; refreshCurrentConditions: () => Promise<void> } {
   const { answers } = useOnboardingContext();
   const [sunData, setSunData] = useState<SunData>(() => createEmptySunData());
   const [isLive, setIsLive] = useState(false);
@@ -62,6 +62,40 @@ export function useSunData(): SunData & { isLive: boolean; locationDenied: boole
   const refreshGoal = () => {
     setGoalRefreshTrigger(prev => prev + 1);
   };
+
+  const refreshCurrentConditions = useCallback(async () => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    try {
+      const permission = await BaskWeather.getLocationPermissionStatus().catch(() => null);
+
+      if (permission?.status !== 'granted') {
+        setLocationDenied(permission?.status === 'denied');
+        setLocationNeedsConnection(permission?.status === 'prompt');
+        return;
+      }
+
+      const [currentWeather, userProfile] = await Promise.all([
+        BaskWeather.getCurrentWeather(),
+        userProfileRepository.get().catch(() => null),
+      ]);
+      const fitzpatrickType = resolveFitzpatrickType(userProfile, answers);
+
+      setSunData((prev) => ({
+        ...prev,
+        uvIndex: currentWeather.uvIndex,
+        uvLevel: getUVLevel(currentWeather.uvIndex),
+        timeToBurnMinutes: calculateTimeToBurn(currentWeather.uvIndex, fitzpatrickType),
+        cloudCover: currentWeather.cloudCover,
+        isDaylight: currentWeather.isDaylight,
+      }));
+      setIsLive(true);
+      setLocationDenied(false);
+      setLocationNeedsConnection(false);
+    } catch (error) {
+      console.warn('Failed to refresh current WeatherKit conditions:', error);
+    }
+  }, [answers]);
 
   useEffect(() => {
     let safetyTimeout: NodeJS.Timeout;
@@ -219,7 +253,7 @@ export function useSunData(): SunData & { isLive: boolean; locationDenied: boole
     };
   }, [goalRefreshTrigger, answers.skinTone, answers.sunReaction]);
 
-  return { ...sunData, isLive, locationDenied, locationNeedsConnection, isLoading, locationCity, locationState, refreshGoal };
+  return { ...sunData, isLive, locationDenied, locationNeedsConnection, isLoading, locationCity, locationState, refreshGoal, refreshCurrentConditions };
 }
 
 /**

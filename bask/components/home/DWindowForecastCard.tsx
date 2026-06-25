@@ -54,6 +54,7 @@ function parseClockTimeToDate(timeStr: string | undefined, baseDate: Date) {
 function getTodayNoWindowCopy(
   reason: DWindowForecast['todayNoWindowReason'],
   isAfterSunset: boolean,
+  isCurrentCloudBlocked: boolean,
 ) {
   if (isAfterSunset) {
     return {
@@ -62,16 +63,32 @@ function getTodayNoWindowCopy(
     };
   }
 
+  if (reason === 'clouds-blocking') {
+    return {
+      headline: 'No window right now',
+      subtext: isCurrentCloudBlocked
+        ? 'Clouds may be blocking vitamin D right now. Check back later.'
+        : 'Clouds may limit your D-window later today. Check back later.',
+    };
+  }
+
+  if (reason === 'low-exposure') {
+    return {
+      headline: 'No window right now',
+      subtext: 'Conditions aren\'t enough for your D-window right now. Check back later.',
+    };
+  }
+
+  if (reason === 'uv-too-low') {
+    return {
+      headline: 'No window right now',
+      subtext: 'UV is too low for vitamin D right now. Check back later.',
+    };
+  }
+
   return {
     headline: 'No window right now',
-    subtext:
-      reason === 'clouds-blocking'
-        ? 'Clouds are blocking vitamin D right now. Check back later.'
-        : reason === 'low-exposure'
-        ? 'Conditions aren\'t enough for your D-window right now. Check back later.'
-        : reason === 'uv-too-low'
-        ? 'UV is too low for vitamin D right now. Check back later.'
-        : 'Forecast still updating. Check back later.',
+    subtext: 'Forecast still updating. Check back later.',
   };
 }
 
@@ -252,7 +269,7 @@ const CURRENT_CLOUD_BLOCKED_RECOMMENDATION: Recommendation = {
   type: 'action',
   priority: 0,
   content: {
-    headline: 'Cloud cover is the blocker right now',
+    headline: 'Cloud cover may be the blocker right now',
     items: [
       'More skin exposure will not add IU until effective UV rises',
       'Use the forecast window when clouds clear',
@@ -308,6 +325,7 @@ export default function DWindowForecastCard({
   const todayNoWindowCopy = getTodayNoWindowCopy(
     forecast.todayNoWindowReason,
     sunsetAt !== null && now >= sunsetAt,
+    isCurrentCloudBlocked,
   );
 
   // Active dot reflects when D synthesis is possible under current conditions.
@@ -407,7 +425,7 @@ export default function DWindowForecastCard({
                 </p>
                 <p className='text-xs text-text-secondary mt-0.5'>
                   {forecast.tomorrowNoWindowReason === 'clouds-blocking'
-                    ? 'Cloud cover is blocking vitamin D'
+                    ? 'Cloud cover may block vitamin D'
                     : forecast.tomorrowNoWindowReason === 'low-exposure'
                     ? 'UV available · exposure may be limiting'
                     : forecast.tomorrowNoWindowReason === 'uv-too-low'
@@ -513,7 +531,7 @@ function SynthesisOnlyDisplay({
   now: Date;
 }) {
   const message = isCurrentCloudBlocked
-    ? 'Clouds are blocking vitamin D right now'
+    ? 'Clouds may be blocking vitamin D right now'
     : getSynthesisSecondaryMessage(synthesis, null, now) ??
       `D synthesis possible ${synthesis.startTime} – ${synthesis.endTime}`;
 
@@ -546,7 +564,7 @@ function SynthesisOnlyDisplay({
       />
       <p className='text-xs text-text-secondary'>
         {isCurrentCloudBlocked
-          ? 'Check back when cloud cover clears; IU will stay at 0 while effective UV is below 3.'
+          ? 'IU stays at 0 while effective UV is below 3.'
           : isWindowClosing
           ? "Today's window is closing. Check back tomorrow."
           : "You can get vitamin D now, but there's no standout window left today."}
@@ -569,7 +587,7 @@ function WindowDisplay({
   now: Date;
 }) {
   const synthesisMessage = isCurrentCloudBlocked
-    ? `Clouds are blocking vitamin D right now · Forecasted best window: ${window.windowStartTime} - ${window.windowEndTime}`
+    ? `Clouds may be blocking vitamin D right now · Best window: ${window.windowStartTime} - ${window.windowEndTime}`
     : synthesis
     ? getSynthesisSecondaryMessage(synthesis, window, now)
     : null;
