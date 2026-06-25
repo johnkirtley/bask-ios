@@ -144,6 +144,7 @@ export default function Home() {
     locationCity,
     locationState,
     refreshGoal,
+    refreshCurrentConditions,
     ...sunData
   } = useSunData();
   const { answers } = useOnboardingContext();
@@ -381,6 +382,7 @@ export default function Home() {
         recordReviewAppOpen().finally(() =>
           setReviewCheckKey((prev) => prev + 1),
         );
+        void refreshCurrentConditions();
         void loadForecast();
         void loadTodayTotal('app_open');
         void leaderboardService.syncParticipationState();
@@ -392,7 +394,7 @@ export default function Home() {
     return () => {
       listenerHandle?.remove();
     };
-  }, [loadForecast, loadTodayTotal]);
+  }, [loadForecast, loadTodayTotal, refreshCurrentConditions]);
 
   useEffect(() => {
     recordReviewAppOpen().finally(() => setReviewCheckKey((prev) => prev + 1));
@@ -587,7 +589,7 @@ export default function Home() {
     if (!isFinite(timeToGoal) && effectiveUV < 3) {
       // Raw UV is strong but clouds are cutting it below the synthesis threshold.
       return sunData.uvIndex >= 3
-        ? 'Clouds are blocking vitamin D right now.'
+        ? 'Clouds may be blocking vitamin D right now.'
         : 'UV is too low for vitamin D right now.';
     }
 

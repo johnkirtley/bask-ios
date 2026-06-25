@@ -289,7 +289,7 @@ export default function AddSessionModal({ isOpen, onClose, onSaved }: AddSession
             </div>
             {computedIU === 0 && !noUvData && isWindowCloudBlocked && (
               <p className='text-xs text-amber-700 leading-snug'>
-                Clouds are blocking vitamin D for this window. Effective UV stayed under 3, so
+                Clouds may have blocked vitamin D for this window. Effective UV stayed under 3, so
                 no IU is produced.
               </p>
             )}
