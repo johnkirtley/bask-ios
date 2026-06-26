@@ -18,8 +18,9 @@ function makeSynthesis(dayLabel: 'Today' | 'Tomorrow' = 'Today'): SynthesisWindo
 }
 
 function makeWindow(dayLabel: 'Today' | 'Tomorrow' = 'Today'): OptimalWindow {
+  const now = new Date();
   return {
-    date: new Date().toISOString().split('T')[0],
+    date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}T12:00:00`,
     dayLabel,
     windowStartTime: '12:00 PM',
     windowEndTime: '3:00 PM',

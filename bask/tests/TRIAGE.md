@@ -4,8 +4,9 @@ These tests currently fail because they assert **correct expected behavior** tha
 
 ## Run the suite
 ```bash
-npm test         # one-shot
-npm run test:watch  # watch mode
+npm test             # green gate (pre-Xcode check) — excludes triage
+npm run test:triage  # known-bug assertions only
+npm run test:all     # everything including triage
 ```
 
 ## Bug #1 — `formatDurationMinutes` rounds to "60m" instead of "1h"

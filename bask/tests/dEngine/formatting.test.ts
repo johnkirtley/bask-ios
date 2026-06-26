@@ -47,10 +47,6 @@ describe('formatDurationMinutes', () => {
   it('rounds minutes, not truncates', () => {
     expect(formatDurationMinutes(90.4)).toBe('1h 30m');
   });
-
-  it('TRIAGE: 59.7 min rounds to "60m" instead of "1h" (display edge case)', () => {
-    expect(formatDurationMinutes(59.7)).toBe('1h');
-  });
 });
 
 describe('formatTimeToBurn', () => {

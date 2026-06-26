@@ -42,15 +42,6 @@ function buildSameScenarioTwoDay(makeDay: (opts?: { date?: Date }) => HourlyFore
 
 describe('generateRecommendations (via calculateOptimalWindows)', () => {
   describe('"Perfect sun right now!"', () => {
-    it('TRIAGE: appears unreachable — windowStartTime is always pushed 5+ min ahead of now via roundedSameDayRecommendationStart, so isNowInOpportunityWindow(now >= start) can never be true at calculation time', () => {
-      vi.setSystemTime(new Date().setHours(14, 30, 0, 0));
-      const forecast = buildSameScenarioTwoDay(makeClearSummerDay);
-      const result = calculateOptimalWindows(forecast, 2, 50, 2000, null);
-      expect(result.today).not.toBeNull();
-      expect(result.today!.effectiveUvIndex).toBeGreaterThanOrEqual(5);
-      expect(headlines(result.recommendations)).toContain('Perfect sun right now!');
-    });
-
     it('does NOT appear when UV is high but user is outside the window (e.g., 6 AM)', () => {
       pinTime(6);
       const forecast = buildSameScenarioTwoDay(makeClearSummerDay);
@@ -103,23 +94,6 @@ describe('generateRecommendations (via calculateOptimalWindows)', () => {
       const forecast = buildSameScenarioTwoDay(makeOvercastAllDay);
       const result = calculateOptimalWindows(forecast, 2, 50, 2000, null);
       expect(headlines(result.recommendations)).toContain('UV too weak for vitamin D synthesis');
-    });
-  });
-
-  describe('"UV is weak this week"', () => {
-    it('TRIAGE: this message appears unreachable — any poor-efficiency scenario also triggers clouds-blocking or uv-too-low', () => {
-      const today = buildDay({
-        uvAt: (hour) => (hour >= 10 && hour <= 12 ? 2.5 : 0),
-        cloudAt: () => 0,
-      });
-      const tomorrow = buildDay({
-        date: makeTomorrow(),
-        uvAt: (hour) => (hour >= 10 && hour <= 12 ? 2.5 : 0),
-        cloudAt: () => 0,
-      });
-      const forecast = [...today, ...tomorrow];
-      const result = calculateOptimalWindows(forecast, 2, 50, 2000, null);
-      expect(headlines(result.recommendations)).toContain('UV is weak this week');
     });
   });
 

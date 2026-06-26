@@ -33,9 +33,16 @@ export interface BuildDayOptions {
   cloudCover?: number;
 }
 
+export function localDateKey(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export function buildDay(opts: BuildDayOptions = {}): HourlyForecastItem[] {
   const base = opts.date ?? new Date();
-  const dateIso = base.toISOString().split('T')[0];
+  const dateKey = localDateKey(base);
 
   return Array.from({ length: 24 }, (_, hour) => {
     const uvIndex = opts.uvAt ? opts.uvAt(hour) : (opts.uvIndex ?? 0);
@@ -44,7 +51,7 @@ export function buildDay(opts: BuildDayOptions = {}): HourlyForecastItem[] {
       hour,
       uvIndex,
       cloudCover,
-      date: `${dateIso}T${String(hour).padStart(2, '0')}:00:00.000Z`,
+      date: `${dateKey}T${String(hour).padStart(2, '0')}:00:00`,
     });
   });
 }
@@ -64,8 +71,8 @@ export function tomorrowOfDay(base: Date = new Date()): Date {
 }
 
 function defaultIsoForHour(hour: number): string {
-  const today = new Date().toISOString().split('T')[0];
-  return `${today}T${String(hour).padStart(2, '0')}:00:00.000Z`;
+  const today = localDateKey(new Date());
+  return `${today}T${String(hour).padStart(2, '0')}:00:00`;
 }
 
 export function uvBellCurve(peak: number, options?: { sunriseHour?: number; sunsetHour?: number; floor?: number }): (hour: number) => number {

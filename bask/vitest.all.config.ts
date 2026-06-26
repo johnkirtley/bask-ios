@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['tests/**/*.test.ts'],
-    exclude: ['node_modules', '.next', 'ios', 'android', 'extension', 'tests/triage/**'],
+    exclude: ['node_modules', '.next', 'ios', 'android', 'extension'],
   },
   resolve: {
     alias: {
