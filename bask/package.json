@@ -13,6 +13,8 @@
     "copy-out": "mv out/_next out/next && sed -i '' -e 's/\\/_next/\\.\\/next/g' out/**.html && mv out/index.html ./extension && rsync -va --delete-after out/next/ ./extension/next/ && rm -rf out",
     "copy-public": "cp public/images/* extension/images",
     "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "test:leaderboard": "node scripts/test-leaderboard.mjs",
     "seed:leaderboard": "node scripts/seed-leaderboard.mjs"
   },
@@ -56,6 +58,7 @@
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
-    "@capacitor/cli": "^8.0.0"
+    "@capacitor/cli": "^8.0.0",
+    "vitest": "^4.1.9"
   }
 }
