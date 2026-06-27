@@ -612,8 +612,13 @@ export const notificationService = {
    */
   parseWindowStartTime(window: OptimalWindow): Date | null {
     try {
-      // window.date is ISO8601, window.startTime is "12:15 PM"
-      const baseDate = new Date(`${window.date}T00:00:00`);
+      // window.date may be a full ISO timestamp (from forecast hour items) or
+      // a date-only string. Parse it directly instead of appending T00:00:00
+      // (which produces Invalid Date for full timestamps).
+      const baseDate = new Date(window.date);
+      if (isNaN(baseDate.getTime())) return null;
+
+      // window.startTime is "12:15 PM"
       const [time, period] = window.startTime.split(' ');
       const [hours, minutes] = time.split(':').map(Number);
 

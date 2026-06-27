@@ -9,6 +9,7 @@ import {
   getSynthesisSecondaryMessage,
   isInSynthesisWindow,
 } from '../../lib/dWindowForecast';
+import { getTodayNoWindowCopy } from '../../lib/dWindowCopy';
 import { formatEstimatedIU } from '../../lib/dEngine';
 import GlassCardWrapper from './GlassCardWrapper';
 import ProBadge from '../ui/ProBadge';
@@ -49,47 +50,6 @@ function parseClockTimeToDate(timeStr: string | undefined, baseDate: Date) {
   const date = new Date(baseDate);
   date.setHours(hours, minutes, 0, 0);
   return date;
-}
-
-function getTodayNoWindowCopy(
-  reason: DWindowForecast['todayNoWindowReason'],
-  isAfterSunset: boolean,
-  isCurrentCloudBlocked: boolean,
-) {
-  if (isAfterSunset) {
-    return {
-      headline: 'Sun has set',
-      subtext: 'No D-window is available for the rest of today.',
-    };
-  }
-
-  if (reason === 'clouds-blocking') {
-    return {
-      headline: 'No window right now',
-      subtext: isCurrentCloudBlocked
-        ? 'Clouds may be blocking vitamin D right now. Check back later.'
-        : 'Clouds may limit your D-window later today. Check back later.',
-    };
-  }
-
-  if (reason === 'low-exposure') {
-    return {
-      headline: 'No window right now',
-      subtext: 'Conditions aren\'t enough for your D-window right now. Check back later.',
-    };
-  }
-
-  if (reason === 'uv-too-low') {
-    return {
-      headline: 'No window right now',
-      subtext: 'UV is too low for vitamin D right now. Check back later.',
-    };
-  }
-
-  return {
-    headline: 'No window right now',
-    subtext: 'Forecast still updating. Check back later.',
-  };
 }
 
 function RecommendationCard({ rec }: { rec: Recommendation }) {

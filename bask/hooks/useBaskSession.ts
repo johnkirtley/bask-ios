@@ -23,6 +23,7 @@ import {
 } from '../lib/sessionPersistence';
 import { BaskLiveActivity } from '../lib/plugins';
 import { getSolarPhase, isSunUp } from '../lib/lightPhase';
+import { lightPhaseForLiveActivity, formatElapsedTime } from '../lib/sessionPhaseUtils';
 import type { SolarClock } from '../lib/lightPhase';
 import type { LiveActivityPhase } from '../lib/plugins';
 import type { BaskSessionStatus } from '../types';
@@ -50,24 +51,6 @@ export interface BaskSessionState {
   liveActivityId: string | null;
 }
 
-/**
- * Phase label for the lock screen / Dynamic Island. Pre-synthesis sessions are
- * only "morning light" when it's actually morning — computed sun-anchored at
- * each update so a session that outlives its window flips live, matching the
- * in-app hero label. "night" reads as evening light: a session can outlive
- * sunset by a few minutes.
- */
-function lightPhaseForLiveActivity(
-  hasSynthesized: boolean,
-  solar: SolarClock,
-): LiveActivityPhase {
-  if (hasSynthesized) return 'vitaminD';
-  const phase = getSolarPhase(Date.now(), solar);
-  if (phase === 'morning') return 'morningLight';
-  if (phase === 'evening' || phase === 'night') return 'eveningLight';
-  return 'daylight';
-}
-
 const INITIAL_STATE: BaskSessionState = {
   status: 'idle',
   elapsedSeconds: 0,
@@ -90,15 +73,6 @@ const INITIAL_STATE: BaskSessionState = {
   liveActivityId: null,
 };
 
-
-/**
- * Format elapsed seconds as MM:SS
- */
-function formatElapsedTime(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
 
 interface SessionSunData extends SolarClock {
   rawUvIndex: number;
