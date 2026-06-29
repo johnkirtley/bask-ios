@@ -254,13 +254,14 @@ export function getBurnRiskLevel(uvIndex: number): BurnRiskLevel {
  * Format minutes as a human-readable duration (no upper cap).
  */
 export function formatDurationMinutes(minutes: number): string {
-  if (!isFinite(minutes) || minutes <= 0) return '—';
-  if (minutes >= 60) {
-    const h = Math.floor(minutes / 60);
-    const m = Math.round(minutes % 60);
+  const rounded = Math.round(minutes);
+  if (!isFinite(rounded) || rounded <= 0) return '—';
+  if (rounded >= 60) {
+    const h = Math.floor(rounded / 60);
+    const m = rounded % 60;
     return m > 0 ? `${h}h ${m}m` : `${h}h`;
   }
-  return `${Math.round(minutes)}m`;
+  return `${rounded}m`;
 }
 
 /**

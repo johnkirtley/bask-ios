@@ -48,6 +48,17 @@ describe('generateRecommendations (via calculateOptimalWindows)', () => {
       const result = calculateOptimalWindows(forecast, 2, 50, 2000, null);
       expect(headlines(result.recommendations)).not.toContain('Perfect sun right now!');
     });
+
+    it('appears when effective UV >= 5 and the user is inside the natural band (e.g., 2:30 PM)', () => {
+      const pinned = new Date();
+      pinned.setHours(14, 30, 0, 0);
+      vi.setSystemTime(pinned);
+      const forecast = buildSameScenarioTwoDay(makeClearSummerDay);
+      const result = calculateOptimalWindows(forecast, 2, 50, 2000, null);
+      expect(result.today).not.toBeNull();
+      expect(result.today!.effectiveUvIndex).toBeGreaterThanOrEqual(5);
+      expect(headlines(result.recommendations)).toContain('Perfect sun right now!');
+    });
   });
 
   describe('"Good UV today from {time}"', () => {
@@ -94,6 +105,22 @@ describe('generateRecommendations (via calculateOptimalWindows)', () => {
       const forecast = buildSameScenarioTwoDay(makeOvercastAllDay);
       const result = calculateOptimalWindows(forecast, 2, 50, 2000, null);
       expect(headlines(result.recommendations)).toContain('UV too weak for vitamin D synthesis');
+    });
+  });
+
+  describe('"UV is weak this week"', () => {
+    it('appears for sustained marginal UV (2–3) that is above the synthesis floor but below the synthesis threshold', () => {
+      const today = buildDay({
+        uvAt: (hour) => (hour >= 10 && hour <= 12 ? 2.5 : 0),
+        cloudAt: () => 0,
+      });
+      const tomorrow = buildDay({
+        date: makeTomorrow(),
+        uvAt: (hour) => (hour >= 10 && hour <= 12 ? 2.5 : 0),
+        cloudAt: () => 0,
+      });
+      const result = calculateOptimalWindows([...today, ...tomorrow], 2, 50, 2000, null);
+      expect(headlines(result.recommendations)).toContain('UV is weak this week');
     });
   });
 

@@ -47,6 +47,11 @@ describe('formatDurationMinutes', () => {
   it('rounds minutes, not truncates', () => {
     expect(formatDurationMinutes(90.4)).toBe('1h 30m');
   });
+
+  it('treats sub-hour values that round up to 60 as "1h" (not "60m")', () => {
+    expect(formatDurationMinutes(59.7)).toBe('1h');
+    expect(formatDurationMinutes(59.5)).toBe('1h');
+  });
 });
 
 describe('formatTimeToBurn', () => {

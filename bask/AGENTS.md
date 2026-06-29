@@ -7,12 +7,11 @@ Linear is the source of truth for planned, deferred, and completed app work.
 Run weather logic tests before building in Xcode to catch calculation/messaging bugs early:
 
 ```bash
-npm test             # green gate (pre-Xcode check) — excludes triage
+npm test             # green gate (pre-Xcode check) — includes former triage cases
 npm run test:watch   # watch mode for iterative development
-npm run test:triage  # known bugs (3 failing tests documenting unfixed issues)
-npm run test:all     # everything including triage
+npm run test:all     # full suite
 ```
 
-Tests live in `tests/` and cover the pure weather/vitamin-D logic in `lib/`. Known bugs
-discovered by tests are documented in `tests/TRIAGE.md`. The triage tests live in
-`tests/triage/` and are excluded from the normal `npm test` green gate.
+Tests live in `tests/` and cover the pure weather/vitamin-D logic in `lib/`.
+Bugs previously caught by the test suite were documented in `tests/TRIAGE.md`;
+all have been resolved and their assertions promoted into the green gate.

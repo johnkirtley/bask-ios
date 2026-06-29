@@ -1,100 +1,83 @@
 # Test Triage — Bugs Discovered by Test Suite
 
-These tests currently fail because they assert **correct expected behavior** that the code does not yet produce. Each is a real bug, not a test error.
+> **Status: All clear.** Every triage bug below has been fixed and its assertion
+> promoted into the green-gate suite (`npm test`). This file is kept as a
+> historical record of the bugs the test suite caught.
 
 ## Run the suite
 ```bash
-npm test             # green gate (pre-Xcode check) — excludes triage
-npm run test:triage  # known-bug assertions only
-npm run test:all     # everything including triage
+npm test             # green gate (pre-Xcode check) — includes the former triage cases
+npm run test:all     # everything (triage dir is now empty/removed)
 ```
 
-## Bug #1 — `formatDurationMinutes` rounds to "60m" instead of "1h"
+---
+
+## ✅ Resolved — Bug #1 — `formatDurationMinutes` rounded to "60m" instead of "1h"
 
 **Severity:** Low (cosmetic display)
-**File:** `lib/dEngine.ts:256-264`
+**File:** `lib/dEngine.ts` (`formatDurationMinutes`)
 
 ### Problem
-`formatDurationMinutes(59.7)` returns `"60m"` instead of `"1h"`. The function rounds sub-hour values before checking the `>= 60` threshold:
-
-```ts
-if (minutes >= 60) {          // 59.7 < 60, takes the else branch
-  // ...
-}
-return `${Math.round(minutes)}m`;  // Math.round(59.7) = 60 → "60m"
-```
-
-### Expected
-Any value that rounds to 60+ minutes should display as "1h" (or "1h 0m" → "1h"), not "60m".
+`formatDurationMinutes(59.7)` returned `"60m"` instead of `"1h"`. The function
+branched on `minutes >= 60` *before* rounding, so `59.7` took the `< 60` branch
+and then `Math.round(59.7)` produced `60` → `"60m"`.
 
 ### Fix
-Round first, then branch:
-```ts
-const rounded = Math.round(minutes);
-if (!isFinite(rounded) || rounded <= 0) return '—';
-if (rounded >= 60) { ... }
-return `${rounded}m`;
-```
+Round first, then branch on the rounded value. Any value that rounds to 60+
+minutes now displays as `"1h"`.
 
-### Test
-`tests/dEngine/formatting.test.ts > formatDurationMinutes > TRIAGE: 59.7 min rounds to "60m" instead of "1h"`
+### Coverage
+`tests/dEngine/formatting.test.ts > formatDurationMinutes > "treats sub-hour
+values that round up to 60 as '1h'"`
 
 ---
 
-## Bug #2 — "Perfect sun right now!" recommendation is unreachable
+## ✅ Resolved — Bug #2 — "Perfect sun right now!" recommendation was unreachable
 
-**Severity:** High (dead feature — users never see this message)
-**File:** `lib/dWindowForecast.ts:939-955` (generateRecommendations) + `dWindowForecast.ts:489-495` (roundedSameDayRecommendationStart)
+**Severity:** High (dead feature — users never saw this message)
+**File:** `lib/dWindowForecast.ts` (`isNowInOpportunityWindow`)
 
 ### Problem
-The "Perfect sun right now!" message requires `isNowInOpportunityWindow(today, now)` to return true, meaning `now >= windowStartTime`. But `windowStartTime` is always set to `recommendedStartAt`, which is `max(naturalWindowStart, sameDayStart)`. And `sameDayStart` = `roundedSameDayRecommendationStart(now)` always pushes **at least 5 minutes into the future** from `now`:
+The message required `isNowInOpportunityWindow(today, now)` to be true, i.e.
+`now >= windowStartTime`. But `windowStartTime` is always set to
+`recommendedStartAt = max(naturalStart, sameDayStart)`, and `sameDayStart`
+(`roundedSameDayRecommendationStart`) always pushes at least 5 minutes into the
+future. So for today, `now >= windowStartTime` could never be true.
 
-```ts
-const earliest = new Date(now.getTime() + SAME_DAY_RECOMMENDATION_LEAD_MINUTES * 60_000); // now + 5min
-const intervalMs = SAME_DAY_RECOMMENDATION_ROUNDING_MINUTES * 60_000; // 5min
-return new Date(Math.ceil(earliest.getTime() / intervalMs) * intervalMs); // rounds UP
-```
+### Fix
+`isNowInOpportunityWindow` now floors the parsed `windowStartTime` back to the
+top of the hour, recovering the natural UV-viable band start (today's displayed
+start is the natural hour boundary rounded up by the same-day lead). Tomorrow
+windows are already on the hour, so the floor is a no-op for them.
 
-Since `generateRecommendations` is called inside `calculateOptimalWindows` with the same `now`, `windowStartTime` is always > `now`. The condition `now >= windowStartTime` can **never** be true.
-
-### Expected
-When effective UV >= 5 and the user is currently inside the day's viable basking hours, they should see "Perfect sun right now!" instead of "Good UV today from {future time}".
-
-### Fix options
-1. Compare against the **natural** window start (before same-day rounding), not the recommended start
-2. Use a tolerance: `now >= windowStartTime - SOME_TOLERANCE`
-3. Check `isInSynthesisWindow(synthesis, now)` instead of `isNowInOpportunityWindow`
-
-### Test
-`tests/dWindowForecast/generateRecommendations.test.ts > "Perfect sun right now!" > TRIAGE: appears unreachable...`
+### Coverage
+`tests/dWindowForecast/generateRecommendations.test.ts > "Perfect sun right
+now!" > "appears when effective UV >= 5 and the user is inside the natural band"`
 
 ---
 
-## Bug #3 — "UV is weak this week" recommendation appears unreachable
+## ✅ Resolved — Bug #3 — "UV is weak this week" recommendation was unreachable
 
-**Severity:** Medium (dead code path — users never see this message)
-**File:** `lib/dWindowForecast.ts:1023-1032`
+**Severity:** Medium (dead code path — users never saw this message)
+**File:** `lib/dWindowForecast.ts` (`generateRecommendations`)
 
 ### Problem
-The "UV is weak this week" message requires:
-- `efficiency === 'poor'` (best effective UV < 2)
-- `!isLowUvScenario` (maxForecastedUV >= 3 AND noWindowReason !== 'clouds-blocking')
-- `!isExposureLimited` (noWindowReason !== 'low-exposure')
+The message was guarded by `!isLowUvScenario`, where
+`isLowUvScenario = maxForecastedUV < 3 || clouds-blocking`. Any forecast below
+the synthesis threshold (UV < 3) was tagged `isLowUvScenario`, which suppressed
+the "weak this week" alert and instead showed the harsher "too weak /
+supplement" action — even for the marginal 2–3 band where the softer alert was
+intended.
 
-But these conditions are contradictory:
-- If best effective UV < 2, no hour has effective UV >= 3
-- If raw UV >= 3 (required for !isLowUvScenario), `determineNoWindowReason` will find that effective UV < 3 → returns `'clouds-blocking'`
-- If raw UV < 3, then maxForecastedUV < 3 → `isLowUvScenario` is true → message skipped
+### Fix
+Introduced `WEAK_UV_SYNTHESIS_FLOOR = 2` and changed the UV condition in
+`isLowUvScenario` from `< 3` to `<= WEAK_UV_SYNTHESIS_FLOOR`. Now:
+- UV ≤ 2 → "UV too weak for vitamin D synthesis" (negligible → supplement)
+- UV 2–3 → "UV is weak this week" (marginal → limited D production)
 
-The only escape hatch would be `reconcileExposureReason` turning 'low-exposure' into undefined, but that requires effective UV >= 3 somewhere (which contradicts efficiency = poor).
+The winter golden scenario (UV peaks at 2.0) still correctly surfaces the
+"too weak" action.
 
-### Expected
-The "UV is weak this week" alert should appear during sustained low-UV periods (e.g., late autumn where UV hovers at 2-3) to inform users that natural vitamin D production will be limited.
-
-### Fix options
-1. Relax the `!isLowUvScenario` condition (e.g., only skip for `maxForecastedUV < 2`)
-2. Gate on raw UV bands instead of effective UV
-3. Remove the dead code if the scenario is genuinely impossible
-
-### Test
-`tests/dWindowForecast/generateRecommendations.test.ts > "UV is weak this week" > TRIAGE: this message appears unreachable...`
+### Coverage
+`tests/dWindowForecast/generateRecommendations.test.ts > "UV is weak this week"
+> "appears for sustained marginal UV (2–3)..."`

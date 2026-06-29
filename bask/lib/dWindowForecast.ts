@@ -20,6 +20,7 @@ const MIN_VIABLE_IU = 100;
 const MIN_RECOMMENDED_SESSION_MINUTES = 5;
 const SAME_DAY_RECOMMENDATION_LEAD_MINUTES = 5;
 const SAME_DAY_RECOMMENDATION_ROUNDING_MINUTES = 5;
+const WEAK_UV_SYNTHESIS_FLOOR = 2;
 
 /**
  * Full-day band when effective UV supports vitamin D synthesis (Shadow Rule).
@@ -913,6 +914,7 @@ function parseWindowEndHour(timeStr: string): number {
 
 function isNowInOpportunityWindow(window: OptimalWindow, now: Date): boolean {
   const start = parseTimeToDate(window.windowStartTime);
+  start.setMinutes(0, 0, 0);
   const end = parseTimeToDate(window.windowEndTime);
   return now >= start && now <= end;
 }
@@ -932,7 +934,7 @@ function generateRecommendations(
 ): Recommendation[] {
   const recommendations: Recommendation[] = [];
   const isLowUvScenario =
-    (maxForecastedUV !== undefined && maxForecastedUV < 3) ||
+    (maxForecastedUV !== undefined && maxForecastedUV <= WEAK_UV_SYNTHESIS_FLOOR) ||
     noWindowReason === 'clouds-blocking';
 
   // Today's recommendation — gate on cloud-adjusted UV so "perfect sun" reflects real synthesis
