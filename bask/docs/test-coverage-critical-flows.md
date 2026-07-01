@@ -20,7 +20,7 @@ A jsdom + React Testing Layer test rig that loads automatically with the integra
 - **`notificationFixtures.ts`** — `DWindowForecast` builders dated "tomorrow" so notification times are always future-valid (the service skips within a 60s grace of now).
 - **`jsdomSetup.ts`** — `@testing-library/jest-dom/vitest` matchers.
 
-### Test files (102 new tests across 13 files)
+### Test files (102 new tests across 16 files)
 
 **Persistence (51 tests)**
 - `tests/persistence/streaksRepository.test.ts` — 10 tests covering the streak algebra: streak-start, milestone detection, milestone-rejection on repeat, streak-death after the grace day, grace-day survival, `lowGoalStreak` (<500 IU), no double-recording of a death, longest-streak monotonicity, plus `getGoalStreakSummary` hit/remaining/multi-day count.
@@ -77,12 +77,12 @@ Aggregate (priority files only — excludes intentionally-untested infra: mocked
 
 **Gate thresholds** (enforced by `npm run test:coverage`): statements 55, branches 45, functions 55, lines 58. Current aggregate across the scoped files is **70% stmts / 58.7% branch / 75% funcs / 73% lines** — comfortably above the floor, so the gate locks in gains and catches real erosion.
 
-The un-covered branches in `useBaskSession` are predominantly the Live Activity native paths (the mocked plugin reports `supported: false` so startActivity is skipped; the `updateActivity` branches are exercised but the full native lifecycle isn't). These match the "verify call-shape only, real iOS behavior stays manual QA" scope decision.
+The uncovered branches in `useBaskSession` are predominantly the Live Activity native paths. The test setup mocks the plugin, but this suite does not exercise or assert the Live Activity lifecycle; that behavior remains manual native QA.
 
 ## Known gaps (flagged, not fixed)
 
 1. **Component smoke tests deferred** — the root `tsconfig` uses `jsx: "preserve"`, which blocks importing JSX components under the Vitest transform (esbuild/oxc overrides don't reach the import-analysis step). Hooks and services are covered directly. Enabling component tests requires a `tsconfig` `jsx` decision (e.g. `react-jsx`; low-risk since Next uses SWC for compilation and ignores this setting, but it's a shared-config change left for the team).
-2. **Native-only paths** (Live Activity, real iOS notification delivery, native HealthKit) are verified by call-shape only. They stay manual/native QA.
+2. **Native-only paths** (Live Activity, real iOS notification delivery, native HealthKit) are not covered by this integration suite. They stay manual/native QA.
 3. **Web-preview fallbacks** in the repositories (the `if (!Capacitor.isNativePlatform())` seed-data branches used during local dev) are not exercised by the integration tests, which run in the native path. Coverage drift on those branches is acceptable per scope.
 4. **Ionic page interaction tests** (ActiveSessionView morph celebration, zero-IU tooltip, settings page toggle) are out of scope this round, per the "no deep Ionic renders" decision.
 

@@ -18,6 +18,7 @@ import { leaderboardService } from '@/lib/supabase/leaderboardService';
 import { recordReviewValueEvent } from '@/lib/services/inAppReviewService';
 import {
   savePersistedSession,
+  loadPersistedSession,
   clearPersistedSession,
 } from '@/lib/sessionPersistence';
 import { STORAGE_KEYS } from '@/lib/constants';
@@ -78,7 +79,9 @@ describe('useBaskSession', () => {
       await act(async () => {
         await result.current.startSession('tshirt', 40, 'vitamin_d');
       });
-      const startedAt = result.current; // capture via state below
+      const beforePause = loadPersistedSession();
+      const elapsedBeforePause = result.current.elapsedSeconds;
+      expect(beforePause?.startTime).not.toBeNull();
 
       await act(async () => {
         await result.current.pauseSession();
@@ -104,7 +107,12 @@ describe('useBaskSession', () => {
         ANALYTICS_EVENTS.sessionResumed,
         expect.any(Object),
       );
-      void startedAt;
+
+      const afterResume = loadPersistedSession();
+      expect(afterResume?.startTime?.getTime()).toBe(
+        beforePause!.startTime!.getTime() + 60_000,
+      );
+      expect(result.current.elapsedSeconds).toBe(elapsedBeforePause);
     });
   });
 
@@ -245,10 +253,19 @@ describe('useBaskSession', () => {
       const stateCall = calls.find((c) => c[0] === 'appStateChange');
       expect(stateCall).toBeTruthy();
 
-      // Firing isActive does not throw and leaves the session active.
+      const elapsedBeforeBackground = result.current.elapsedSeconds;
+      const iuBeforeBackground = result.current.currentIU;
+      vi.setSystemTime(Date.now() + 180_000);
+
+      // Move the clock without running intervals so the foreground callback
+      // must reconcile the backgrounded interval itself.
       const cb = stateCall![1] as (e: { isActive: boolean }) => void;
-      act(() => cb({ isActive: true }));
+      await act(async () => cb({ isActive: true }));
+
       expect(result.current.status).toBe('active');
+      expect(result.current.elapsedSeconds).toBeGreaterThan(elapsedBeforeBackground);
+      expect(result.current.elapsedSeconds).toBeGreaterThanOrEqual(180);
+      expect(result.current.currentIU).toBeGreaterThan(iuBeforeBackground);
       unmount();
     });
   });
